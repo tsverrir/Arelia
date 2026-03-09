@@ -1,0 +1,78 @@
+@page "/admin/backups"
+@using Arelia.Infrastructure.Services
+@inject BackupService BackupService
+@inject IConfiguration Configuration
+@inject ISnackbar Snackbar
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Backups</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Database Backups</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateBackup"
+           StartIcon="@Icons.Material.Filled.Backup" Class="mb-4"
+           Disabled="@_isCreating">
+    @(_isCreating ? "Creating..." : "Create Backup Now")
+</MudButton>
+
+@if (_backups is not null && _backups.Count > 0)
+{
+    <MudTable Items="_backups" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>File</MudTh>
+            <MudTh>Size</MudTh>
+            <MudTh>Created</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.FileName</MudTd>
+            <MudTd>@FormatSize(context.SizeBytes)</MudTd>
+            <MudTd>@context.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss UTC")</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+else
+{
+    <MudAlert Severity="Severity.Info">No backups yet.</MudAlert>
+}
+
+@code {
+    private List<BackupInfo>? _backups;
+    private bool _isCreating;
+
+    private string BackupDir => Configuration["Backup:Directory"] ?? "backups";
+    private string DbPath => Configuration.GetConnectionString("DefaultConnection")
+        ?.Replace("Data Source=", "", StringComparison.OrdinalIgnoreCase) ?? "arelia.db";
+
+    protected override void OnInitialized()
+    {
+        _backups = BackupService.GetBackups(BackupDir);
+    }
+
+    private async Task CreateBackup()
+    {
+        _isCreating = true;
+        try
+        {
+            var path = await BackupService.CreateBackupAsync(DbPath, BackupDir);
+            Snackbar.Add($"Backup created: {Path.GetFileName(path)}", Severity.Success);
+            _backups = BackupService.GetBackups(BackupDir);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Backup failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isCreating = false;
+        }
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024)
+            return $"{bytes} B";
+        if (bytes < 1024 * 1024)
+            return $"{bytes / 1024.0:N1} KB";
+        return $"{bytes / (1024.0 * 1024.0):N1} MB";
+    }
+}

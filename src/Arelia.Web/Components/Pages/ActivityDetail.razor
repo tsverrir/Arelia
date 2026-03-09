@@ -1,0 +1,105 @@
+@page "/activities/{ActivityId:guid}"
+@using Arelia.Application.Activities.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Activity Detail</PageTitle>
+
+@if (_activity is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+    return;
+}
+
+<MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
+           StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-2">
+    Back to Activities
+</MudButton>
+
+<MudText Typo="Typo.h5" GutterBottom="true">@_activity.Name</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="8">
+        <MudCard>
+            <MudCardContent>
+                <MudStack Spacing="2">
+                    <MudStack Row="true" Spacing="2">
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">@_activity.ActivityType</MudChip>
+                        <MudChip T="string" Size="Size.Small">Work Year @_activity.WorkYear</MudChip>
+                        @if (_activity.IsPublicVisible)
+                        {
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">Public</MudChip>
+                        }
+                    </MudStack>
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                        <MudText>@_activity.StartDateTime.ToString("ddd dd MMM yyyy HH:mm") — @_activity.EndDateTime.ToString("ddd dd MMM yyyy HH:mm")</MudText>
+                    </MudStack>
+
+                    @if (!string.IsNullOrEmpty(_activity.Location))
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                            <MudText>@_activity.Location</MudText>
+                        </MudStack>
+                    }
+
+                    @if (_activity.ParentName is not null)
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" />
+                            <MudLink Href="@($"/activities/{_activity.ParentActivityId}")">@_activity.ParentName</MudLink>
+                        </MudStack>
+                    }
+
+                    @if (!string.IsNullOrEmpty(_activity.Description))
+                    {
+                        <MudDivider Class="my-2" />
+                        <MudText>@_activity.Description</MudText>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudCard>
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">Summary</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_activity.MaxCapacity.HasValue)
+                {
+                    <MudText>Capacity: @_activity.ParticipantCount / @_activity.MaxCapacity</MudText>
+                }
+                else
+                {
+                    <MudText>Participants: @_activity.ParticipantCount</MudText>
+                }
+                @if (_activity.ChildActivityCount > 0)
+                {
+                    <MudText>Child activities: @_activity.ChildActivityCount</MudText>
+                }
+                @if (_activity.SignupDeadline.HasValue)
+                {
+                    <MudText>Signup deadline: @_activity.SignupDeadline.Value.ToString("dd MMM yyyy HH:mm")</MudText>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public Guid ActivityId { get; set; }
+
+    private ActivityDetailDto? _activity;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _activity = await Mediator.Send(new GetActivityDetailQuery(ActivityId));
+    }
+}

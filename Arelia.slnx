@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/AgentDocks/">
+    <File Path="AIDocks/Assumptions.md" />
+    <File Path="AIDocks/Plan.md" />
+    <File Path="AIDocks/smoketest.md" />
+    <File Path="AIDocks/SpecificationReview.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Arelia.Application/Arelia.Application.csproj" />
+    <Project Path="src/Arelia.Domain/Arelia.Domain.csproj" />
+    <Project Path="src/Arelia.Infrastructure/Arelia.Infrastructure.csproj" />
+    <Project Path="src/Arelia.Web/Arelia.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Arelia.Application.Tests/Arelia.Application.Tests.csproj" />
+    <Project Path="tests/Arelia.Domain.Tests/Arelia.Domain.Tests.csproj" />
+    <Project Path="tests/Arelia.Infrastructure.Tests/Arelia.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

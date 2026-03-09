@@ -1,0 +1,100 @@
+@page "/admin/organizations"
+@using Arelia.Application.Organizations.Commands
+@using Arelia.Application.Organizations.Queries
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IMediator Mediator
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Organizations</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Organizations</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
+           StartIcon="@Icons.Material.Filled.Add" Class="mb-4">
+    Create Organization
+</MudButton>
+
+@if (_organizations is not null)
+{
+    <MudTable Items="_organizations" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>
+                <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+<MudDialog @bind-Visible="_showCreate">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Create Organization</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newOrgName" Label="Organization Name" Required="true" />
+        <MudTextField @bind-Value="_newOrgEmail" Label="Contact Email" />
+        <MudTextField @bind-Value="_newOrgPhone" Label="Contact Phone" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateOrganization">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<OrganizationDto>? _organizations;
+    private bool _showCreate;
+    private string _newOrgName = string.Empty;
+    private string? _newOrgEmail;
+    private string? _newOrgPhone;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganizations();
+    }
+
+    private async Task LoadOrganizations()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId is not null)
+        {
+            _organizations = await Mediator.Send(new GetUserOrganizationsQuery(userId));
+        }
+    }
+
+    private async Task CreateOrganization()
+    {
+        if (string.IsNullOrWhiteSpace(_newOrgName))
+        {
+            Snackbar.Add("Organization name is required.", Severity.Warning);
+            return;
+        }
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId is null)
+            return;
+
+        var newOrgId = await Mediator.Send(new CreateOrganizationCommand(_newOrgName, _newOrgEmail, _newOrgPhone, userId));
+        Snackbar.Add($"Organization '{_newOrgName}' created.", Severity.Success);
+
+        _showCreate = false;
+        _newOrgName = string.Empty;
+        _newOrgEmail = null;
+        _newOrgPhone = null;
+
+        Navigation.NavigateTo($"/set-tenant/{newOrgId}");
+    }
+}

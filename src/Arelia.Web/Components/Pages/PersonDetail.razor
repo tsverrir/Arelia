@@ -1,0 +1,263 @@
+@page "/people/{PersonId:guid}"
+@using Arelia.Application.Interfaces
+@using Arelia.Application.People.Commands
+@using Arelia.Application.People.Queries
+@using Arelia.Application.Roles.Commands
+@using Arelia.Application.Roles.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject ITenantContext TenantContext
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Person Detail</PageTitle>
+
+@if (_person is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+    return;
+}
+
+<MudText Typo="Typo.h5" GutterBottom="true">@_person.FirstName @_person.LastName</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField @bind-Value="_editFirstName" Label="First Name" />
+                <MudTextField @bind-Value="_editLastName" Label="Last Name" />
+                <MudTextField @bind-Value="_editEmail" Label="Email" />
+                <MudTextField @bind-Value="_editPhone" Label="Phone" />
+                <MudSelect T="VoiceGroup?" @bind-Value="_editVoiceGroup" Label="Voice Group" Clearable="true">
+                    @foreach (var vg in Enum.GetValues<VoiceGroup>())
+                    {
+                        <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextField @bind-Value="_editNotes" Label="Notes" Lines="3" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Save</MudButton>
+                @if (_person.IsActive)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="DeactivatePerson">Deactivate</MudButton>
+                }
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">Role Assignments</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_person.HasLinkedUser)
+                {
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mb-2">Has linked user account</MudChip>
+                }
+
+                <MudTable Items="_person.RoleAssignments" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>Role</MudTh>
+                        <MudTh>From</MudTh>
+                        <MudTh>To</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.RoleName</MudTd>
+                        <MudTd>@context.FromDate.ToString("yyyy-MM-dd")</MudTd>
+                        <MudTd>@(context.ToDate?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
+                        <MudTd>
+                            <MudChip T="string" Size="Size.Small"
+                                     Color="@(context.IsCurrentlyActive ? Color.Success : Color.Default)">
+                                @(context.IsCurrentlyActive ? "Active" : "Ended")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd>
+                            @if (context.IsCurrentlyActive)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.EventBusy" Size="Size.Small"
+                                               OnClick="@(() => EndRoleAssignment(context.Id))"
+                                               Title="End assignment today" />
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                           Color="Color.Error"
+                                           OnClick="@(() => RemoveRoleAssignment(context.Id))"
+                                           Title="Remove assignment" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+
+                <MudDivider Class="my-3" />
+
+                <MudText Typo="Typo.subtitle1" GutterBottom="true">Assign Role</MudText>
+                <MudStack Row="true" AlignItems="AlignItems.End" Spacing="2">
+                    <MudSelect T="Guid?" @bind-Value="_selectedRoleId" Label="Role" Clearable="true">
+                        @if (_roles is not null)
+                        {
+                            @foreach (var role in _roles.Where(r => r.IsActive))
+                            {
+                                <MudSelectItem T="Guid?" Value="@role.Id">@role.Name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                    <MudDatePicker @bind-Date="_assignFromDate" Label="From" />
+                    <MudDatePicker @bind-Date="_assignToDate" Label="To (optional)" Clearable="true" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AssignRole"
+                               Disabled="@(_selectedRoleId is null)">
+                        Assign
+                    </MudButton>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public Guid PersonId { get; set; }
+
+    private PersonDetailDto? _person;
+    private List<RoleDto>? _roles;
+    private string _editFirstName = string.Empty;
+    private string _editLastName = string.Empty;
+    private string? _editEmail;
+    private string? _editPhone;
+    private VoiceGroup? _editVoiceGroup;
+    private string? _editNotes;
+    private Guid? _selectedRoleId;
+    private DateTime? _assignFromDate = DateTime.Today;
+    private DateTime? _assignToDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPerson();
+        if (TenantContext.CurrentOrganizationId is Guid orgId)
+            _roles = await Mediator.Send(new GetRolesQuery(orgId));
+    }
+
+    private async Task LoadPerson()
+    {
+        _person = await Mediator.Send(new GetPersonDetailQuery(PersonId));
+        if (_person is not null)
+        {
+            _editFirstName = _person.FirstName;
+            _editLastName = _person.LastName;
+            _editEmail = _person.Email;
+            _editPhone = _person.Phone;
+            _editVoiceGroup = _person.VoiceGroup;
+            _editNotes = _person.Notes;
+        }
+    }
+
+    private async Task SaveChanges()
+    {
+        var result = await Mediator.Send(new UpdatePersonCommand(
+            PersonId, _editFirstName, _editLastName, _editEmail, _editPhone, _editVoiceGroup, _editNotes));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Person updated.", Severity.Success);
+            Navigation.NavigateTo("/people");
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task DeactivatePerson()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Deactivate {_person!.FirstName} {_person.LastName}? This will also demote any linked user to Former Member." }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Deactivate Person", parameters);
+        var dialogResult = await dialog.Result;
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new DeactivatePersonCommand(PersonId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Person deactivated.", Severity.Success);
+            await LoadPerson();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task AssignRole()
+    {
+        if (_selectedRoleId is not Guid roleId || TenantContext.CurrentOrganizationId is not Guid orgId)
+            return;
+
+        var result = await Mediator.Send(new AssignRoleCommand(
+            PersonId, roleId, _assignFromDate ?? DateTime.UtcNow, _assignToDate, orgId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Role assigned.", Severity.Success);
+            _selectedRoleId = null;
+            _assignToDate = null;
+            await LoadPerson();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task EndRoleAssignment(Guid assignmentId)
+    {
+        var dialog = await DialogService.ShowAsync<EndRoleAssignmentDialog>("End Assignment");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var endDate = (DateTime)dialogResult.Data!;
+        var result = await Mediator.Send(new EndRoleAssignmentCommand(assignmentId, endDate));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Role assignment ended.", Severity.Success);
+            await LoadPerson();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task RemoveRoleAssignment(Guid assignmentId)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Remove this role assignment permanently?" }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove Assignment", parameters);
+        var dialogResult = await dialog.Result;
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new RemoveRoleAssignmentCommand(assignmentId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Role assignment removed.", Severity.Success);
+            await LoadPerson();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private static string VoiceGroupLabel(VoiceGroup? vg) => vg switch
+    {
+        null => "—",
+        VoiceGroup.None => "No Voice Group",
+        _ => vg.ToString()!
+    };
+}

@@ -1,0 +1,64 @@
+@page "/select-organization"
+@using Arelia.Application.Organizations.Queries
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IMediator Mediator
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Select Organization</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudText Typo="Typo.h5" GutterBottom="true">Select an Organization</MudText>
+
+    @if (_organizations is null)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (_organizations.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">
+            You are not a member of any organization yet. Contact an administrator.
+        </MudAlert>
+    }
+    else
+    {
+        <MudList T="OrganizationDto" Class="mt-4">
+            @foreach (var org in _organizations)
+            {
+                <MudListItem T="OrganizationDto" OnClick="@(() => OnOrgSelected(org.Id))">
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" />
+                        <MudText>@org.Name</MudText>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+</MudContainer>
+
+@code {
+    private List<OrganizationDto>? _organizations;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId is not null)
+        {
+            _organizations = await Mediator.Send(new GetUserOrganizationsQuery(userId));
+
+            if (_organizations.Count == 1)
+            {
+                OnOrgSelected(_organizations[0].Id);
+            }
+        }
+    }
+
+    private void OnOrgSelected(Guid orgId)
+    {
+        Navigation.NavigateTo($"/set-tenant/{orgId}", forceLoad: false);
+    }
+}

@@ -1,0 +1,65 @@
+@using Arelia.Application.Notifications.Commands
+@using Arelia.Application.Notifications.Queries
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IMediator Mediator
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<MudBadge Content="@_unreadCount" Visible="@(_unreadCount > 0)" Color="Color.Error" Overlap="true">
+    <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit"
+             Dense="true" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+        @if (_notifications is null || _notifications.Count == 0)
+        {
+            <MudMenuItem Disabled="true">No notifications</MudMenuItem>
+        }
+        else
+        {
+            @foreach (var n in _notifications.Take(10))
+            {
+                <MudMenuItem OnClick="@(() => OnNotificationClick(n))">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.body2" Style="@(n.IsRead ? "" : "font-weight:bold;")">
+                            @n.Title
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">
+                            @n.CreatedAt.ToString("dd MMM HH:mm")
+                        </MudText>
+                    </MudStack>
+                </MudMenuItem>
+            }
+        }
+    </MudMenu>
+</MudBadge>
+
+@code {
+    private List<NotificationDto>? _notifications;
+    private int _unreadCount;
+    private string? _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (_userId is not null)
+        {
+            _notifications = await Mediator.Send(new GetNotificationsQuery(_userId));
+            _unreadCount = await Mediator.Send(new GetUnreadCountQuery(_userId));
+        }
+    }
+
+    private async Task OnNotificationClick(NotificationDto notification)
+    {
+        if (!notification.IsRead && _userId is not null)
+        {
+            await Mediator.Send(new MarkNotificationReadCommand(notification.Id, _userId));
+            _unreadCount = Math.Max(0, _unreadCount - 1);
+        }
+
+        if (!string.IsNullOrEmpty(notification.LinkUrl))
+        {
+            Navigation.NavigateTo(notification.LinkUrl);
+        }
+    }
+}

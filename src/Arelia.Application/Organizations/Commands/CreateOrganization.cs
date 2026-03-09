@@ -1,0 +1,112 @@
+using Arelia.Application.Interfaces;
+using Arelia.Domain.Entities;
+using Arelia.Domain.Enums;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+
+namespace Arelia.Application.Organizations.Commands;
+
+public record CreateOrganizationCommand(
+    string Name,
+    string? ContactEmail,
+    string? ContactPhone,
+    string CreatingUserId) : IRequest<Guid>;
+
+public class CreateOrganizationHandler(IAreliaDbContext context) : IRequestHandler<CreateOrganizationCommand, Guid>
+{
+    public async Task<Guid> Handle(CreateOrganizationCommand request, CancellationToken cancellationToken)
+    {
+        var org = new Organization
+        {
+            Name = request.Name,
+            ContactEmail = request.ContactEmail,
+            ContactPhone = request.ContactPhone,
+        };
+
+        context.Organizations.Add(org);
+
+        // Link creating user as member
+        var orgUser = new OrganizationUser
+        {
+            UserId = request.CreatingUserId,
+            OrganizationId = org.Id,
+            IsActive = true,
+        };
+        context.OrganizationUsers.Add(orgUser);
+
+        // Seed system roles
+        var systemRoles = new[]
+        {
+            ("Board", new[] { Permission.ManagePeople, Permission.ManageActivities, Permission.ManageAttendance, Permission.RsvpOnBehalf, Permission.ViewAttendanceReports, Permission.ViewMembershipReports }),
+            ("Treasurer", new[] { Permission.ManageCharges, Permission.ManageExpenses, Permission.ViewFinanceReports, Permission.ViewMembershipReports }),
+            ("Conductor", new[] { Permission.ManageAttendance, Permission.ViewAttendanceReports }),
+            ("Admin", Enum.GetValues<Permission>()),
+        };
+
+        Role? adminRole = null;
+        foreach (var (roleName, permissions) in systemRoles)
+        {
+            var role = new Role
+            {
+                Name = roleName,
+                RoleType = RoleType.System,
+                OrganizationId = org.Id,
+            };
+            context.Roles.Add(role);
+
+            foreach (var permission in permissions)
+            {
+                context.RolePermissions.Add(new RolePermission
+                {
+                    RoleId = role.Id,
+                    Permission = permission,
+                    OrganizationId = org.Id,
+                });
+            }
+
+            if (roleName == "Admin")
+                adminRole = role;
+        }
+
+        // Create a Person for the creating user and assign Admin role
+        var person = new Person
+        {
+            FirstName = "Admin",
+            LastName = "User",
+            OrganizationId = org.Id,
+        };
+        context.Persons.Add(person);
+
+        orgUser.PersonId = person.Id;
+
+        if (adminRole is not null)
+        {
+            context.RoleAssignments.Add(new RoleAssignment
+            {
+                PersonId = person.Id,
+                RoleId = adminRole.Id,
+                FromDate = DateTime.UtcNow,
+                OrganizationId = org.Id,
+            });
+        }
+
+        // Seed default expense categories
+        var defaultCategories = new[]
+        {
+            "SHEET MUSIC", "VENUE RENTAL", "INSTRUMENT MAINTENANCE", "TRAVEL",
+            "REFRESHMENTS", "MARKETING", "INSURANCE", "OTHER"
+        };
+
+        foreach (var category in defaultCategories)
+        {
+            context.ExpenseCategories.Add(new ExpenseCategory
+            {
+                Name = category,
+                OrganizationId = org.Id,
+            });
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+        return org.Id;
+    }
+}

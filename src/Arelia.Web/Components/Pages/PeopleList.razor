@@ -1,0 +1,337 @@
+@page "/people"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Interfaces
+@using Arelia.Application.Organizations.Commands
+@using Arelia.Application.People.Commands
+@using Arelia.Application.People.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>People</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">People</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    return;
+}
+
+<MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="3">
+    <MudTextField @bind-Value="_searchTerm" Label="Search" Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"
+                  TextChanged="OnSearchChanged" />
+    <MudSelect T="VoiceGroup?" Value="_voiceGroupFilter" Label="Voice Group" Clearable="true"
+               ValueChanged="@(async (VoiceGroup? v) => { _voiceGroupFilter = v; await LoadPeople(); })">
+        @foreach (var vg in Enum.GetValues<VoiceGroup>())
+        {
+            <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
+        }
+    </MudSelect>
+    <MudCheckBox T="bool" Value="_showInactive" Label="Show inactive"
+                 ValueChanged="@(async (bool v) => { _showInactive = v; await LoadPeople(); })" />
+    <MudSpacer />
+    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _showAddByEmail = true)"
+               StartIcon="@Icons.Material.Filled.PersonSearch">
+        Add by Email
+    </MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="@(() => _showImport = true)"
+               StartIcon="@Icons.Material.Filled.TransferWithinAStation">
+        Import from Org
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
+               StartIcon="@Icons.Material.Filled.PersonAdd">
+        Add Person
+    </MudButton>
+</MudStack>
+
+@if (_people is not null)
+{
+    <MudTable Items="_people" Hover="true" Dense="true" OnRowClick="OnRowClick" T="PersonListDto">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel T="PersonListDto" SortBy="new Func<PersonListDto, object>(x => x.LastName)">Last Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="PersonListDto" SortBy="new Func<PersonListDto, object>(x => x.FirstName)">First Name</MudTableSortLabel></MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Phone</MudTh>
+            <MudTh>Voice Group</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.LastName</MudTd>
+            <MudTd>@context.FirstName</MudTd>
+            <MudTd>@context.Email</MudTd>
+            <MudTd>@context.Phone</MudTd>
+            <MudTd>@VoiceGroupLabel(context.VoiceGroup)</MudTd>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+<MudDialog @bind-Visible="_showCreate">
+    <TitleContent><MudText Typo="Typo.h6">Add Person</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_firstName" Label="First Name" Required="true" />
+        <MudTextField @bind-Value="_lastName" Label="Last Name" Required="true" />
+        <MudTextField @bind-Value="_email" Label="Email" />
+        <MudTextField @bind-Value="_phone" Label="Phone" />
+        <MudSelect T="VoiceGroup?" @bind-Value="_voiceGroup" Label="Voice Group" Clearable="true">
+            @foreach (var vg in Enum.GetValues<VoiceGroup>())
+            {
+                <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField @bind-Value="_notes" Label="Notes" Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreatePerson">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showAddByEmail">
+    <TitleContent><MudText Typo="Typo.h6">Add Member by Email</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_inviteEmail" Label="Email" Required="true" />
+        <MudTextField @bind-Value="_inviteFirstName" Label="First Name" />
+        <MudTextField @bind-Value="_inviteLastName" Label="Last Name" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showAddByEmail = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddByEmail">Add</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showImport">
+    <TitleContent><MudText Typo="Typo.h6">Import Person from Another Organization</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_importSearch" Label="Search by name" Immediate="true"
+                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                      TextChanged="OnImportSearchChanged" />
+        @if (_importResults is not null)
+        {
+            @if (_importResults.Count == 0)
+            {
+                <MudText Class="mt-2" Color="Color.Secondary">No matches found in other organizations.</MudText>
+            }
+            else
+            {
+                <MudTable Items="_importResults" Dense="true" Hover="true" Class="mt-2">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Organization</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.FirstName @context.LastName</MudTd>
+                        <MudTd>@context.OrganizationName</MudTd>
+                        <MudTd>@context.Email</MudTd>
+                        <MudTd>
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                                       OnClick="@(() => ImportPerson(context))">Import</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseImportDialog">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<PersonListDto>? _people;
+    private string _searchTerm = string.Empty;
+    private VoiceGroup? _voiceGroupFilter;
+    private bool _showInactive;
+    private bool _showCreate;
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private string? _email;
+    private string? _phone;
+    private VoiceGroup? _voiceGroup;
+    private string? _notes;
+
+    private bool _showAddByEmail;
+    private string _inviteEmail = string.Empty;
+    private string? _inviteFirstName;
+    private string? _inviteLastName;
+
+    private bool _showImport;
+    private string _importSearch = string.Empty;
+    private List<PersonAcrossOrgDto>? _importResults;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadPeople();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadPeople();
+
+    private async Task LoadPeople()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _people = await Mediator.Send(new GetPeopleQuery(
+            orgId, _voiceGroupFilter,
+            _showInactive ? null : true,
+            string.IsNullOrWhiteSpace(_searchTerm) ? null : _searchTerm));
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _searchTerm = value;
+        await LoadPeople();
+    }
+
+    private void OnRowClick(TableRowClickEventArgs<PersonListDto> args)
+    {
+        Navigation.NavigateTo($"/people/{args.Item!.Id}");
+    }
+
+    private async Task CreatePerson()
+    {
+        if (string.IsNullOrWhiteSpace(_firstName) || string.IsNullOrWhiteSpace(_lastName))
+        {
+            Snackbar.Add("First and last name are required.", Severity.Warning);
+            return;
+        }
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var existing = await Mediator.Send(new GetPeopleQuery(orgId));
+        var isDuplicate = existing.Any(p =>
+            string.Equals(p.FirstName.Trim(), _firstName.Trim(), StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(p.LastName.Trim(), _lastName.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (isDuplicate)
+        {
+            var dlgParams = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.ContentText, $"{_firstName} {_lastName} already exists in this organization. Create a duplicate anyway?" }
+            };
+            var dlg = await DialogService.ShowAsync<ConfirmDialog>("Duplicate Person", dlgParams);
+            var dlgResult = await dlg.Result;
+            if (dlgResult is null || dlgResult.Canceled) return;
+        }
+        else
+        {
+            // Check for matching persons in other organizations
+            var crossOrgMatches = await Mediator.Send(
+                new FindPersonsAcrossOrgsQuery($"{_firstName} {_lastName}".Trim(), orgId));
+            var exactMatches = crossOrgMatches
+                .Where(p =>
+                    string.Equals(p.FirstName.Trim(), _firstName.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(p.LastName.Trim(), _lastName.Trim(), StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (exactMatches.Count > 0)
+            {
+                var match = exactMatches[0];
+                var dlgParams = new DialogParameters<ConfirmDialog>
+                {
+                    { x => x.ContentText,
+                      $"{_firstName} {_lastName} already exists in \"{match.OrganizationName}\". " +
+                      $"Click Confirm to copy their details into this organization, or Cancel to enter details manually." }
+                };
+                var dlg = await DialogService.ShowAsync<ConfirmDialog>("Person Found in Another Organization", dlgParams);
+                var dlgResult = await dlg.Result;
+                if (dlgResult is not null && !dlgResult.Canceled)
+                {
+                    // Copy details from the matched person
+                    _email ??= match.Email;
+                    _phone ??= match.Phone;
+                    _voiceGroup ??= match.VoiceGroup;
+                }
+                // If canceled, the user will fill in details manually — fall through to create
+            }
+        }
+
+        var id = await Mediator.Send(new CreatePersonCommand(
+            _firstName, _lastName, _email, _phone, _voiceGroup, _notes, orgId));
+
+        Snackbar.Add("Person created.", Severity.Success);
+        _showCreate = false;
+        _firstName = string.Empty;
+        _lastName = string.Empty;
+        _email = null;
+        _phone = null;
+        _voiceGroup = null;
+        _notes = null;
+        await LoadPeople();
+    }
+
+    private async Task AddByEmail()
+    {
+        if (string.IsNullOrWhiteSpace(_inviteEmail))
+        {
+            Snackbar.Add("Email is required.", Severity.Warning);
+            return;
+        }
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var result = await Mediator.Send(new InviteUserCommand(
+            _inviteEmail, orgId, _inviteFirstName, _inviteLastName));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Member added.", Severity.Success);
+            _showAddByEmail = false;
+            _inviteEmail = string.Empty;
+            _inviteFirstName = null;
+            _inviteLastName = null;
+            await LoadPeople();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task OnImportSearchChanged(string value)
+    {
+        _importSearch = value;
+        if (string.IsNullOrWhiteSpace(value) || TenantService.CurrentOrganizationId is not Guid orgId)
+        {
+            _importResults = null;
+            return;
+        }
+        _importResults = await Mediator.Send(new FindPersonsAcrossOrgsQuery(value, orgId));
+    }
+
+    private async Task ImportPerson(PersonAcrossOrgDto source)
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        await Mediator.Send(new CreatePersonCommand(
+            source.FirstName, source.LastName, source.Email, source.Phone,
+            source.VoiceGroup, null, orgId));
+
+        Snackbar.Add($"{source.FirstName} {source.LastName} imported.", Severity.Success);
+        CloseImportDialog();
+        await LoadPeople();
+    }
+
+    private void CloseImportDialog()
+    {
+        _showImport = false;
+        _importSearch = string.Empty;
+        _importResults = null;
+    }
+
+    private static string VoiceGroupLabel(VoiceGroup? vg) => vg switch
+    {
+        null => "—",
+        VoiceGroup.None => "No Voice Group",
+        _ => vg.ToString()!
+    };
+}

@@ -1,0 +1,141 @@
+@page "/roles"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Roles.Commands
+@using Arelia.Application.Roles.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Roles &amp; Permissions</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Roles &amp; Permissions</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    return;
+}
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
+           StartIcon="@Icons.Material.Filled.Add" Class="mb-4">
+    Create Custom Role
+</MudButton>
+
+@if (_roles is not null)
+{
+    <MudText Typo="Typo.h6" Class="mt-4 mb-2">Permission Matrix</MudText>
+
+    <MudSimpleTable Dense="true" Hover="true" Style="overflow-x: auto;">
+        <thead>
+            <tr>
+                <th>Permission</th>
+                @foreach (var role in _roles.Where(r => r.IsActive))
+                {
+                    <th style="text-align:center;">@role.Name</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var permission in Enum.GetValues<Permission>())
+            {
+                <tr>
+                    <td>@permission</td>
+                    @foreach (var role in _roles.Where(r => r.IsActive))
+                    {
+                        var hasPermission = role.Permissions.Contains(permission);
+                        <td style="text-align:center;">
+                            <MudCheckBox T="bool" Value="hasPermission"
+                                         ValueChanged="@(v => OnPermissionToggle(role.Id, permission, v))" />
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+
+    <MudText Typo="Typo.h6" Class="mt-6 mb-2">All Roles</MudText>
+
+    <MudTable Items="_roles" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Active Assignments</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small"
+                         Color="@(context.RoleType == RoleType.System ? Color.Primary : Color.Secondary)">
+                    @context.RoleType
+                </MudChip>
+            </MudTd>
+            <MudTd>@context.AssignmentCount</MudTd>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+<MudDialog @bind-Visible="_showCreate">
+    <TitleContent><MudText Typo="Typo.h6">Create Custom Role</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newRoleName" Label="Role Name" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateRole">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<RoleDto>? _roles;
+    private bool _showCreate;
+    private string _newRoleName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadRoles();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadRoles();
+
+    private async Task LoadRoles()
+    {
+        if (TenantService.CurrentOrganizationId is Guid orgId)
+            _roles = await Mediator.Send(new GetRolesQuery(orgId));
+    }
+
+    private async Task CreateRole()
+    {
+        if (string.IsNullOrWhiteSpace(_newRoleName) || TenantService.CurrentOrganizationId is not Guid orgId)
+            return;
+
+        var result = await Mediator.Send(new CreateCustomRoleCommand(_newRoleName, orgId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add($"Role '{_newRoleName}' created.", Severity.Success);
+            _showCreate = false;
+            _newRoleName = string.Empty;
+            await LoadRoles();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task OnPermissionToggle(Guid roleId, Permission permission, bool grant)
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        await Mediator.Send(new ToggleRolePermissionCommand(roleId, permission, grant, orgId));
+        await LoadRoles();
+    }
+}

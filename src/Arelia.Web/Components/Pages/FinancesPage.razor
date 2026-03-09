@@ -1,0 +1,147 @@
+@page "/finances"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Finance.Commands
+@using Arelia.Application.Finance.Queries
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Finances</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Finances</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    return;
+}
+
+<MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="Charges">
+        @if (_charges is not null)
+        {
+            <MudTable Items="_charges" Hover="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>Member</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Due Date</MudTh>
+                    <MudTh>Due</MudTh>
+                    <MudTh>Paid</MudTh>
+                    <MudTh>Status</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.PersonName</MudTd>
+                    <MudTd>@context.Description</MudTd>
+                    <MudTd>@context.DueDate.ToString("yyyy-MM-dd")</MudTd>
+                    <MudTd>@context.TotalDue.ToString("N2") @context.CurrencyCode</MudTd>
+                    <MudTd>@context.TotalPaid.ToString("N2") @context.CurrencyCode</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+                            @context.Status
+                        </MudChip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudTabPanel>
+
+    <MudTabPanel Text="Expenses">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4"
+                   OnClick="@(() => _showExpense = true)" StartIcon="@Icons.Material.Filled.Add">
+            Record Expense
+        </MudButton>
+        @if (_expenses is not null)
+        {
+            <MudTable Items="_expenses" Hover="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>Date</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Category</MudTh>
+                    <MudTh>Amount</MudTh>
+                    <MudTh>Received By</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.ExpenseDate.ToString("yyyy-MM-dd")</MudTd>
+                    <MudTd>@context.Description</MudTd>
+                    <MudTd>@context.CategoryName</MudTd>
+                    <MudTd>@context.Amount.ToString("N2") @context.CurrencyCode</MudTd>
+                    <MudTd>@context.ReceivedBy</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudTabPanel>
+</MudTabs>
+
+<MudDialog @bind-Visible="_showExpense">
+    <TitleContent><MudText Typo="Typo.h6">Record Expense</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_expDesc" Label="Description" Required="true" />
+        <MudNumericField T="decimal" @bind-Value="_expAmount" Label="Amount" Required="true" />
+        <MudDatePicker @bind-Date="_expDate" Label="Date" Required="true" />
+        <MudTextField @bind-Value="_expCategory" Label="Category" Required="true" />
+        <MudTextField @bind-Value="_expReceivedBy" Label="Received By" />
+        <MudTextField @bind-Value="_expNotes" Label="Notes" Lines="2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showExpense = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RecordExpense">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<ChargeListDto>? _charges;
+    private List<ExpenseListDto>? _expenses;
+    private bool _showExpense;
+    private string _expDesc = string.Empty;
+    private decimal _expAmount;
+    private DateTime? _expDate = DateTime.Today;
+    private string _expCategory = string.Empty;
+    private string? _expReceivedBy;
+    private string? _expNotes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadFinances();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadFinances();
+
+    private async Task LoadFinances()
+    {
+        if (TenantService.CurrentOrganizationId is Guid orgId)
+        {
+            _charges = await Mediator.Send(new GetChargesQuery(orgId));
+            _expenses = await Mediator.Send(new GetExpensesQuery(orgId));
+        }
+    }
+
+    private async Task RecordExpense()
+    {
+        if (string.IsNullOrWhiteSpace(_expDesc) || _expDate is null || TenantService.CurrentOrganizationId is not Guid orgId)
+            return;
+
+        var result = await Mediator.Send(new RecordExpenseCommand(
+            _expDesc, _expAmount, _expDate.Value, _expCategory, _expReceivedBy, _expNotes, orgId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Expense recorded.", Severity.Success);
+            _showExpense = false;
+            _expenses = await Mediator.Send(new GetExpensesQuery(orgId));
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private static Color GetStatusColor(Arelia.Domain.Enums.ChargeStatus status) => status switch
+    {
+        Arelia.Domain.Enums.ChargeStatus.Paid => Color.Success,
+        Arelia.Domain.Enums.ChargeStatus.PartiallyPaid => Color.Warning,
+        Arelia.Domain.Enums.ChargeStatus.Overpaid => Color.Info,
+        _ => Color.Default,
+    };
+}

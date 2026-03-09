@@ -1,0 +1,145 @@
+@page "/calendar"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Activities.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Calendar</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Calendar</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    return;
+}
+
+@if (_activities is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudStack Row="true" Class="mb-4" Spacing="2">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PreviousMonth" />
+        <MudText Typo="Typo.h6">@_currentMonth.ToString("MMMM yyyy")</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextMonth" />
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" OnClick="GoToToday">Today</MudButton>
+    </MudStack>
+
+    <MudSimpleTable Dense="true">
+        <thead>
+            <tr>
+                @foreach (var day in new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" })
+                {
+                    <th style="width:14.28%; text-align:center;">@day</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var week in GetWeeks())
+            {
+                <tr>
+                    @foreach (var day in week)
+                    {
+                        var isCurrentMonth = day.Month == _currentMonth.Month;
+                        var dayActivities = _activities
+                            .Where(a => a.StartDateTime.Date <= day.Date && a.EndDateTime.Date >= day.Date)
+                            .ToList();
+
+                        <td style="vertical-align:top; min-height:80px; @(isCurrentMonth ? "" : "opacity:0.4;")">
+                            <MudText Typo="Typo.caption" Style="@(day.Date == DateTime.Today ? "font-weight:bold; color:var(--mud-palette-primary);" : "")">
+                                @day.Day
+                            </MudText>
+                            @foreach (var act in dayActivities.Take(3))
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="@GetColor(act.ActivityType)"
+                                         Style="cursor:pointer; font-size:0.7rem; padding:0 4px; margin:1px 0;"
+                                         OnClick="@(() => Navigation.NavigateTo($"/activities/{act.Id}"))">
+                                    @act.Name
+                                </MudChip>
+                            }
+                            @if (dayActivities.Count > 3)
+                            {
+                                <MudText Typo="Typo.caption">+@(dayActivities.Count - 3) more</MudText>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+}
+
+@code {
+    private List<ActivityListDto>? _activities;
+    private DateTime _currentMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadActivities();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadActivities();
+
+    private async Task LoadActivities()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _activities = await Mediator.Send(new GetActivitiesQuery(orgId, _currentMonth.Year));
+    }
+
+    private async Task PreviousMonth()
+    {
+        _currentMonth = _currentMonth.AddMonths(-1);
+        await LoadActivities();
+    }
+
+    private async Task NextMonth()
+    {
+        _currentMonth = _currentMonth.AddMonths(1);
+        await LoadActivities();
+    }
+
+    private async Task GoToToday()
+    {
+        _currentMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+        await LoadActivities();
+    }
+
+    private List<List<DateTime>> GetWeeks()
+    {
+        var weeks = new List<List<DateTime>>();
+        var firstDay = _currentMonth;
+        var startDay = firstDay.AddDays(-(((int)firstDay.DayOfWeek + 6) % 7));
+        var lastDay = _currentMonth.AddMonths(1).AddDays(-1);
+        var endDay = lastDay.AddDays((7 - (int)lastDay.DayOfWeek) % 7);
+
+        var current = startDay;
+        while (current <= endDay)
+        {
+            var week = new List<DateTime>();
+            for (int i = 0; i < 7; i++)
+            {
+                week.Add(current);
+                current = current.AddDays(1);
+            }
+            weeks.Add(week);
+        }
+        return weeks;
+    }
+
+    private static Color GetColor(ActivityType type) => type switch
+    {
+        ActivityType.Semester => Color.Primary,
+        ActivityType.Rehearsal => Color.Info,
+        ActivityType.Concert => Color.Secondary,
+        ActivityType.Trip => Color.Tertiary,
+        ActivityType.Social => Color.Warning,
+        _ => Color.Default,
+    };
+}

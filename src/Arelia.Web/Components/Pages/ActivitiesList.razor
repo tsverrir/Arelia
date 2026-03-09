@@ -1,0 +1,169 @@
+@page "/activities"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Activities.Commands
+@using Arelia.Application.Activities.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Activities</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Activities</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    return;
+}
+
+<MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="3">
+    <MudSelect T="ActivityType?" Value="_typeFilter" Label="Type" Clearable="true"
+               ValueChanged="@(async (ActivityType? v) => { _typeFilter = v; await LoadActivities(); })">
+        @foreach (var t in Enum.GetValues<ActivityType>())
+        {
+            <MudSelectItem T="ActivityType?" Value="@t">@t</MudSelectItem>
+        }
+    </MudSelect>
+    <MudNumericField T="int?" @bind-Value="_workYear" Label="Work Year" />
+    <MudButton OnClick="LoadActivities">Filter</MudButton>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
+               StartIcon="@Icons.Material.Filled.Add">
+        Create Activity
+    </MudButton>
+</MudStack>
+
+@if (_activities is not null)
+{
+    @foreach (var group in _activities.GroupBy(a => a.StartDateTime.ToString("MMMM yyyy")))
+    {
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">@group.Key</MudText>
+
+        @foreach (var activity in group)
+        {
+            <MudCard Class="mb-2" Outlined="true" @onclick="@(() => Navigation.NavigateTo($"/activities/{activity.Id}"))">
+                <MudCardContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                        <MudIcon Icon="@GetIcon(activity.ActivityType)" Color="@GetColor(activity.ActivityType)" />
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.subtitle1">@activity.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Tertiary">
+                                @activity.StartDateTime.ToString("ddd dd MMM HH:mm") — @activity.EndDateTime.ToString("HH:mm")
+                                @if (!string.IsNullOrEmpty(activity.Location))
+                                {
+                                    <text> · @activity.Location</text>
+                                }
+                            </MudText>
+                        </MudStack>
+                        <MudSpacer />
+                        <MudChip T="string" Size="Size.Small" Color="@GetColor(activity.ActivityType)">@activity.ActivityType</MudChip>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+    }
+}
+
+<MudDialog @bind-Visible="_showCreate">
+    <TitleContent><MudText Typo="Typo.h6">Create Activity</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newName" Label="Name" Required="true" />
+        <MudSelect T="ActivityType" @bind-Value="_newType" Label="Type">
+            @foreach (var t in Enum.GetValues<ActivityType>())
+            {
+                <MudSelectItem T="ActivityType" Value="@t">@t</MudSelectItem>
+            }
+        </MudSelect>
+        <MudDatePicker @bind-Date="_newStartDate" Label="Start Date" Required="true" />
+        <MudTimePicker @bind-Time="_newStartTime" Label="Start Time" />
+        <MudDatePicker @bind-Date="_newEndDate" Label="End Date" Required="true" />
+        <MudTimePicker @bind-Time="_newEndTime" Label="End Time" />
+        <MudTextField @bind-Value="_newLocation" Label="Location" />
+        <MudTextField @bind-Value="_newDescription" Label="Description" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_newPublicVisible" Label="Public Visible" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateActivity">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<ActivityListDto>? _activities;
+    private ActivityType? _typeFilter;
+    private int? _workYear;
+    private bool _showCreate;
+    private string _newName = string.Empty;
+    private ActivityType _newType = ActivityType.Rehearsal;
+    private DateTime? _newStartDate = DateTime.Today;
+    private TimeSpan? _newStartTime = new(19, 0, 0);
+    private DateTime? _newEndDate = DateTime.Today;
+    private TimeSpan? _newEndTime = new(21, 30, 0);
+    private string? _newLocation;
+    private string? _newDescription;
+    private bool _newPublicVisible;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        _workYear = DateTime.Now.Year;
+        await LoadActivities();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadActivities();
+
+    private async Task LoadActivities()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _activities = await Mediator.Send(new GetActivitiesQuery(orgId, _workYear, _typeFilter));
+    }
+
+    private async Task CreateActivity()
+    {
+        if (string.IsNullOrWhiteSpace(_newName) || _newStartDate is null || _newEndDate is null)
+            return;
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var start = _newStartDate.Value + (_newStartTime ?? TimeSpan.Zero);
+        var end = _newEndDate.Value + (_newEndTime ?? TimeSpan.Zero);
+
+        var result = await Mediator.Send(new CreateActivityCommand(
+            _newName, _newDescription, _newType, start, end,
+            _newLocation, null, _newPublicVisible, null, null, orgId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Activity created.", Severity.Success);
+            _showCreate = false;
+            _newName = string.Empty;
+            await LoadActivities();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private static string GetIcon(ActivityType type) => type switch
+    {
+        ActivityType.Semester => Icons.Material.Filled.DateRange,
+        ActivityType.Rehearsal => Icons.Material.Filled.MusicNote,
+        ActivityType.Concert => Icons.Material.Filled.TheaterComedy,
+        ActivityType.Trip => Icons.Material.Filled.Flight,
+        ActivityType.Social => Icons.Material.Filled.Celebration,
+        _ => Icons.Material.Filled.Event,
+    };
+
+    private static Color GetColor(ActivityType type) => type switch
+    {
+        ActivityType.Semester => Color.Primary,
+        ActivityType.Rehearsal => Color.Info,
+        ActivityType.Concert => Color.Secondary,
+        ActivityType.Trip => Color.Tertiary,
+        ActivityType.Social => Color.Warning,
+        _ => Color.Default,
+    };
+}

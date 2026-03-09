@@ -1,0 +1,38 @@
+@page "/set-tenant/{OrgId:guid}"
+@using Arelia.Application.Interfaces
+@using Arelia.Application.Organizations.Queries
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IMediator Mediator
+@inject ITenantContext TenantContext
+@inject Arelia.Web.Services.TenantService TenantService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+@code {
+    [Parameter] public Guid OrgId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId is null)
+        {
+            Navigation.NavigateTo("/Account/Login");
+            return;
+        }
+
+        var orgs = await Mediator.Send(new GetUserOrganizationsQuery(userId));
+        var selected = orgs.FirstOrDefault(o => o.Id == OrgId);
+
+        if (selected is null)
+        {
+            Navigation.NavigateTo("/select-organization");
+            return;
+        }
+
+        TenantService.SetTenant(selected.Id, selected.Name);
+        Navigation.NavigateTo("/");
+    }
+}

@@ -1,0 +1,56 @@
+@page "/admin/audit"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.AuditLog.Queries
+@using MediatR
+@inject IMediator Mediator
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Audit Log</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Audit Log</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    return;
+}
+
+@if (_entries is not null)
+{
+    <MudTable Items="_entries" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Timestamp</MudTh>
+            <MudTh>Action</MudTh>
+            <MudTh>Entity</MudTh>
+            <MudTh>User</MudTh>
+            <MudTh>Details</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+            <MudTd><MudChip T="string" Size="Size.Small">@context.Action</MudChip></MudTd>
+            <MudTd>@(context.EntityType ?? "—") @(context.EntityId is not null ? $"({context.EntityId[..Math.Min(8, context.EntityId.Length)]})": "")</MudTd>
+            <MudTd>@(context.UserId ?? "—")</MudTd>
+            <MudTd Style="max-width:300px; overflow:hidden; text-overflow:ellipsis;">
+                @(context.Details ?? "—")
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<AuditLogEntryDto>? _entries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadEntries();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadEntries();
+
+    private async Task LoadEntries()
+    {
+        if (TenantService.CurrentOrganizationId is Guid orgId)
+            _entries = await Mediator.Send(new GetAuditLogQuery(orgId));
+    }
+}

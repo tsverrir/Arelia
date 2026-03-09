@@ -1,0 +1,19 @@
+@page "/"
+
+<PageTitle>Arelia</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Welcome to Arelia</MudText>
+<MudText Typo="Typo.body1">Choir management made simple.</MudText>
+
+<AuthorizeView>
+    <Authorized>
+        <MudAlert Severity="Severity.Info" Class="mt-4">
+            Signed in as @context.User.Identity?.Name
+        </MudAlert>
+    </Authorized>
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Normal" Class="mt-4">
+            Please <MudLink Href="Account/Login">sign in</MudLink> to continue.
+        </MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
