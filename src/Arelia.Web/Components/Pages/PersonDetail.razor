@@ -2,9 +2,10 @@
 @using Arelia.Application.Interfaces
 @using Arelia.Application.People.Commands
 @using Arelia.Application.People.Queries
+@using Arelia.Web.Components.Shared
 @using Arelia.Application.Roles.Commands
 @using Arelia.Application.Roles.Queries
-@using Arelia.Domain.Enums
+@using Arelia.Application.VoiceGroups.Queries
 @using MediatR
 @inject IMediator Mediator
 @inject ITenantContext TenantContext
@@ -32,20 +33,38 @@
                 <MudTextField @bind-Value="_editLastName" Label="@L["Common.LastName"]" />
                 <MudTextField @bind-Value="_editEmail" Label="@L["Common.Email"]" />
                 <MudTextField @bind-Value="_editPhone" Label="@L["Common.Phone"]" />
-                <MudSelect T="VoiceGroup?" @bind-Value="_editVoiceGroup" Label="@L["Common.VoiceGroup"]" Clearable="true">
-                    @foreach (var vg in Enum.GetValues<VoiceGroup>())
+                <MudSelect T="Guid?" @bind-Value="_editVoiceGroupId" Label="@L["Common.VoiceGroup"]" Clearable="true">
+                    @if (_voiceGroups is not null)
                     {
-                        <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
+                        @foreach (var vg in _voiceGroups)
+                        {
+                            <MudSelectItem T="Guid?" Value="@vg.Id">@vg.Name</MudSelectItem>
+                        }
                     }
                 </MudSelect>
                 <MudTextField @bind-Value="_editNotes" Label="@L["Common.Notes"]" Lines="3" />
             </MudCardContent>
             <MudCardActions>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">@L.H("Common.Save")</MudButton>
+                <MudSpacer />
                 @if (_person.IsActive)
                 {
-                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="DeactivatePerson">@L.H("Common.Deactivate")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="SetPersonInactive"
+                               StartIcon="@Icons.Material.Filled.PauseCircle">
+                        @L.H("Common.SetInactive")
+                    </MudButton>
                 }
+                else
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="SetPersonActive"
+                               StartIcon="@Icons.Material.Filled.PlayCircle">
+                        @L.H("Common.SetActive")
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeletePerson"
+                           StartIcon="@Icons.Material.Filled.DeleteForever">
+                    @L.H("Common.Delete")
+                </MudButton>
             </MudCardActions>
         </MudCard>
     </MudItem>
@@ -124,11 +143,12 @@
 
     private PersonDetailDto? _person;
     private List<RoleDto>? _roles;
+    private List<VoiceGroupDto>? _voiceGroups;
     private string _editFirstName = string.Empty;
     private string _editLastName = string.Empty;
     private string? _editEmail;
     private string? _editPhone;
-    private VoiceGroup? _editVoiceGroup;
+    private Guid? _editVoiceGroupId;
     private string? _editNotes;
     private Guid? _selectedRoleId;
     private DateTime? _assignFromDate = DateTime.Today;
@@ -138,7 +158,10 @@
     {
         await LoadPerson();
         if (TenantContext.CurrentOrganizationId is Guid orgId)
+        {
             _roles = await Mediator.Send(new GetRolesQuery(orgId));
+            _voiceGroups = await Mediator.Send(new GetVoiceGroupsQuery(orgId));
+        }
     }
 
     private async Task LoadPerson()
@@ -150,7 +173,7 @@
             _editLastName = _person.LastName;
             _editEmail = _person.Email;
             _editPhone = _person.Phone;
-            _editVoiceGroup = _person.VoiceGroup;
+            _editVoiceGroupId = _person.VoiceGroupId;
             _editNotes = _person.Notes;
         }
     }
@@ -158,7 +181,7 @@
     private async Task SaveChanges()
     {
         var result = await Mediator.Send(new UpdatePersonCommand(
-            PersonId, _editFirstName, _editLastName, _editEmail, _editPhone, _editVoiceGroup, _editNotes));
+            PersonId, _editFirstName, _editLastName, _editEmail, _editPhone, _editVoiceGroupId, _editNotes));
 
         if (result.IsSuccess)
         {
@@ -171,20 +194,48 @@
         }
     }
 
-    private async Task DeactivatePerson()
+    private async Task DeletePerson()
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, string.Format(L["PersonDetail.DeactivateConfirm"], _person!.FirstName, _person.LastName) }
+            { x => x.ContentText, string.Format(L["PersonDetail.DeleteConfirm"], _person!.FirstName, _person.LastName) }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["PersonDetail.DeactivateTitle"], parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["PersonDetail.DeleteTitle"], parameters);
         var dialogResult = await dialog.Result;
         if (dialogResult is null || dialogResult.Canceled) return;
 
-        var result = await Mediator.Send(new DeactivatePersonCommand(PersonId));
+        var result = await Mediator.Send(new DeletePersonCommand(PersonId));
         if (result.IsSuccess)
         {
-            Snackbar.Add(L["PersonDetail.Deactivated"], Severity.Success);
+            Snackbar.Add(L["PersonDetail.Deleted"], Severity.Success);
+            Navigation.NavigateTo("/people");
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task SetPersonInactive()
+    {
+        var result = await Mediator.Send(new SetPersonActiveStatusCommand(PersonId, false));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["PersonDetail.SetInactive"], Severity.Info);
+            await LoadPerson();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task SetPersonActive()
+    {
+        var result = await Mediator.Send(new SetPersonActiveStatusCommand(PersonId, true));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["PersonDetail.SetActive"], Severity.Success);
             await LoadPerson();
         }
         else
@@ -255,10 +306,4 @@
         }
     }
 
-    private string VoiceGroupLabel(VoiceGroup? vg) => vg switch
-    {
-        null => "—",
-        VoiceGroup.None => L["People.VoiceGroupNone"],
-        _ => vg.ToString()!
-    };
-}
+    }

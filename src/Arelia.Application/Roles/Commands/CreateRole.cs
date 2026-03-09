@@ -1,18 +1,17 @@
 using Arelia.Application.Interfaces;
 using Arelia.Domain.Entities;
-using Arelia.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.Roles.Commands;
 
-public record CreateCustomRoleCommand(string Name, Guid OrganizationId) : IRequest<Domain.Common.Result<Guid>>;
+public record CreateRoleCommand(string Name, Guid OrganizationId) : IRequest<Domain.Common.Result<Guid>>;
 
-public class CreateCustomRoleHandler(IAreliaDbContext context)
-    : IRequestHandler<CreateCustomRoleCommand, Domain.Common.Result<Guid>>
+public class CreateRoleHandler(IAreliaDbContext context)
+    : IRequestHandler<CreateRoleCommand, Domain.Common.Result<Guid>>
 {
     public async Task<Domain.Common.Result<Guid>> Handle(
-        CreateCustomRoleCommand request, CancellationToken cancellationToken)
+        CreateRoleCommand request, CancellationToken cancellationToken)
     {
         var exists = await context.Roles
             .IgnoreQueryFilters()
@@ -25,7 +24,6 @@ public class CreateCustomRoleHandler(IAreliaDbContext context)
         var role = new Role
         {
             Name = request.Name,
-            RoleType = RoleType.Custom,
             OrganizationId = request.OrganizationId,
         };
 

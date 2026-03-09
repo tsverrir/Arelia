@@ -1,0 +1,251 @@
+@page "/roles/{RoleId:guid}"
+@using Arelia.Application.Interfaces
+@using Arelia.Application.Roles.Commands
+@using Arelia.Application.Roles.Queries
+@using Arelia.Domain.Enums
+@using Arelia.Web.Components.Shared
+@using MediatR
+@inject IMediator Mediator
+@inject ITenantContext TenantContext
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@(_role is null ? L["Roles.Title"] : _role.Name)</PageTitle>
+
+@if (_role is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+    return;
+}
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4" Spacing="2">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Navigation.NavigateTo("/roles"))" />
+    <MudText Typo="Typo.h5">@_role.Name</MudText>
+    @if (!_role.IsActive)
+    {
+        <MudChip T="string" Size="Size.Small" Color="Color.Default">@L["Common.Inactive"]</MudChip>
+    }
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@L.H("RoleDetail.RoleInfo")</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField @bind-Value="_editName" Label="@L["Roles.RoleName"]" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">
+                    @L.H("Common.Save")
+                </MudButton>
+                <MudSpacer />
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteDialog"
+                           StartIcon="@Icons.Material.Filled.Delete">
+                    @L.H("Common.Delete")
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+
+        <MudCard Class="mt-4">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@L.H("RoleDetail.Permissions")</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @foreach (var permission in Enum.GetValues<Permission>())
+                {
+                    var granted = _role.Permissions.Contains(permission);
+                    <MudCheckBox T="bool" Value="granted" Label="@permission.ToString()"
+                                 ValueChanged="@(v => OnPermissionToggle(permission, v))" />
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">
+                        @L.H("RoleDetail.ActiveAssignments") (@_role.ActiveAssignments.Count)
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_role.ActiveAssignments.Count == 0)
+                {
+                    <MudText Color="Color.Secondary">@L["RoleDetail.NoAssignments"]</MudText>
+                }
+                else
+                {
+                    <MudTable Items="_role.ActiveAssignments" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>@L["Common.Name"]</MudTh>
+                            <MudTh>@L["Common.From"]</MudTh>
+                            <MudTh>@L["Common.To"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <MudLink Href="@($"/people/{context.PersonId}")">
+                                    @context.FirstName @context.LastName
+                                </MudLink>
+                            </MudTd>
+                            <MudTd>@context.FromDate.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd>@(context.ToDate?.ToString("yyyy-MM-dd") ?? "—")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudDialog @bind-Visible="_showDelete">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("RoleDetail.DeleteTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_role.ActiveAssignments.Count > 0)
+        {
+            <MudText Class="mb-3">
+                @string.Format(L["RoleDetail.DeleteHasAssignments"], _role.ActiveAssignments.Count, _role.Name)
+            </MudText>
+            <MudSimpleTable Dense="true" Bordered="true" Class="mb-4">
+                <thead>
+                    <tr>
+                        <th>@L["Common.Name"]</th>
+                        <th>@L["Common.From"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in _role.ActiveAssignments)
+                    {
+                        <tr>
+                            <td>@a.FirstName @a.LastName</td>
+                            <td>@a.FromDate.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+
+            <MudRadioGroup T="RoleDeleteMode" @bind-Value="_deleteMode">
+                <MudRadio T="RoleDeleteMode" Value="RoleDeleteMode.RemoveAssignments" Color="Color.Warning">
+                    @L["RoleDetail.DeleteRemoveAssignments"]
+                </MudRadio>
+                <MudRadio T="RoleDeleteMode" Value="RoleDeleteMode.TransferAssignments" Color="Color.Info">
+                    @L["RoleDetail.DeleteTransferAssignments"]
+                </MudRadio>
+            </MudRadioGroup>
+
+            @if (_deleteMode == RoleDeleteMode.TransferAssignments)
+            {
+                <MudSelect T="Guid?" @bind-Value="_transferToRoleId" Label="@L["RoleDetail.TransferToRole"]"
+                           Class="mt-3">
+                    @foreach (var r in _availableTransferRoles)
+                    {
+                        <MudSelectItem T="Guid?" Value="@r.Id">@r.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        }
+        else
+        {
+            <MudText>@string.Format(L["RoleDetail.DeleteConfirm"], _role.Name)</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showDelete = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDelete"
+                   Disabled="@(_deleteMode == RoleDeleteMode.TransferAssignments && _transferToRoleId is null)">
+            @L.H("Common.Delete")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Guid RoleId { get; set; }
+
+    private RoleDetailDto? _role;
+    private List<RoleDto> _availableTransferRoles = [];
+    private string _editName = string.Empty;
+    private bool _showDelete;
+    private RoleDeleteMode _deleteMode = RoleDeleteMode.RemoveAssignments;
+    private Guid? _transferToRoleId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRole();
+    }
+
+    private async Task LoadRole()
+    {
+        _role = await Mediator.Send(new GetRoleDetailQuery(RoleId));
+        if (_role is not null)
+            _editName = _role.Name;
+
+        if (TenantContext.CurrentOrganizationId is Guid orgId)
+        {
+            var allRoles = await Mediator.Send(new GetRolesQuery(orgId));
+            _availableTransferRoles = allRoles
+                .Where(r => r.Id != RoleId && r.IsActive)
+                .ToList();
+        }
+    }
+
+    private async Task SaveChanges()
+    {
+        if (string.IsNullOrWhiteSpace(_editName)) return;
+
+        var result = await Mediator.Send(new UpdateRoleCommand(RoleId, _editName));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["RoleDetail.Updated"], Severity.Success);
+            await LoadRole();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private void OpenDeleteDialog()
+    {
+        _deleteMode = RoleDeleteMode.RemoveAssignments;
+        _transferToRoleId = null;
+        _showDelete = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        var cmd = new DeleteRoleCommand(
+            RoleId,
+            _deleteMode,
+            _deleteMode == RoleDeleteMode.TransferAssignments ? _transferToRoleId : null);
+
+        var result = await Mediator.Send(cmd);
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["RoleDetail.Deleted"], Severity.Success);
+            Navigation.NavigateTo("/roles");
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task OnPermissionToggle(Permission permission, bool grant)
+    {
+        if (TenantContext.CurrentOrganizationId is not Guid orgId) return;
+        await Mediator.Send(new ToggleRolePermissionCommand(RoleId, permission, grant, orgId));
+        await LoadRole();
+    }
+}

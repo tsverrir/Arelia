@@ -61,6 +61,8 @@
   <data name="Common.Assign" xml:space="preserve"><value>Tildel</value></data>
   <data name="Common.Invite" xml:space="preserve"><value>Inviter</value></data>
   <data name="Common.Deactivate" xml:space="preserve"><value>Deaktiver</value></data>
+  <data name="Common.SetInactive" xml:space="preserve"><value>Saet inaktiv</value></data>
+  <data name="Common.SetActive" xml:space="preserve"><value>Saet aktiv</value></data>
   <data name="Common.FormerMember" xml:space="preserve"><value>Tidligere Medlem</value></data>
   <data name="Common.Today" xml:space="preserve"><value>I dag</value></data>
   <data name="Common.File" xml:space="preserve"><value>Fil</value></data>
@@ -183,6 +185,11 @@
   <data name="People.AddByEmail" xml:space="preserve"><value>Tilfoej via e-mail</value></data>
   <data name="People.ImportFromOrg" xml:space="preserve"><value>Importer fra org.</value></data>
   <data name="People.ShowInactive" xml:space="preserve"><value>Vis inaktive</value></data>
+  <data name="People.ViewMode" xml:space="preserve"><value>Visning</value></data>
+  <data name="People.ViewMode.Active" xml:space="preserve"><value>Vis aktive</value></data>
+  <data name="People.ViewMode.All" xml:space="preserve"><value>Vis alle</value></data>
+  <data name="People.ViewMode.Grouped" xml:space="preserve"><value>Vis grupperet</value></data>
+  <data name="People.NoResults" xml:space="preserve"><value>Ingen medlemmer i denne gruppe.</value></data>
   <data name="People.AddPersonTitle" xml:space="preserve"><value>Tilfoej person</value></data>
   <data name="People.PersonAdded" xml:space="preserve"><value>Person tilfoejt.</value></data>
   <data name="People.AddByEmailTitle" xml:space="preserve"><value>Tilfoej person via e-mail</value></data>
@@ -201,6 +208,22 @@
   <data name="People.ImportSearch" xml:space="preserve"><value>Soeg efter navn</value></data>
   <data name="People.ImportNoResults" xml:space="preserve"><value>Ingen resultater i andre organisationer.</value></data>
   <data name="People.ImportBtn" xml:space="preserve"><value>Importer</value></data>
+  <data name="People.ImportFromCsv" xml:space="preserve"><value>Importer fra CSV</value></data>
+  <data name="People.CsvFormat.Title" xml:space="preserve"><value>CSV-importformat</value></data>
+  <data name="People.CsvFormat.Intro" xml:space="preserve"><value>Upload en semikolon- eller kommaadskilt CSV-fil med en overskriftsraekke. Alle kolonner undtagen FirstName og LastName er valgfrie. Kolonnenavne er ufølsomme over for store og smaa bogstaver.</value></data>
+  <data name="People.CsvFormat.Required" xml:space="preserve"><value>Pakraevet</value></data>
+  <data name="People.CsvFormat.Optional" xml:space="preserve"><value>Valgfri</value></data>
+  <data name="People.CsvFormat.SampleLabel" xml:space="preserve"><value>Eksempel</value></data>
+  <data name="People.CsvFormat.ColVoiceGroup" xml:space="preserve"><value>En af: None, Soprano, Alto, Tenor, Bass, Other</value></data>
+  <data name="People.CsvFormat.ChooseFile" xml:space="preserve"><value>Vaelg fil…</value></data>
+  <data name="People.CsvImport.Title" xml:space="preserve"><value>Gennemse CSV-import</value></data>
+  <data name="People.CsvImport.NoData" xml:space="preserve"><value>Ingen importdata fundet. Upload venligst en CSV-fil fra Personersiden.</value></data>
+  <data name="People.CsvImport.RowsReady" xml:space="preserve"><value>{0} raekker klar til import. Gennemse og rediger nedenfor, klik derefter Gennemfoer.</value></data>
+  <data name="People.CsvImport.RowsWithErrors" xml:space="preserve"><value>{0} raekker analyseret – {1} mangler pakraevede felter (fremhaevet). Ret eller fjern dem foer gennemfoerelse.</value></data>
+  <data name="People.CsvImport.CommitBtn" xml:space="preserve"><value>Gennemfoer {0} person(er)</value></data>
+  <data name="People.CsvImport.Committed" xml:space="preserve"><value>{0} person(er) importeret.</value></data>
+  <data name="People.CsvImport.Empty" xml:space="preserve"><value>CSV-filen indeholdt ingen datarækker.</value></data>
+  <data name="People.CsvImport.ParseError" xml:space="preserve"><value>CSV-parsing mislykkedes: {0}</value></data>
   <data name="PersonDetail.RoleAssignments" xml:space="preserve"><value>Rolletildelinger</value></data>
   <data name="PersonDetail.HasLinkedUser" xml:space="preserve"><value>Har tilknyttet brugerkonto</value></data>
   <data name="PersonDetail.AssignRole" xml:space="preserve"><value>Tildel rolle</value></data>
@@ -209,6 +232,11 @@
   <data name="PersonDetail.RemoveAssignmentTitle" xml:space="preserve"><value>Fjern tildeling</value></data>
   <data name="PersonDetail.Saved" xml:space="preserve"><value>aendringer gemt.</value></data>
   <data name="PersonDetail.Deactivated" xml:space="preserve"><value>Person deaktiveret.</value></data>
+  <data name="PersonDetail.Deleted" xml:space="preserve"><value>Person slettet.</value></data>
+  <data name="PersonDetail.SetInactive" xml:space="preserve"><value>Person sat til inaktiv.</value></data>
+  <data name="PersonDetail.SetActive" xml:space="preserve"><value>Person sat til aktiv.</value></data>
+  <data name="PersonDetail.DeleteTitle" xml:space="preserve"><value>Slet person</value></data>
+  <data name="PersonDetail.DeleteConfirm" xml:space="preserve"><value>Slet {0} {1} permanent? Denne handling kan ikke fortrydes.</value></data>
   <data name="PersonDetail.RoleAssigned" xml:space="preserve"><value>Rolle tildelt.</value></data>
   <data name="PersonDetail.RoleEnded" xml:space="preserve"><value>Rolletildeling afsluttet.</value></data>
   <data name="PersonDetail.RoleRemoved" xml:space="preserve"><value>Rolletildeling fjernet.</value></data>
@@ -220,6 +248,8 @@
   <data name="PersonDetail.RemoveAssignmentConfirm" xml:space="preserve"><value>Fjern denne rolletildeling permanent?</value></data>
   <data name="Roles.Title" xml:space="preserve"><value>Roller og rettigheder</value></data>
   <data name="Roles.CreateCustom" xml:space="preserve"><value>Opret brugerdefineret rolle</value></data>
+  <data name="Roles.Create" xml:space="preserve"><value>Opret rolle</value></data>
+  <data name="Roles.CreateTitle" xml:space="preserve"><value>Opret rolle</value></data>
   <data name="Roles.PermissionMatrix" xml:space="preserve"><value>Rettighedsmatrix</value></data>
   <data name="Roles.AllRoles" xml:space="preserve"><value>Alle roller</value></data>
   <data name="Roles.CreateCustomTitle" xml:space="preserve"><value>Opret brugerdefineret rolle</value></data>
@@ -227,6 +257,18 @@
   <data name="Roles.Created" xml:space="preserve"><value>Rolle oprettet.</value></data>
   <data name="Roles.RoleCreated" xml:space="preserve"><value>Rollen &apos;{0}&apos; er oprettet.</value></data>
   <data name="Roles.ActiveAssignments" xml:space="preserve"><value>Aktive tildelinger</value></data>
+  <data name="RoleDetail.RoleInfo" xml:space="preserve"><value>Rolleoplysninger</value></data>
+  <data name="RoleDetail.Permissions" xml:space="preserve"><value>Tilladelser</value></data>
+  <data name="RoleDetail.ActiveAssignments" xml:space="preserve"><value>Aktive tildelinger</value></data>
+  <data name="RoleDetail.NoAssignments" xml:space="preserve"><value>Ingen aktive tildelinger.</value></data>
+  <data name="RoleDetail.Updated" xml:space="preserve"><value>Rolle opdateret.</value></data>
+  <data name="RoleDetail.Deleted" xml:space="preserve"><value>Rolle slettet.</value></data>
+  <data name="RoleDetail.DeleteTitle" xml:space="preserve"><value>Slet rolle</value></data>
+  <data name="RoleDetail.DeleteConfirm" xml:space="preserve"><value>Slet rollen &quot;{0}&quot;? Denne handling kan ikke fortrydes.</value></data>
+  <data name="RoleDetail.DeleteHasAssignments" xml:space="preserve"><value>Rollen &quot;{1}&quot; har {0} aktiv(e) tildeling(er). Vaelg hvordan du vil fortsaette:</value></data>
+  <data name="RoleDetail.DeleteRemoveAssignments" xml:space="preserve"><value>Fjern alle tildelinger</value></data>
+  <data name="RoleDetail.DeleteTransferAssignments" xml:space="preserve"><value>Overfoer tildelinger til en anden rolle</value></data>
+  <data name="RoleDetail.TransferToRole" xml:space="preserve"><value>Overfoer til rolle</value></data>
   <data name="Finance.Title" xml:space="preserve"><value>Oekonomi</value></data>
   <data name="Finance.Charges" xml:space="preserve"><value>Opkraevninger</value></data>
   <data name="Finance.Expenses" xml:space="preserve"><value>Udgifter</value></data>

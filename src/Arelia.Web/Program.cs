@@ -33,6 +33,7 @@ public class Program
 
         // Tenant service
         builder.Services.AddScoped<TenantService>();
+        builder.Services.AddScoped<CsvImportSession>();
 
         // Identity UI support
         builder.Services.AddCascadingAuthenticationState();

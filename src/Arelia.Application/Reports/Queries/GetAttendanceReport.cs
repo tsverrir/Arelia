@@ -15,7 +15,7 @@ public record AttendanceReportDto(
 public record AttendancePersonRow(
     Guid PersonId,
     string PersonName,
-    VoiceGroup? VoiceGroup,
+    string? VoiceGroupName,
     int Present,
     int Late,
     int Absent,
@@ -56,7 +56,7 @@ public class GetAttendanceReportHandler(IAreliaDbContext context)
 
         var persons = await context.Persons
             .Where(p => p.OrganizationId == request.OrganizationId)
-            .Select(p => new { p.Id, Name = p.FirstName + " " + p.LastName, p.VoiceGroup })
+            .Select(p => new { p.Id, Name = p.FirstName + " " + p.LastName, VoiceGroupName = p.VoiceGroup != null ? p.VoiceGroup.Name : (string?)null })
             .ToListAsync(cancellationToken);
 
         var rows = persons.Select(p =>
@@ -65,7 +65,7 @@ public class GetAttendanceReportHandler(IAreliaDbContext context)
             var present = (record?.Present ?? 0) + (record?.Late ?? 0);
             var rate = totalRehearsals > 0 ? (decimal)present / totalRehearsals * 100 : 0;
             return new AttendancePersonRow(
-                p.Id, p.Name, p.VoiceGroup,
+                p.Id, p.Name, p.VoiceGroupName,
                 record?.Present ?? 0, record?.Late ?? 0, record?.Absent ?? 0,
                 Math.Round(rate, 1));
         })

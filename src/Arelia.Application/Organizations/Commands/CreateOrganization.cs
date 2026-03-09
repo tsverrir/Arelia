@@ -2,7 +2,6 @@ using Arelia.Application.Interfaces;
 using Arelia.Domain.Entities;
 using Arelia.Domain.Enums;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.Organizations.Commands;
 
@@ -34,22 +33,22 @@ public class CreateOrganizationHandler(IAreliaDbContext context) : IRequestHandl
         };
         context.OrganizationUsers.Add(orgUser);
 
-        // Seed system roles
-        var systemRoles = new[]
+        // Seed default roles
+        var defaultRoles = new (string Name, Permission[] Permissions)[]
         {
-            ("Board", new[] { Permission.ManagePeople, Permission.ManageActivities, Permission.ManageAttendance, Permission.RsvpOnBehalf, Permission.ViewAttendanceReports, Permission.ViewMembershipReports }),
-            ("Treasurer", new[] { Permission.ManageCharges, Permission.ManageExpenses, Permission.ViewFinanceReports, Permission.ViewMembershipReports }),
-            ("Conductor", new[] { Permission.ManageAttendance, Permission.ViewAttendanceReports }),
-            ("Admin", Enum.GetValues<Permission>()),
+            ("Member",    []),
+            ("Board",     [Permission.ManagePeople, Permission.ManageActivities, Permission.ManageAttendance, Permission.RsvpOnBehalf, Permission.ViewAttendanceReports, Permission.ViewMembershipReports]),
+            ("Treasurer", [Permission.ManageCharges, Permission.ManageExpenses, Permission.ViewFinanceReports, Permission.ViewMembershipReports]),
+            ("Conductor", [Permission.ManageAttendance, Permission.ViewAttendanceReports]),
+            ("Admin",     Enum.GetValues<Permission>()),
         };
 
         Role? adminRole = null;
-        foreach (var (roleName, permissions) in systemRoles)
+        foreach (var (roleName, permissions) in defaultRoles)
         {
             var role = new Role
             {
                 Name = roleName,
-                RoleType = RoleType.System,
                 OrganizationId = org.Id,
             };
             context.Roles.Add(role);
@@ -102,6 +101,24 @@ public class CreateOrganizationHandler(IAreliaDbContext context) : IRequestHandl
             context.ExpenseCategories.Add(new ExpenseCategory
             {
                 Name = category,
+                OrganizationId = org.Id,
+            });
+        }
+
+        // Seed default voice groups
+        var defaultVoiceGroups = new (string Name, int SortOrder)[]
+        {
+            ("Soprano", 1), ("Mezzo-Soprano", 2), ("Alto", 3),
+            ("Tenor", 4), ("Baritone", 5), ("Bass", 6),
+            ("Other", 7),
+        };
+
+        foreach (var (name, sortOrder) in defaultVoiceGroups)
+        {
+            context.VoiceGroups.Add(new VoiceGroup
+            {
+                Name = name,
+                SortOrder = sortOrder,
                 OrganizationId = org.Id,
             });
         }

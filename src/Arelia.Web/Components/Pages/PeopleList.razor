@@ -2,15 +2,19 @@
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Interfaces
 @using Arelia.Application.Organizations.Commands
+@using Arelia.Application.People
 @using Arelia.Application.People.Commands
 @using Arelia.Application.People.Queries
-@using Arelia.Domain.Enums
+@using Arelia.Application.VoiceGroups.Queries
 @using Arelia.Web.Components.Shared
+@using Arelia.Web.Services
 @using MediatR
+@using Microsoft.AspNetCore.Components.Forms
 @inject IMediator Mediator
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject CsvImportSession CsvImportSession
 @inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
@@ -28,16 +32,28 @@
     <MudTextField @bind-Value="_searchTerm" Label="@L["Common.Search"]" Adornment="Adornment.Start"
                   AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"
                   TextChanged="OnSearchChanged" />
-    <MudSelect T="VoiceGroup?" Value="_voiceGroupFilter" Label="@L["Common.VoiceGroup"]" Clearable="true"
-               ValueChanged="@(async (VoiceGroup? v) => { _voiceGroupFilter = v; await LoadPeople(); })">
-        @foreach (var vg in Enum.GetValues<VoiceGroup>())
+    <MudSelect T="Guid?" Value="_voiceGroupIdFilter" Label="@L["Common.VoiceGroup"]" Clearable="true"
+               ValueChanged="@(async (Guid? v) => { _voiceGroupIdFilter = v; await LoadPeople(); })">
+        @if (_voiceGroups is not null)
         {
-            <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
+            @foreach (var vg in _voiceGroups)
+            {
+                <MudSelectItem T="Guid?" Value="@vg.Id">@vg.Name</MudSelectItem>
+            }
         }
     </MudSelect>
-    <MudCheckBox T="bool" Value="_showInactive" Label="@L["People.ShowInactive"]"
-                 ValueChanged="@(async (bool v) => { _showInactive = v; await LoadPeople(); })" />
+    <MudSelect T="string" Value="_viewMode" Label="@L["People.ViewMode"]" Dense="true"
+               ValueChanged="@(async (string v) => { _viewMode = v; await LoadPeople(); })">
+        <MudSelectItem T="string" Value="ViewModeActive">@L["People.ViewMode.Active"]</MudSelectItem>
+        <MudSelectItem T="string" Value="ViewModeAll">@L["People.ViewMode.All"]</MudSelectItem>
+        <MudSelectItem T="string" Value="ViewModeGrouped">@L["People.ViewMode.Grouped"]</MudSelectItem>
+    </MudSelect>
     <MudSpacer />
+    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => _showCsvFormat = true)"
+               StartIcon="@Icons.Material.Filled.UploadFile">
+        @L.H("People.ImportFromCsv")
+    </MudButton>
+    <InputFile id="csvFileInput" OnChange="HandleCsvUpload" accept=".csv" style="display:none" />
     <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _showAddByEmail = true)"
                StartIcon="@Icons.Material.Filled.PersonSearch">
         @L.H("People.AddByEmail")
@@ -54,24 +70,86 @@
 
 @if (_people is not null)
 {
-    <ConfigurableTable TItem="PersonListDto" Items="_people" Columns="_columns" OnRowClick="OnRowClick">
-        <CellTemplate>
-            @switch (context.ColumnKey)
-            {
-                case "VoiceGroup":
-                    @VoiceGroupLabel((VoiceGroup?)context.Value)
-                    break;
-                case "Status":
-                    <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
-                        @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
-                    </MudChip>
-                    break;
-                default:
-                    @(context.Value?.ToString() ?? "—")
-                    break;
-            }
-        </CellTemplate>
-    </ConfigurableTable>
+    @if (_viewMode != ViewModeGrouped)
+    {
+        <ConfigurableTable TItem="PersonListDto" Items="_people" Columns="_columns" OnRowClick="OnRowClick">
+            <CellTemplate>
+                @switch (context.ColumnKey)
+                {
+                    case "VoiceGroup":
+                        @(context.Value?.ToString() ?? "—")
+                        break;
+                    case "Status":
+                        <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
+                            @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
+                        </MudChip>
+                        break;
+                    default:
+                        @(context.Value?.ToString() ?? "—")
+                        break;
+                }
+            </CellTemplate>
+        </ConfigurableTable>
+    }
+    else
+    {
+        var activePeople = _people.Where(p => p.IsActive).ToList();
+        var inactivePeople = _people.Where(p => !p.IsActive).ToList();
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="@ActiveGroupTitle(activePeople.Count)"
+                               IsInitiallyExpanded="true">
+                @if (activePeople.Count == 0)
+                {
+                    <MudText Color="Color.Secondary" Class="pa-3">@L["People.NoResults"]</MudText>
+                }
+                else
+                {
+                    <MudTable Items="activePeople" Dense="true" Hover="true" OnRowClick="OnRowClick" T="PersonListDto">
+                        <HeaderContent>
+                            <MudTh>@L["Common.FirstName"]</MudTh>
+                            <MudTh>@L["Common.LastName"]</MudTh>
+                            <MudTh>@L["Common.Email"]</MudTh>
+                            <MudTh>@L["Common.Phone"]</MudTh>
+                            <MudTh>@L["Common.VoiceGroup"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.FirstName</MudTd>
+                            <MudTd>@context.LastName</MudTd>
+                            <MudTd>@(context.Email ?? "—")</MudTd>
+                            <MudTd>@(context.Phone ?? "—")</MudTd>
+                            <MudTd>@(context.VoiceGroupName ?? "—")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="@InactiveGroupTitle(inactivePeople.Count)"
+                               IsInitiallyExpanded="false">
+                @if (inactivePeople.Count == 0)
+                {
+                    <MudText Color="Color.Secondary" Class="pa-3">@L["People.NoResults"]</MudText>
+                }
+                else
+                {
+                    <MudTable Items="inactivePeople" Dense="true" Hover="true" OnRowClick="OnRowClick" T="PersonListDto">
+                        <HeaderContent>
+                            <MudTh>@L["Common.FirstName"]</MudTh>
+                            <MudTh>@L["Common.LastName"]</MudTh>
+                            <MudTh>@L["Common.Email"]</MudTh>
+                            <MudTh>@L["Common.Phone"]</MudTh>
+                            <MudTh>@L["Common.VoiceGroup"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.FirstName</MudTd>
+                            <MudTd>@context.LastName</MudTd>
+                            <MudTd>@(context.Email ?? "—")</MudTd>
+                            <MudTd>@(context.Phone ?? "—")</MudTd>
+                            <MudTd>@(context.VoiceGroupName ?? "—")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
 }
 
 <MudDialog @bind-Visible="_showCreate">
@@ -81,10 +159,13 @@
         <MudTextField @bind-Value="_lastName" Label="@L["Common.LastName"]" Required="true" />
         <MudTextField @bind-Value="_email" Label="@L["Common.Email"]" />
         <MudTextField @bind-Value="_phone" Label="@L["Common.Phone"]" />
-        <MudSelect T="VoiceGroup?" @bind-Value="_voiceGroup" Label="@L["Common.VoiceGroup"]" Clearable="true">
-            @foreach (var vg in Enum.GetValues<VoiceGroup>())
+        <MudSelect T="Guid?" @bind-Value="_voiceGroupId" Label="@L["Common.VoiceGroup"]" Clearable="true">
+            @if (_voiceGroups is not null)
             {
-                <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
+                @foreach (var vg in _voiceGroups)
+                {
+                    <MudSelectItem T="Guid?" Value="@vg.Id">@vg.Name</MudSelectItem>
+                }
             }
         </MudSelect>
         <MudTextField @bind-Value="_notes" Label="@L["Common.Notes"]" Lines="3" />
@@ -147,17 +228,83 @@
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="_showCsvFormat" MaxWidth="MaxWidth.Small" FullWidth="true">
+    <TitleContent><MudText Typo="Typo.h6">@L.H("People.CsvFormat.Title")</MudText></TitleContent>
+    <DialogContent>
+        <MudText Class="mb-3">@L["People.CsvFormat.Intro"]</MudText>
+        <MudSimpleTable Dense="true" Bordered="true" Class="mb-4">
+            <thead>
+                <tr>
+                    <th>@L["Common.Name"]</th>
+                    <th></th>
+                    <th>@L["Common.Description"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>FirstName</code></td>
+                    <td><MudChip T="string" Size="Size.Small" Color="Color.Error" DisableRipple="true">@L["People.CsvFormat.Required"]</MudChip></td>
+                    <td>@L["Common.FirstName"]</td>
+                </tr>
+                <tr>
+                    <td><code>LastName</code></td>
+                    <td><MudChip T="string" Size="Size.Small" Color="Color.Error" DisableRipple="true">@L["People.CsvFormat.Required"]</MudChip></td>
+                    <td>@L["Common.LastName"]</td>
+                </tr>
+                <tr>
+                    <td><code>Email</code></td>
+                    <td><MudChip T="string" Size="Size.Small" DisableRipple="true">@L["People.CsvFormat.Optional"]</MudChip></td>
+                    <td>@L["Common.Email"]</td>
+                </tr>
+                <tr>
+                    <td><code>Phone</code></td>
+                    <td><MudChip T="string" Size="Size.Small" DisableRipple="true">@L["People.CsvFormat.Optional"]</MudChip></td>
+                    <td>@L["Common.Phone"]</td>
+                </tr>
+                <tr>
+                    <td><code>VoiceGroup</code></td>
+                    <td><MudChip T="string" Size="Size.Small" DisableRipple="true">@L["People.CsvFormat.Optional"]</MudChip></td>
+                    <td>@L["People.CsvFormat.ColVoiceGroup"]</td>
+                </tr>
+                <tr>
+                    <td><code>Notes</code></td>
+                    <td><MudChip T="string" Size="Size.Small" DisableRipple="true">@L["People.CsvFormat.Optional"]</MudChip></td>
+                    <td>@L["Common.Notes"]</td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["People.CsvFormat.SampleLabel"]</MudText>
+        <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+            <pre style="margin:0; font-size:0.8em; overflow-x:auto;">FirstName;LastName;Email;Phone;VoiceGroup;Notes
+John;Doe;john@example.com;+1 555 1234;Tenor;
+Jane;Smith;;;Soprano;Section leader</pre>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showCsvFormat = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartCsvUpload"
+                   StartIcon="@Icons.Material.Filled.UploadFile">
+            @L.H("People.CsvFormat.ChooseFile")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private List<PersonListDto>? _people;
+    private List<VoiceGroupDto>? _voiceGroups;
     private string _searchTerm = string.Empty;
-    private VoiceGroup? _voiceGroupFilter;
-    private bool _showInactive;
+    private Guid? _voiceGroupIdFilter;
+    private const string ViewModeActive = "Active";
+    private const string ViewModeAll = "All";
+    private const string ViewModeGrouped = "Grouped";
+
+    private string _viewMode = ViewModeActive;
     private bool _showCreate;
     private string _firstName = string.Empty;
     private string _lastName = string.Empty;
     private string? _email;
     private string? _phone;
-    private VoiceGroup? _voiceGroup;
+    private Guid? _voiceGroupId;
     private string? _notes;
 
     private List<ColumnDefinition<PersonListDto>>? _columns;
@@ -170,6 +317,8 @@
     private bool _showImport;
     private string _importSearch = string.Empty;
     private List<PersonAcrossOrgDto>? _importResults;
+    private bool _csvParsing;
+    private bool _showCsvFormat;
 
     protected override async Task OnInitializedAsync()
     {
@@ -179,7 +328,7 @@
             new("LastName", L["Common.LastName"], x => x.LastName, SortBy: x => x.LastName),
             new("Email", L["Common.Email"], x => x.Email),
             new("Phone", L["Common.Phone"], x => x.Phone),
-            new("VoiceGroup", L["Common.VoiceGroup"], x => x.VoiceGroup),
+            new("VoiceGroup", L["Common.VoiceGroup"], x => x.VoiceGroupName),
             new("Status", L["Common.Status"], x => x.IsActive),
         ];
         RegisterTenantChangeHandler();
@@ -191,9 +340,10 @@
     private async Task LoadPeople()
     {
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _voiceGroups = await Mediator.Send(new GetVoiceGroupsQuery(orgId));
         _people = await Mediator.Send(new GetPeopleQuery(
-            orgId, _voiceGroupFilter,
-            _showInactive ? null : true,
+            orgId, _voiceGroupIdFilter,
+            _viewMode == ViewModeActive ? true : null,
             string.IsNullOrWhiteSpace(_searchTerm) ? null : _searchTerm));
     }
 
@@ -258,14 +408,14 @@
                     // Copy details from the matched person
                     _email ??= match.Email;
                     _phone ??= match.Phone;
-                    _voiceGroup ??= match.VoiceGroup;
+                    _voiceGroupId ??= match.VoiceGroupId;
                 }
                 // If canceled, the user will fill in details manually — fall through to create
             }
         }
 
         var id = await Mediator.Send(new CreatePersonCommand(
-            _firstName, _lastName, _email, _phone, _voiceGroup, _notes, orgId));
+            _firstName, _lastName, _email, _phone, _voiceGroupId, _notes, orgId));
 
         Snackbar.Add(L["People.Created"], Severity.Success);
         _showCreate = false;
@@ -273,7 +423,7 @@
         _lastName = string.Empty;
         _email = null;
         _phone = null;
-        _voiceGroup = null;
+        _voiceGroupId = null;
         _notes = null;
         await LoadPeople();
     }
@@ -322,7 +472,7 @@
 
         await Mediator.Send(new CreatePersonCommand(
             source.FirstName, source.LastName, source.Email, source.Phone,
-            source.VoiceGroup, null, orgId));
+            source.VoiceGroupId, null, orgId));
 
         Snackbar.Add(string.Format(L["People.Imported"], source.FirstName, source.LastName), Severity.Success);
         CloseImportDialog();
@@ -336,10 +486,50 @@
         _importResults = null;
     }
 
-    private string VoiceGroupLabel(VoiceGroup? vg) => vg switch
+    [Microsoft.AspNetCore.Components.Inject]
+    private IJSRuntime JS { get; set; } = null!;
+
+    private async Task TriggerCsvUpload()
     {
-        null => "—",
-        VoiceGroup.None => L["People.VoiceGroupNone"],
-        _ => vg.ToString()!
-    };
+        await JS.InvokeVoidAsync("eval", "document.getElementById('csvFileInput').click()");
+    }
+
+    private async Task StartCsvUpload()
+    {
+        _showCsvFormat = false;
+        await TriggerCsvUpload();
+    }
+
+    private async Task HandleCsvUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null) return;
+
+        _csvParsing = true;
+        try
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            var rows = await CsvPeopleImporter.ParseAsync(stream);
+
+            if (rows.Count == 0)
+            {
+                Snackbar.Add(L["People.CsvImport.Empty"], Severity.Warning);
+                return;
+            }
+
+            CsvImportSession.Begin(rows);
+            Navigation.NavigateTo("/people/csv-import");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["People.CsvImport.ParseError"], ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _csvParsing = false;
+        }
+    }
+
+    private string ActiveGroupTitle(int count) => L["Common.Active"] + $" ({count})";
+    private string InactiveGroupTitle(int count) => L["Common.Inactive"] + $" ({count})";
 }

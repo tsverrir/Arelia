@@ -8,6 +8,7 @@ public interface IAreliaDbContext
     DbSet<Organization> Organizations { get; }
     DbSet<OrganizationUser> OrganizationUsers { get; }
     DbSet<Person> Persons { get; }
+    DbSet<VoiceGroup> VoiceGroups { get; }
     DbSet<Role> Roles { get; }
     DbSet<RoleAssignment> RoleAssignments { get; }
     DbSet<RolePermission> RolePermissions { get; }

@@ -1,5 +1,4 @@
 using Arelia.Application.Interfaces;
-using Arelia.Domain.Enums;
 
 using MediatR;
 
@@ -15,7 +14,8 @@ public record PersonDetailDto(
 	string LastName,
 	string? Email,
 	string? Phone,
-	VoiceGroup? VoiceGroup,
+	Guid? VoiceGroupId,
+	string? VoiceGroupName,
 	string? Notes,
 	bool IsActive,
 	List<PersonRoleAssignmentDto> RoleAssignments,
@@ -24,7 +24,6 @@ public record PersonDetailDto(
 public record PersonRoleAssignmentDto(
 	Guid Id,
 	string RoleName,
-	RoleType RoleType,
 	DateTime FromDate,
 	DateTime? ToDate,
 	bool IsCurrentlyActive);
@@ -36,14 +35,15 @@ public class GetPersonDetailHandler(IAreliaDbContext context)
 	{
 		var person = await context.Persons
 			.IgnoreQueryFilters()
-			.Where(p => p.Id == request.PersonId)
+			.Where(p => p.Id == request.PersonId && !p.IsDeleted)
 			.Select(p => new PersonDetailDto(
 				p.Id,
 				p.FirstName,
 				p.LastName,
 				p.Email,
 				p.Phone,
-				p.VoiceGroup,
+				p.VoiceGroupId,
+				p.VoiceGroup != null ? p.VoiceGroup.Name : null,
 				p.Notes,
 				p.IsActive,
 				p.RoleAssignments
@@ -52,7 +52,6 @@ public class GetPersonDetailHandler(IAreliaDbContext context)
 					.Select(ra => new PersonRoleAssignmentDto(
 						ra.Id,
 						ra.Role.Name,
-						ra.Role.RoleType,
 						ra.FromDate,
 						ra.ToDate,
 						ra.FromDate <= DateTime.UtcNow && (ra.ToDate == null || ra.ToDate >= DateTime.UtcNow)))

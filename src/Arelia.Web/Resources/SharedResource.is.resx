@@ -61,6 +61,8 @@
   <data name="Common.Assign" xml:space="preserve"><value>Uthluta</value></data>
   <data name="Common.Invite" xml:space="preserve"><value>Bjoda</value></data>
   <data name="Common.Deactivate" xml:space="preserve"><value>Gera ovirkt</value></data>
+  <data name="Common.SetInactive" xml:space="preserve"><value>Gera ovirkan</value></data>
+  <data name="Common.SetActive" xml:space="preserve"><value>Gera virkan</value></data>
   <data name="Common.FormerMember" xml:space="preserve"><value>Fyrrverandi medhlimaur</value></data>
   <data name="Common.Today" xml:space="preserve"><value>I dag</value></data>
   <data name="Common.File" xml:space="preserve"><value>Skra</value></data>
@@ -183,6 +185,11 @@
   <data name="People.AddByEmail" xml:space="preserve"><value>Baeta vid med netfangi</value></data>
   <data name="People.ImportFromOrg" xml:space="preserve"><value>Flyja inn fra samtokum</value></data>
   <data name="People.ShowInactive" xml:space="preserve"><value>Syyna ovirk</value></data>
+  <data name="People.ViewMode" xml:space="preserve"><value>Sýning</value></data>
+  <data name="People.ViewMode.Active" xml:space="preserve"><value>Sýna virka</value></data>
+  <data name="People.ViewMode.All" xml:space="preserve"><value>Sýna alla</value></data>
+  <data name="People.ViewMode.Grouped" xml:space="preserve"><value>Sýna í hópum</value></data>
+  <data name="People.NoResults" xml:space="preserve"><value>Engir meðlimir í þessum hóp.</value></data>
   <data name="People.AddPersonTitle" xml:space="preserve"><value>Baeta vid einstaklingi</value></data>
   <data name="People.PersonAdded" xml:space="preserve"><value>Einstaklingi baett vid.</value></data>
   <data name="People.AddByEmailTitle" xml:space="preserve"><value>Baeta vid med netfangi</value></data>
@@ -201,6 +208,22 @@
   <data name="People.ImportSearch" xml:space="preserve"><value>Leita að nafni</value></data>
   <data name="People.ImportNoResults" xml:space="preserve"><value>Engar niðurstöður í öðrum félögum.</value></data>
   <data name="People.ImportBtn" xml:space="preserve"><value>Flytja inn</value></data>
+  <data name="People.ImportFromCsv" xml:space="preserve"><value>Flytja inn fra CSV</value></data>
+  <data name="People.CsvFormat.Title" xml:space="preserve"><value>CSV innflutningssnidmat</value></data>
+  <data name="People.CsvFormat.Intro" xml:space="preserve"><value>Hladdu upp semikolon- eða kommuaðskildu CSV-skjali með hauslínu. Allar dálkar nema FirstName og LastName eru valfrjalsir. Dálknheiti eru hástafanæm ekki.</value></data>
+  <data name="People.CsvFormat.Required" xml:space="preserve"><value>Nauðsynlegt</value></data>
+  <data name="People.CsvFormat.Optional" xml:space="preserve"><value>Valfrjálst</value></data>
+  <data name="People.CsvFormat.SampleLabel" xml:space="preserve"><value>Dæmi</value></data>
+  <data name="People.CsvFormat.ColVoiceGroup" xml:space="preserve"><value>Eitt af: None, Soprano, Alto, Tenor, Bass, Other</value></data>
+  <data name="People.CsvFormat.ChooseFile" xml:space="preserve"><value>Velja skjal…</value></data>
+  <data name="People.CsvImport.Title" xml:space="preserve"><value>Yfirfara CSV innflutning</value></data>
+  <data name="People.CsvImport.NoData" xml:space="preserve"><value>Engar innflutningsgogn fundust. Hladdu upp CSV-skjali fra Einstaklingsidunni.</value></data>
+  <data name="People.CsvImport.RowsReady" xml:space="preserve"><value>{0} raedir tilbunar til innflutnings. Skoðaðu og breyttu hér að neðan og smelltu svo á Staðfesta.</value></data>
+  <data name="People.CsvImport.RowsWithErrors" xml:space="preserve"><value>{0} raedir greindar – {1} vantar nauðsynleg reiti (auðkenndar). Leiðréttu eða fjarlægðu þær áður en þú staðfestir.</value></data>
+  <data name="People.CsvImport.CommitBtn" xml:space="preserve"><value>Staðfesta {0} einstakling(a)</value></data>
+  <data name="People.CsvImport.Committed" xml:space="preserve"><value>{0} einstaklingur(ar) fluttir inn.</value></data>
+  <data name="People.CsvImport.Empty" xml:space="preserve"><value>CSV-skjalið innihélt engar gagnalínur.</value></data>
+  <data name="People.CsvImport.ParseError" xml:space="preserve"><value>Mistókst að lesa CSV: {0}</value></data>
   <data name="PersonDetail.RoleAssignments" xml:space="preserve"><value>Hlutverksuthlutanir</value></data>
   <data name="PersonDetail.HasLinkedUser" xml:space="preserve"><value>Hefur tengdan notandareikningur</value></data>
   <data name="PersonDetail.AssignRole" xml:space="preserve"><value>Uthluta hlutverki</value></data>
@@ -209,6 +232,11 @@
   <data name="PersonDetail.RemoveAssignmentTitle" xml:space="preserve"><value>Fjarlaegja uthlutun</value></data>
   <data name="PersonDetail.Saved" xml:space="preserve"><value>Breytingar vistadar.</value></data>
   <data name="PersonDetail.Deactivated" xml:space="preserve"><value>Einstaklingur gerdur ovirkt.</value></data>
+  <data name="PersonDetail.Deleted" xml:space="preserve"><value>Einstaklingur eydur.</value></data>
+  <data name="PersonDetail.SetInactive" xml:space="preserve"><value>Einstaklingur gerður óvirkur.</value></data>
+  <data name="PersonDetail.SetActive" xml:space="preserve"><value>Einstaklingur gerður virkur.</value></data>
+  <data name="PersonDetail.DeleteTitle" xml:space="preserve"><value>Eyða einstaklingi</value></data>
+  <data name="PersonDetail.DeleteConfirm" xml:space="preserve"><value>Eyða {0} {1} varanlega? Þetta er óafturkræft.</value></data>
   <data name="PersonDetail.RoleAssigned" xml:space="preserve"><value>Hlutverki uthlutad.</value></data>
   <data name="PersonDetail.RoleEnded" xml:space="preserve"><value>Hlutverksuthlutun lokid.</value></data>
   <data name="PersonDetail.RoleRemoved" xml:space="preserve"><value>Hlutverksuthlutun fjarlaegdh.</value></data>
@@ -220,6 +248,8 @@
   <data name="PersonDetail.RemoveAssignmentConfirm" xml:space="preserve"><value>Fjarlægja þessa hlutverksúthlutun varanlega?</value></data>
   <data name="Roles.Title" xml:space="preserve"><value>Hlutverk og heimildir</value></data>
   <data name="Roles.CreateCustom" xml:space="preserve"><value>Bua til serstaelt hlutverk</value></data>
+  <data name="Roles.Create" xml:space="preserve"><value>Bua til hlutverk</value></data>
+  <data name="Roles.CreateTitle" xml:space="preserve"><value>Bua til hlutverk</value></data>
   <data name="Roles.PermissionMatrix" xml:space="preserve"><value>Heimildaryfirlit</value></data>
   <data name="Roles.AllRoles" xml:space="preserve"><value>Oell hlutverk</value></data>
   <data name="Roles.CreateCustomTitle" xml:space="preserve"><value>Bua til serstaelt hlutverk</value></data>
@@ -227,6 +257,18 @@
   <data name="Roles.Created" xml:space="preserve"><value>Hlutverk buinn til.</value></data>
   <data name="Roles.RoleCreated" xml:space="preserve"><value>Hlutverkid &apos;{0}&apos; stofnad.</value></data>
   <data name="Roles.ActiveAssignments" xml:space="preserve"><value>Virkar uthlutanir</value></data>
+  <data name="RoleDetail.RoleInfo" xml:space="preserve"><value>Hlutverksupplysingar</value></data>
+  <data name="RoleDetail.Permissions" xml:space="preserve"><value>Heimildir</value></data>
+  <data name="RoleDetail.ActiveAssignments" xml:space="preserve"><value>Virkar uthlutanir</value></data>
+  <data name="RoleDetail.NoAssignments" xml:space="preserve"><value>Engar virkar uthlutanir.</value></data>
+  <data name="RoleDetail.Updated" xml:space="preserve"><value>Hlutverk uppfaert.</value></data>
+  <data name="RoleDetail.Deleted" xml:space="preserve"><value>Hlutverk eytt.</value></data>
+  <data name="RoleDetail.DeleteTitle" xml:space="preserve"><value>Eyda hlutverki</value></data>
+  <data name="RoleDetail.DeleteConfirm" xml:space="preserve"><value>Eyda hlutverkinu &quot;{0}&quot;? Thetta er oafturkraeft.</value></data>
+  <data name="RoleDetail.DeleteHasAssignments" xml:space="preserve"><value>Hlutverkid &quot;{1}&quot; hefur {0} virka uthlutun(ir). Veldu hvernig a ad haega:</value></data>
+  <data name="RoleDetail.DeleteRemoveAssignments" xml:space="preserve"><value>Fjarlaegja allar uthlutanir</value></data>
+  <data name="RoleDetail.DeleteTransferAssignments" xml:space="preserve"><value>Flytja uthlutanir yfir a annad hlutverk</value></data>
+  <data name="RoleDetail.TransferToRole" xml:space="preserve"><value>Flytja yfir a hlutverk</value></data>
   <data name="Finance.Title" xml:space="preserve"><value>Fjarmal</value></data>
   <data name="Finance.Charges" xml:space="preserve"><value>Gjold</value></data>
   <data name="Finance.Expenses" xml:space="preserve"><value>Kostnadur</value></data>

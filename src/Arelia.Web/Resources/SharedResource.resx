@@ -61,6 +61,8 @@
   <data name="Common.Assign" xml:space="preserve"><value>Assign</value></data>
   <data name="Common.Invite" xml:space="preserve"><value>Invite</value></data>
   <data name="Common.Deactivate" xml:space="preserve"><value>Deactivate</value></data>
+  <data name="Common.SetInactive" xml:space="preserve"><value>Set Inactive</value></data>
+  <data name="Common.SetActive" xml:space="preserve"><value>Set Active</value></data>
   <data name="Common.FormerMember" xml:space="preserve"><value>Former Member</value></data>
   <data name="Common.Today" xml:space="preserve"><value>Today</value></data>
   <data name="Common.File" xml:space="preserve"><value>File</value></data>
@@ -183,6 +185,11 @@
   <data name="People.AddByEmail" xml:space="preserve"><value>Add by Email</value></data>
   <data name="People.ImportFromOrg" xml:space="preserve"><value>Import from Org</value></data>
   <data name="People.ShowInactive" xml:space="preserve"><value>Show inactive</value></data>
+  <data name="People.ViewMode" xml:space="preserve"><value>View</value></data>
+  <data name="People.ViewMode.Active" xml:space="preserve"><value>Show active</value></data>
+  <data name="People.ViewMode.All" xml:space="preserve"><value>Show all</value></data>
+  <data name="People.ViewMode.Grouped" xml:space="preserve"><value>Show grouped</value></data>
+  <data name="People.NoResults" xml:space="preserve"><value>No members in this group.</value></data>
   <data name="People.AddPersonTitle" xml:space="preserve"><value>Add Person</value></data>
   <data name="People.PersonAdded" xml:space="preserve"><value>Person added.</value></data>
   <data name="People.AddByEmailTitle" xml:space="preserve"><value>Add Person by Email</value></data>
@@ -201,6 +208,22 @@
   <data name="People.ImportSearch" xml:space="preserve"><value>Search by name</value></data>
   <data name="People.ImportNoResults" xml:space="preserve"><value>No matches found in other organizations.</value></data>
   <data name="People.ImportBtn" xml:space="preserve"><value>Import</value></data>
+  <data name="People.ImportFromCsv" xml:space="preserve"><value>Import from CSV</value></data>
+  <data name="People.CsvFormat.Title" xml:space="preserve"><value>CSV Import Format</value></data>
+  <data name="People.CsvFormat.Intro" xml:space="preserve"><value>Upload a semicolon- or comma-delimited CSV file with a header row. All columns except FirstName and LastName are optional. Column names are case-insensitive.</value></data>
+  <data name="People.CsvFormat.Required" xml:space="preserve"><value>Required</value></data>
+  <data name="People.CsvFormat.Optional" xml:space="preserve"><value>Optional</value></data>
+  <data name="People.CsvFormat.SampleLabel" xml:space="preserve"><value>Example</value></data>
+  <data name="People.CsvFormat.ColVoiceGroup" xml:space="preserve"><value>Name of a voice group configured for the organization (e.g. Soprano, Alto, Tenor, Bass)</value></data>
+  <data name="People.CsvFormat.ChooseFile" xml:space="preserve"><value>Choose File…</value></data>
+  <data name="People.CsvImport.Title" xml:space="preserve"><value>Review CSV Import</value></data>
+  <data name="People.CsvImport.NoData" xml:space="preserve"><value>No import data found. Please upload a CSV file from the People page.</value></data>
+  <data name="People.CsvImport.RowsReady" xml:space="preserve"><value>{0} rows ready to import. Review and edit below, then click Commit.</value></data>
+  <data name="People.CsvImport.RowsWithErrors" xml:space="preserve"><value>{0} rows parsed — {1} have missing required fields (highlighted). Fix or remove them before committing.</value></data>
+  <data name="People.CsvImport.CommitBtn" xml:space="preserve"><value>Commit {0} person(s)</value></data>
+  <data name="People.CsvImport.Committed" xml:space="preserve"><value>{0} person(s) imported successfully.</value></data>
+  <data name="People.CsvImport.Empty" xml:space="preserve"><value>The CSV file contained no data rows.</value></data>
+  <data name="People.CsvImport.ParseError" xml:space="preserve"><value>Failed to parse CSV: {0}</value></data>
   <data name="PersonDetail.RoleAssignments" xml:space="preserve"><value>Role Assignments</value></data>
   <data name="PersonDetail.HasLinkedUser" xml:space="preserve"><value>Has linked user account</value></data>
   <data name="PersonDetail.AssignRole" xml:space="preserve"><value>Assign Role</value></data>
@@ -209,6 +232,11 @@
   <data name="PersonDetail.RemoveAssignmentTitle" xml:space="preserve"><value>Remove assignment</value></data>
   <data name="PersonDetail.Saved" xml:space="preserve"><value>Changes saved.</value></data>
   <data name="PersonDetail.Deactivated" xml:space="preserve"><value>Person deactivated.</value></data>
+  <data name="PersonDetail.Deleted" xml:space="preserve"><value>Person deleted.</value></data>
+  <data name="PersonDetail.SetInactive" xml:space="preserve"><value>Person set to inactive.</value></data>
+  <data name="PersonDetail.SetActive" xml:space="preserve"><value>Person set to active.</value></data>
+  <data name="PersonDetail.DeleteTitle" xml:space="preserve"><value>Delete Person</value></data>
+  <data name="PersonDetail.DeleteConfirm" xml:space="preserve"><value>Permanently delete {0} {1}? This cannot be undone.</value></data>
   <data name="PersonDetail.RoleAssigned" xml:space="preserve"><value>Role assigned.</value></data>
   <data name="PersonDetail.RoleEnded" xml:space="preserve"><value>Role assignment ended.</value></data>
   <data name="PersonDetail.RoleRemoved" xml:space="preserve"><value>Role assignment removed.</value></data>
@@ -220,6 +248,8 @@
   <data name="PersonDetail.RemoveAssignmentConfirm" xml:space="preserve"><value>Remove this role assignment permanently?</value></data>
   <data name="Roles.Title" xml:space="preserve"><value>Roles and Permissions</value></data>
   <data name="Roles.CreateCustom" xml:space="preserve"><value>Create Custom Role</value></data>
+  <data name="Roles.Create" xml:space="preserve"><value>Create Role</value></data>
+  <data name="Roles.CreateTitle" xml:space="preserve"><value>Create Role</value></data>
   <data name="Roles.PermissionMatrix" xml:space="preserve"><value>Permission Matrix</value></data>
   <data name="Roles.AllRoles" xml:space="preserve"><value>All Roles</value></data>
   <data name="Roles.CreateCustomTitle" xml:space="preserve"><value>Create Custom Role</value></data>
@@ -227,6 +257,18 @@
   <data name="Roles.Created" xml:space="preserve"><value>Role created.</value></data>
   <data name="Roles.RoleCreated" xml:space="preserve"><value>Role &apos;{0}&apos; created.</value></data>
   <data name="Roles.ActiveAssignments" xml:space="preserve"><value>Active Assignments</value></data>
+  <data name="RoleDetail.RoleInfo" xml:space="preserve"><value>Role Info</value></data>
+  <data name="RoleDetail.Permissions" xml:space="preserve"><value>Permissions</value></data>
+  <data name="RoleDetail.ActiveAssignments" xml:space="preserve"><value>Active Assignments</value></data>
+  <data name="RoleDetail.NoAssignments" xml:space="preserve"><value>No active assignments.</value></data>
+  <data name="RoleDetail.Updated" xml:space="preserve"><value>Role updated.</value></data>
+  <data name="RoleDetail.Deleted" xml:space="preserve"><value>Role deleted.</value></data>
+  <data name="RoleDetail.DeleteTitle" xml:space="preserve"><value>Delete Role</value></data>
+  <data name="RoleDetail.DeleteConfirm" xml:space="preserve"><value>Delete role &quot;{0}&quot;? This cannot be undone.</value></data>
+  <data name="RoleDetail.DeleteHasAssignments" xml:space="preserve"><value>The role &quot;{1}&quot; has {0} active assignment(s). Choose how to proceed:</value></data>
+  <data name="RoleDetail.DeleteRemoveAssignments" xml:space="preserve"><value>Remove all assignments</value></data>
+  <data name="RoleDetail.DeleteTransferAssignments" xml:space="preserve"><value>Transfer assignments to another role</value></data>
+  <data name="RoleDetail.TransferToRole" xml:space="preserve"><value>Transfer to role</value></data>
   <data name="Finance.Title" xml:space="preserve"><value>Finances</value></data>
   <data name="Finance.Charges" xml:space="preserve"><value>Charges</value></data>
   <data name="Finance.Expenses" xml:space="preserve"><value>Expenses</value></data>
@@ -269,4 +311,22 @@
   <data name="Admin.Backups.Failed" xml:space="preserve"><value>Backup failed: {0}</value></data>
   <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Choose the end date for this role assignment.</value></data>
   <data name="Dialog.EndDate" xml:space="preserve"><value>End Date</value></data>
+  <data name="Nav.VoiceGroups" xml:space="preserve"><value>Voice Groups</value></data>
+  <data name="VoiceGroups.Title" xml:space="preserve"><value>Voice Groups</value></data>
+  <data name="VoiceGroups.Create" xml:space="preserve"><value>Create Voice Group</value></data>
+  <data name="VoiceGroups.CreateTitle" xml:space="preserve"><value>Create Voice Group</value></data>
+  <data name="VoiceGroups.EditTitle" xml:space="preserve"><value>Edit Voice Group</value></data>
+  <data name="VoiceGroups.DeleteTitle" xml:space="preserve"><value>Delete Voice Group</value></data>
+  <data name="VoiceGroups.DeleteConfirm" xml:space="preserve"><value>Delete voice group "{0}"?</value></data>
+  <data name="VoiceGroups.DeleteHasAssignments" xml:space="preserve"><value>The voice group "{1}" has {0} person(s) assigned. Choose how to proceed:</value></data>
+  <data name="VoiceGroups.DeleteUnassign" xml:space="preserve"><value>Remove voice group from all people</value></data>
+  <data name="VoiceGroups.DeleteMove" xml:space="preserve"><value>Move people to another voice group</value></data>
+  <data name="VoiceGroups.MoveTo" xml:space="preserve"><value>Move to voice group</value></data>
+  <data name="VoiceGroups.SelectTarget" xml:space="preserve"><value>Please select a target voice group.</value></data>
+  <data name="VoiceGroups.SortOrder" xml:space="preserve"><value>Sort Order</value></data>
+  <data name="VoiceGroups.PeopleCount" xml:space="preserve"><value>People</value></data>
+  <data name="VoiceGroups.NameRequired" xml:space="preserve"><value>Voice group name is required.</value></data>
+  <data name="VoiceGroups.Created" xml:space="preserve"><value>Voice group created.</value></data>
+  <data name="VoiceGroups.Updated" xml:space="preserve"><value>Voice group updated.</value></data>
+  <data name="VoiceGroups.Deleted" xml:space="preserve"><value>Voice group deleted.</value></data>
 </root>

@@ -51,6 +51,20 @@ public class OrganizationUserConfiguration : IEntityTypeConfiguration<Organizati
     }
 }
 
+public class VoiceGroupConfiguration : IEntityTypeConfiguration<VoiceGroup>
+{
+    public void Configure(EntityTypeBuilder<VoiceGroup> builder)
+    {
+        builder.Property(v => v.Name).IsRequired().HasMaxLength(100);
+        builder.HasIndex(v => new { v.Name, v.OrganizationId }).IsUnique();
+
+        builder.HasMany(v => v.People)
+            .WithOne(p => p.VoiceGroup)
+            .HasForeignKey(p => p.VoiceGroupId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
 public class PersonConfiguration : IEntityTypeConfiguration<Person>
 {
     public void Configure(EntityTypeBuilder<Person> builder)

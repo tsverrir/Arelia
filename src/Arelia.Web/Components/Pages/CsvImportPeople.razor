@@ -1,0 +1,176 @@
+@page "/people/csv-import"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.People
+@using Arelia.Application.People.Commands
+@using Arelia.Application.VoiceGroups.Queries
+@using Arelia.Web.Services
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject CsvImportSession ImportSession
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@L["People.CsvImport.Title"]</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="Cancel" />
+    <MudText Typo="Typo.h5">@L.H("People.CsvImport.Title")</MudText>
+</MudStack>
+
+@if (!ImportSession.HasData)
+{
+    <MudAlert Severity="Severity.Warning">@L["People.CsvImport.NoData"]</MudAlert>
+    <MudButton Class="mt-4" Variant="Variant.Outlined" OnClick="Cancel">@L.H("Common.Cancel")</MudButton>
+    return;
+}
+
+@{
+    var rows = ImportSession.Rows!;
+    var errorCount = rows.Count(r => r.HasError);
+}
+
+<MudAlert Severity="@(errorCount > 0 ? Severity.Warning : Severity.Info)" Class="mb-4">
+    @if (errorCount > 0)
+    {
+        @string.Format(L["People.CsvImport.RowsWithErrors"], rows.Count, errorCount)
+    }
+    else
+    {
+        @string.Format(L["People.CsvImport.RowsReady"], rows.Count)
+    }
+</MudAlert>
+
+<MudTable Items="rows" Dense="true" Hover="true" Striped="true"
+          RowClassFunc="@((row, _) => row.HasError ? "import-row-error" : string.Empty)">
+    <HeaderContent>
+        <MudTh>@L["Common.FirstName"] *</MudTh>
+        <MudTh>@L["Common.LastName"] *</MudTh>
+        <MudTh>@L["Common.Email"]</MudTh>
+        <MudTh>@L["Common.Phone"]</MudTh>
+        <MudTh>@L["Common.VoiceGroup"]</MudTh>
+        <MudTh>@L["Common.Notes"]</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudTextField @bind-Value="context.FirstName"
+                          Error="@string.IsNullOrWhiteSpace(context.FirstName)"
+                          Variant="Variant.Text" Margin="Margin.Dense" />
+        </MudTd>
+        <MudTd>
+            <MudTextField @bind-Value="context.LastName"
+                          Error="@string.IsNullOrWhiteSpace(context.LastName)"
+                          Variant="Variant.Text" Margin="Margin.Dense" />
+        </MudTd>
+        <MudTd>
+            <MudTextField @bind-Value="context.Email"
+                          Variant="Variant.Text" Margin="Margin.Dense" />
+        </MudTd>
+        <MudTd>
+            <MudTextField @bind-Value="context.Phone"
+                          Variant="Variant.Text" Margin="Margin.Dense" />
+        </MudTd>
+        <MudTd>
+            <MudSelect T="Guid?" Value="context.VoiceGroupId"
+                       ValueChanged="@(v => context.VoiceGroupId = v)"
+                       Clearable="true" Variant="Variant.Text" Margin="Margin.Dense">
+                @if (_voiceGroups is not null)
+                {
+                    @foreach (var vg in _voiceGroups)
+                    {
+                        <MudSelectItem T="Guid?" Value="@vg.Id">@vg.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudTd>
+        <MudTd>
+            <MudTextField @bind-Value="context.Notes"
+                          Variant="Variant.Text" Margin="Margin.Dense" />
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                           Color="Color.Error" OnClick="@(() => RemoveRow(context))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudStack Row="true" Class="mt-4" Spacing="2">
+    <MudButton Variant="Variant.Outlined" OnClick="Cancel">@L.H("Common.Cancel")</MudButton>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+               Disabled="@(rows.Count == 0 || rows.All(r => r.HasError) || _committing)"
+               OnClick="Commit">
+        @if (_committing)
+        {
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+        }
+        @string.Format(L["People.CsvImport.CommitBtn"], rows.Count(r => !r.HasError))
+    </MudButton>
+</MudStack>
+
+<style>
+    .import-row-error td { background-color: var(--mud-palette-error-lighten) !important; }
+</style>
+
+@code {
+    private bool _committing;
+    private List<VoiceGroupDto>? _voiceGroups;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ImportSession.HasData)
+            return;
+        RegisterTenantChangeHandler();
+        await LoadVoiceGroups();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadVoiceGroups();
+
+    private async Task LoadVoiceGroups()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _voiceGroups = await Mediator.Send(new GetVoiceGroupsQuery(orgId));
+
+        // Auto-resolve raw voice group names from CSV to IDs
+        if (_voiceGroups is not null && ImportSession.HasData)
+        {
+            foreach (var row in ImportSession.Rows!.Where(r => r.VoiceGroupId is null && r.VoiceGroupName is not null))
+            {
+                var match = _voiceGroups.FirstOrDefault(v =>
+                    string.Equals(v.Name, row.VoiceGroupName, StringComparison.OrdinalIgnoreCase));
+                if (match is not null)
+                    row.VoiceGroupId = match.Id;
+            }
+        }
+    }
+
+    private void RemoveRow(PersonImportRow row) => ImportSession.Rows!.Remove(row);
+
+    private async Task Commit()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        _committing = true;
+        try
+        {
+            var count = await Mediator.Send(
+                new BulkCreatePeopleCommand(ImportSession.Rows!, orgId));
+
+            ImportSession.Clear();
+            Snackbar.Add(string.Format(L["People.CsvImport.Committed"], count), Severity.Success);
+            Navigation.NavigateTo("/people");
+        }
+        finally
+        {
+            _committing = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        ImportSession.Clear();
+        Navigation.NavigateTo("/people");
+    }
+}

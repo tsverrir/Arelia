@@ -1,0 +1,228 @@
+@page "/voice-groups"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.VoiceGroups.Commands
+@using Arelia.Application.VoiceGroups.Queries
+@using Arelia.Web.Components.Shared
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@L["VoiceGroups.Title"]</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("VoiceGroups.Title")</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
+    return;
+}
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OpenCreate())"
+           StartIcon="@Icons.Material.Filled.Add" Class="mb-4">
+    @L.H("VoiceGroups.Create")
+</MudButton>
+
+@if (_voiceGroups is not null)
+{
+    <MudTable Items="_voiceGroups" Dense="true" Hover="true">
+        <HeaderContent>
+            <MudTh>@L["Common.Name"]</MudTh>
+            <MudTh>@L["VoiceGroups.SortOrder"]</MudTh>
+            <MudTh>@L["VoiceGroups.PeopleCount"]</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.SortOrder</MudTd>
+            <MudTd>@context.PeopleCount</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               OnClick="@(() => OpenEdit(context))" Title="@L["Common.Edit"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error"
+                               OnClick="@(() => DeleteVoiceGroup(context))" Title="@L["Common.Delete"]" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@* Create / Edit dialog *@
+<MudDialog @bind-Visible="_showForm">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_editId is null ? L.H("VoiceGroups.CreateTitle") : L.H("VoiceGroups.EditTitle"))</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_editName" Label="@L["Common.Name"]" Required="true" />
+        <MudNumericField @bind-Value="_editSortOrder" Label="@L["VoiceGroups.SortOrder"]" Min="0" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showForm = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveVoiceGroup">@L.H("Common.Save")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Delete dialog with options when people are assigned *@
+<MudDialog @bind-Visible="_showDelete">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("VoiceGroups.DeleteTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_deleteTarget is not null && _deleteTarget.PeopleCount > 0)
+        {
+            <MudText Class="mb-3">
+                @string.Format(L["VoiceGroups.DeleteHasAssignments"], _deleteTarget.PeopleCount, _deleteTarget.Name)
+            </MudText>
+            <MudRadioGroup @bind-Value="_deleteMode">
+                <MudRadio Value="VoiceGroupDeleteMode.UnassignPeople" Color="Color.Warning">
+                    @L["VoiceGroups.DeleteUnassign"]
+                </MudRadio>
+                <MudRadio Value="VoiceGroupDeleteMode.MovePeople" Color="Color.Info">
+                    @L["VoiceGroups.DeleteMove"]
+                </MudRadio>
+            </MudRadioGroup>
+            @if (_deleteMode == VoiceGroupDeleteMode.MovePeople)
+            {
+                <MudSelect T="Guid?" @bind-Value="_moveToVoiceGroupId" Label="@L["VoiceGroups.MoveTo"]" Class="mt-2">
+                    @if (_voiceGroups is not null)
+                    {
+                        @foreach (var vg in _voiceGroups.Where(v => v.Id != _deleteTarget.Id))
+                        {
+                            <MudSelectItem T="Guid?" Value="@vg.Id">@vg.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            }
+        }
+        else
+        {
+            <MudText>@string.Format(L["VoiceGroups.DeleteConfirm"], _deleteTarget?.Name)</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showDelete = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDelete">@L.H("Common.Delete")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<VoiceGroupDto>? _voiceGroups;
+
+    // Create/Edit form state
+    private bool _showForm;
+    private Guid? _editId;
+    private string _editName = string.Empty;
+    private int _editSortOrder;
+
+    // Delete state
+    private bool _showDelete;
+    private VoiceGroupDto? _deleteTarget;
+    private VoiceGroupDeleteMode _deleteMode = VoiceGroupDeleteMode.UnassignPeople;
+    private Guid? _moveToVoiceGroupId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadVoiceGroups();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadVoiceGroups();
+
+    private async Task LoadVoiceGroups()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _voiceGroups = await Mediator.Send(new GetVoiceGroupsQuery(orgId));
+    }
+
+    private void OpenCreate()
+    {
+        _editId = null;
+        _editName = string.Empty;
+        _editSortOrder = (_voiceGroups?.Count ?? 0) + 1;
+        _showForm = true;
+    }
+
+    private void OpenEdit(VoiceGroupDto vg)
+    {
+        _editId = vg.Id;
+        _editName = vg.Name;
+        _editSortOrder = vg.SortOrder;
+        _showForm = true;
+    }
+
+    private async Task SaveVoiceGroup()
+    {
+        if (string.IsNullOrWhiteSpace(_editName))
+        {
+            Snackbar.Add(L["VoiceGroups.NameRequired"], Severity.Warning);
+            return;
+        }
+
+        if (_editId is null)
+        {
+            if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+            var result = await Mediator.Send(new CreateVoiceGroupCommand(_editName.Trim(), _editSortOrder, orgId));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["VoiceGroups.Created"], Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+                return;
+            }
+        }
+        else
+        {
+            var result = await Mediator.Send(new UpdateVoiceGroupCommand(_editId.Value, _editName.Trim(), _editSortOrder));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["VoiceGroups.Updated"], Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+                return;
+            }
+        }
+
+        _showForm = false;
+        await LoadVoiceGroups();
+    }
+
+    private void DeleteVoiceGroup(VoiceGroupDto vg)
+    {
+        _deleteTarget = vg;
+        _deleteMode = VoiceGroupDeleteMode.UnassignPeople;
+        _moveToVoiceGroupId = null;
+        _showDelete = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_deleteTarget is null) return;
+
+        if (_deleteMode == VoiceGroupDeleteMode.MovePeople && _moveToVoiceGroupId is null &&
+            _deleteTarget.PeopleCount > 0)
+        {
+            Snackbar.Add(L["VoiceGroups.SelectTarget"], Severity.Warning);
+            return;
+        }
+
+        var result = await Mediator.Send(new DeleteVoiceGroupCommand(
+            _deleteTarget.Id, _deleteMode, _moveToVoiceGroupId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["VoiceGroups.Deleted"], Severity.Success);
+            _showDelete = false;
+            await LoadVoiceGroups();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+}

@@ -56,6 +56,22 @@ public class InviteUserHandler(
         };
         context.OrganizationUsers.Add(orgUser);
 
+        var memberRole = await context.Roles
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(r => r.OrganizationId == request.OrganizationId &&
+                                      r.Name == "Member" && r.IsActive, cancellationToken);
+
+        if (memberRole is not null)
+        {
+            context.RoleAssignments.Add(new RoleAssignment
+            {
+                PersonId = person.Id,
+                RoleId = memberRole.Id,
+                FromDate = DateTime.UtcNow,
+                OrganizationId = request.OrganizationId,
+            });
+        }
+
         await context.SaveChangesAsync(cancellationToken);
 
         return Domain.Common.Result.Success();

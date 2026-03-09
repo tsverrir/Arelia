@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/src/Arelia.Web/arelia.db
+/src/Arelia.Web/arelia.db-shm
+/src/Arelia.Web/arelia.db-wal

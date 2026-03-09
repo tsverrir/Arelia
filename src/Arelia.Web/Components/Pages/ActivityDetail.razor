@@ -149,7 +149,7 @@
                         var person = p;
                         <tr>
                             <td>@person.FirstName @person.LastName</td>
-                            <td>@(person.VoiceGroup?.ToString() ?? "—")</td>
+                            <td>@(person.VoiceGroupName ?? "—")</td>
                             <td>
                                 <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
                                     <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small"

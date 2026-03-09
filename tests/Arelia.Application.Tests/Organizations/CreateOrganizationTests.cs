@@ -25,7 +25,7 @@ public class CreateOrganizationTests
     }
 
     [Fact]
-    public async Task WhenCreatingOrganizationThenSystemRolesAreSeeded()
+    public async Task WhenCreatingOrganizationThenDefaultRolesAreSeeded()
     {
         await using var context = TestDbContextFactory.Create();
         var handler = new CreateOrganizationHandler(context);
@@ -38,9 +38,8 @@ public class CreateOrganizationTests
             .Where(r => r.OrganizationId == orgId)
             .ToListAsync();
 
-        roles.Should().HaveCount(4);
-        roles.Select(r => r.Name).Should().Contain(new[] { "Board", "Treasurer", "Conductor", "Admin" });
-        roles.Should().OnlyContain(r => r.RoleType == RoleType.System);
+        roles.Should().HaveCount(5);
+        roles.Select(r => r.Name).Should().Contain(new[] { "Member", "Board", "Treasurer", "Conductor", "Admin" });
     }
 
     [Fact]

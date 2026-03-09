@@ -3,6 +3,7 @@ using System;
 using Arelia.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Arelia.Infrastructure.Migrations
 {
     [DbContext(typeof(AreliaDbContext))]
-    partial class AreliaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309162300_RemoveRoleType")]
+    partial class RemoveRoleType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
@@ -874,12 +877,10 @@ namespace Arelia.Infrastructure.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("VoiceGroupId")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("VoiceGroup")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("VoiceGroupId");
 
                     b.ToTable("Persons");
                 });
@@ -1049,46 +1050,6 @@ namespace Arelia.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("RolePermissions");
-                });
-
-            modelBuilder.Entity("Arelia.Domain.Entities.VoiceGroup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name", "OrganizationId")
-                        .IsUnique();
-
-                    b.ToTable("VoiceGroups");
                 });
 
             modelBuilder.Entity("Arelia.Infrastructure.Identity.ApplicationUser", b =>
@@ -1458,16 +1419,6 @@ namespace Arelia.Infrastructure.Migrations
                     b.Navigation("PayerPerson");
                 });
 
-            modelBuilder.Entity("Arelia.Domain.Entities.Person", b =>
-                {
-                    b.HasOne("Arelia.Domain.Entities.VoiceGroup", "VoiceGroup")
-                        .WithMany("People")
-                        .HasForeignKey("VoiceGroupId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("VoiceGroup");
-                });
-
             modelBuilder.Entity("Arelia.Domain.Entities.RehearsalRecurrenceTemplate", b =>
                 {
                     b.HasOne("Arelia.Domain.Entities.Activity", "Semester")
@@ -1606,11 +1557,6 @@ namespace Arelia.Infrastructure.Migrations
                     b.Navigation("RoleAssignments");
 
                     b.Navigation("RolePermissions");
-                });
-
-            modelBuilder.Entity("Arelia.Domain.Entities.VoiceGroup", b =>
-                {
-                    b.Navigation("People");
                 });
 #pragma warning restore 612, 618
         }

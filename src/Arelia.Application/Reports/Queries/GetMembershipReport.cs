@@ -24,14 +24,15 @@ public class GetMembershipReportHandler(IAreliaDbContext context)
         var persons = await context.Persons
             .IgnoreQueryFilters()
             .Where(p => p.OrganizationId == request.OrganizationId)
+            .Select(p => new { p.IsActive, VoiceGroupName = p.VoiceGroup != null ? p.VoiceGroup.Name : null })
             .ToListAsync(cancellationToken);
 
         var active = persons.Count(p => p.IsActive);
         var inactive = persons.Count(p => !p.IsActive);
 
         var byVoiceGroup = persons
-            .Where(p => p.IsActive && p.VoiceGroup.HasValue)
-            .GroupBy(p => p.VoiceGroup!.Value.ToString())
+            .Where(p => p.IsActive && p.VoiceGroupName is not null)
+            .GroupBy(p => p.VoiceGroupName!)
             .Select(g => new VoiceGroupCount(g.Key, g.Count()))
             .OrderBy(v => v.VoiceGroup)
             .ToList();

@@ -6,6 +6,7 @@
 @using Arelia.Web.Components.Shared
 @using MediatR
 @inject IMediator Mediator
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
@@ -22,7 +23,7 @@
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
            StartIcon="@Icons.Material.Filled.Add" Class="mb-4">
-    @L.H("Roles.CreateCustom")
+    @L.H("Roles.Create")
 </MudButton>
 
 @if (_roles is not null)
@@ -59,16 +60,10 @@
 
     <MudText Typo="Typo.h6" Class="mt-6 mb-2">@L.H("Roles.AllRoles")</MudText>
 
-    <ConfigurableTable TItem="RoleDto" Items="_roles" Columns="_roleColumns">
+    <ConfigurableTable TItem="RoleDto" Items="_roles" Columns="_roleColumns" OnRowClick="OnRoleRowClick">
         <CellTemplate>
             @switch (context.ColumnKey)
             {
-                case "Type":
-                    <MudChip T="string" Size="Size.Small"
-                             Color="@((RoleType)context.Value! == RoleType.System ? Color.Primary : Color.Secondary)">
-                        @context.Value
-                    </MudChip>
-                    break;
                 case "Status":
                     <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
                         @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
@@ -83,7 +78,7 @@
 }
 
 <MudDialog @bind-Visible="_showCreate">
-    <TitleContent><MudText Typo="Typo.h6">@L.H("Roles.CreateCustomTitle")</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("Roles.CreateTitle")</MudText></TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="_newRoleName" Label="@L["Roles.RoleName"]" Required="true" />
     </DialogContent>
@@ -105,7 +100,6 @@
         _roleColumns =
         [
             new("Name", L["Common.Name"], x => x.Name),
-            new("Type", L["Common.Type"], x => x.RoleType),
             new("Assignments", L["Roles.ActiveAssignments"], x => x.AssignmentCount),
             new("Status", L["Common.Status"], x => x.IsActive),
         ];
@@ -121,12 +115,17 @@
             _roles = await Mediator.Send(new GetRolesQuery(orgId));
     }
 
+    private void OnRoleRowClick(TableRowClickEventArgs<RoleDto> args)
+    {
+        Navigation.NavigateTo($"/roles/{args.Item!.Id}");
+    }
+
     private async Task CreateRole()
     {
         if (string.IsNullOrWhiteSpace(_newRoleName) || TenantService.CurrentOrganizationId is not Guid orgId)
             return;
 
-        var result = await Mediator.Send(new CreateCustomRoleCommand(_newRoleName, orgId));
+        var result = await Mediator.Send(new CreateRoleCommand(_newRoleName, orgId));
         if (result.IsSuccess)
         {
             Snackbar.Add(string.Format(L["Roles.RoleCreated"], _newRoleName), Severity.Success);

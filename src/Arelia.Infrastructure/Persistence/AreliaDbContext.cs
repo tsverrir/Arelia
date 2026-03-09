@@ -21,6 +21,7 @@ public class AreliaDbContext : IdentityDbContext<ApplicationUser>, IAreliaDbCont
 	public DbSet<Organization> Organizations => Set<Organization>();
 	public DbSet<OrganizationUser> OrganizationUsers => Set<OrganizationUser>();
 	public DbSet<Person> Persons => Set<Person>();
+	public DbSet<VoiceGroup> VoiceGroups => Set<VoiceGroup>();
 	public DbSet<Role> Roles => Set<Role>();
 	public new DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
 	public DbSet<RolePermission> RolePermissions => Set<RolePermission>();

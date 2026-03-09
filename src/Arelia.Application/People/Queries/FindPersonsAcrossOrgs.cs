@@ -1,5 +1,4 @@
 using Arelia.Application.Interfaces;
-using Arelia.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,7 +18,7 @@ public record PersonAcrossOrgDto(
     string LastName,
     string? Email,
     string? Phone,
-    VoiceGroup? VoiceGroup,
+    Guid? VoiceGroupId,
     Guid OrganizationId,
     string OrganizationName);
 
@@ -39,7 +38,7 @@ public class FindPersonsAcrossOrgsHandler(IAreliaDbContext context)
             where p.FirstName.ToLower().Contains(term) || p.LastName.ToLower().Contains(term)
             orderby p.LastName, p.FirstName
             select new PersonAcrossOrgDto(
-                p.Id, p.FirstName, p.LastName, p.Email, p.Phone, p.VoiceGroup,
+                p.Id, p.FirstName, p.LastName, p.Email, p.Phone, p.VoiceGroupId,
                 o.Id, o.Name)
         ).ToListAsync(cancellationToken);
     }

@@ -1,5 +1,4 @@
 using Arelia.Application.Interfaces;
-using Arelia.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +10,7 @@ public record UpdatePersonCommand(
     string LastName,
     string? Email,
     string? Phone,
-    VoiceGroup? VoiceGroup,
+    Guid? VoiceGroupId,
     string? Notes) : IRequest<Domain.Common.Result>;
 
 public class UpdatePersonHandler(IAreliaDbContext context) : IRequestHandler<UpdatePersonCommand, Domain.Common.Result>
@@ -26,7 +25,7 @@ public class UpdatePersonHandler(IAreliaDbContext context) : IRequestHandler<Upd
         person.LastName = request.LastName;
         person.Email = request.Email;
         person.Phone = request.Phone;
-        person.VoiceGroup = request.VoiceGroup;
+        person.VoiceGroupId = request.VoiceGroupId;
         person.Notes = request.Notes;
 
         await context.SaveChangesAsync(cancellationToken);

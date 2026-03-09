@@ -1,5 +1,4 @@
 using Arelia.Application.Interfaces;
-using Arelia.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +6,7 @@ namespace Arelia.Application.People.Queries;
 
 public record GetPeopleQuery(
     Guid OrganizationId,
-    VoiceGroup? VoiceGroupFilter = null,
+    Guid? VoiceGroupIdFilter = null,
     bool? IsActiveFilter = null,
     string? SearchTerm = null) : IRequest<List<PersonListDto>>;
 
@@ -17,7 +16,8 @@ public record PersonListDto(
     string LastName,
     string? Email,
     string? Phone,
-    VoiceGroup? VoiceGroup,
+    Guid? VoiceGroupId,
+    string? VoiceGroupName,
     bool IsActive);
 
 public class GetPeopleHandler(IAreliaDbContext context)
@@ -27,15 +27,13 @@ public class GetPeopleHandler(IAreliaDbContext context)
     {
         var query = context.Persons
             .IgnoreQueryFilters()
-            .Where(p => p.OrganizationId == request.OrganizationId);
+            .Where(p => p.OrganizationId == request.OrganizationId && !p.IsDeleted);
 
         if (request.IsActiveFilter.HasValue)
             query = query.Where(p => p.IsActive == request.IsActiveFilter.Value);
-        else
-            query = query.Where(p => p.IsActive);
 
-        if (request.VoiceGroupFilter.HasValue)
-            query = query.Where(p => p.VoiceGroup == request.VoiceGroupFilter.Value);
+        if (request.VoiceGroupIdFilter.HasValue)
+            query = query.Where(p => p.VoiceGroupId == request.VoiceGroupIdFilter.Value);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -49,7 +47,9 @@ public class GetPeopleHandler(IAreliaDbContext context)
             .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
             .Select(p => new PersonListDto(
                 p.Id, p.FirstName, p.LastName,
-                p.Email, p.Phone, p.VoiceGroup, p.IsActive))
+                p.Email, p.Phone,
+                p.VoiceGroupId, p.VoiceGroup != null ? p.VoiceGroup.Name : null,
+                p.IsActive))
             .ToListAsync(cancellationToken);
     }
 }

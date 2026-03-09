@@ -125,8 +125,8 @@ public class PermissionServiceTests
             IsActive = true,
         });
 
-        var boardRole = new Role { Name = "Board", RoleType = RoleType.System, OrganizationId = orgId };
-        var conductorRole = new Role { Name = "Conductor", RoleType = RoleType.System, OrganizationId = orgId };
+        var boardRole = new Role { Name = "Board", OrganizationId = orgId };
+        var conductorRole = new Role { Name = "Conductor", OrganizationId = orgId };
         context.Roles.AddRange(boardRole, conductorRole);
 
         context.RolePermissions.Add(new RolePermission
@@ -188,7 +188,7 @@ public class PermissionServiceTests
             IsActive = true,
         });
 
-        var role = new Role { Name = "Board", RoleType = RoleType.System, OrganizationId = orgId };
+        var role = new Role { Name = "Board", OrganizationId = orgId };
         context.Roles.Add(role);
         context.RolePermissions.Add(new RolePermission
         {

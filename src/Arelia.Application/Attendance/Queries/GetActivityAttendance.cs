@@ -16,7 +16,7 @@ public record ParticipantAttendanceDto(
     Guid PersonId,
     string FirstName,
     string LastName,
-    VoiceGroup? VoiceGroup,
+    string? VoiceGroupName,
     AttendanceStatus? Status,
     string? Comment);
 
@@ -47,14 +47,14 @@ public class GetActivityAttendanceHandler(IAreliaDbContext context)
             var persons = await context.Persons
                 .Where(p => p.OrganizationId == activity.OrganizationId && p.IsActive)
                 .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
-                .Select(p => new { p.Id, p.FirstName, p.LastName, p.VoiceGroup })
+                .Select(p => new { p.Id, p.FirstName, p.LastName, VoiceGroupName = p.VoiceGroup != null ? p.VoiceGroup.Name : (string?)null })
                 .ToListAsync(cancellationToken);
 
             participants = persons.Select(p =>
             {
                 attendanceRecords.TryGetValue(p.Id, out var record);
                 return new ParticipantAttendanceDto(
-                    p.Id, p.FirstName, p.LastName, p.VoiceGroup,
+                    p.Id, p.FirstName, p.LastName, p.VoiceGroupName,
                     record?.Status, record?.Comment);
             }).ToList();
         }
@@ -64,14 +64,14 @@ public class GetActivityAttendanceHandler(IAreliaDbContext context)
             var explicitParticipants = await context.ActivityParticipants
                 .Where(ap => ap.ActivityId == request.ActivityId && ap.IsActive)
                 .OrderBy(ap => ap.Person.LastName).ThenBy(ap => ap.Person.FirstName)
-                .Select(ap => new { ap.PersonId, ap.Person.FirstName, ap.Person.LastName, ap.Person.VoiceGroup })
+                .Select(ap => new { ap.PersonId, ap.Person.FirstName, ap.Person.LastName, VoiceGroupName = ap.Person.VoiceGroup != null ? ap.Person.VoiceGroup.Name : (string?)null })
                 .ToListAsync(cancellationToken);
 
             participants = explicitParticipants.Select(p =>
             {
                 attendanceRecords.TryGetValue(p.PersonId, out var record);
                 return new ParticipantAttendanceDto(
-                    p.PersonId, p.FirstName, p.LastName, p.VoiceGroup,
+                    p.PersonId, p.FirstName, p.LastName, p.VoiceGroupName,
                     record?.Status, record?.Comment);
             }).ToList();
         }
