@@ -1,4 +1,4 @@
-@page "/finances"
+﻿@page "/finances"
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Finance.Commands
 @using Arelia.Application.Finance.Queries
@@ -6,20 +6,21 @@
 @using MediatR
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Finances</PageTitle>
+<PageTitle>@L["Finance.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Finances</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Finance.Title")</MudText>
 
 @if (TenantService.CurrentOrganizationId is null)
 {
-    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
     return;
 }
 
 <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-    <MudTabPanel Text="Charges">
+    <MudTabPanel Text="@L["Finance.Charges"]">
         @if (_charges is not null)
         {
             <ConfigurableTable TItem="ChargeListDto" Items="_charges" Columns="_chargeColumns">
@@ -49,10 +50,10 @@
         }
     </MudTabPanel>
 
-    <MudTabPanel Text="Expenses">
+    <MudTabPanel Text="@L["Finance.Expenses"]">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4"
                    OnClick="@(() => _showExpense = true)" StartIcon="@Icons.Material.Filled.Add">
-            Record Expense
+            @L.H("Finance.RecordExpense")
         </MudButton>
         @if (_expenses is not null)
         {
@@ -77,18 +78,18 @@
 </MudTabs>
 
 <MudDialog @bind-Visible="_showExpense">
-    <TitleContent><MudText Typo="Typo.h6">Record Expense</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("Finance.RecordExpenseTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_expDesc" Label="Description" Required="true" />
-        <MudNumericField T="decimal" @bind-Value="_expAmount" Label="Amount" Required="true" />
-        <MudDatePicker @bind-Date="_expDate" Label="Date" Required="true" />
-        <MudTextField @bind-Value="_expCategory" Label="Category" Required="true" />
-        <MudTextField @bind-Value="_expReceivedBy" Label="Received By" />
-        <MudTextField @bind-Value="_expNotes" Label="Notes" Lines="2" />
+        <MudTextField @bind-Value="_expDesc" Label="@L["Common.Description"]" Required="true" />
+        <MudNumericField T="decimal" @bind-Value="_expAmount" Label="@L["Common.Amount"]" Required="true" />
+        <MudDatePicker @bind-Date="_expDate" Label="@L["Common.Date"]" Required="true" />
+        <MudTextField @bind-Value="_expCategory" Label="@L["Common.Category"]" Required="true" />
+        <MudTextField @bind-Value="_expReceivedBy" Label="@L["Finance.ReceivedBy"]" />
+        <MudTextField @bind-Value="_expNotes" Label="@L["Common.Notes"]" Lines="2" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showExpense = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RecordExpense">Save</MudButton>
+        <MudButton OnClick="@(() => _showExpense = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RecordExpense">@L.H("Common.Save")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -103,27 +104,28 @@
     private string? _expReceivedBy;
     private string? _expNotes;
 
-    private readonly List<ColumnDefinition<ChargeListDto>> _chargeColumns =
-    [
-        new("Member", "Member", x => x.PersonName),
-        new("Description", "Description", x => x.Description),
-        new("DueDate", "Due Date", x => x.DueDate),
-        new("Due", "Due", x => x.TotalDue),
-        new("Paid", "Paid", x => x.TotalPaid),
-        new("Status", "Status", x => x.Status),
-    ];
-
-    private readonly List<ColumnDefinition<ExpenseListDto>> _expenseColumns =
-    [
-        new("Date", "Date", x => x.ExpenseDate),
-        new("Description", "Description", x => x.Description),
-        new("Category", "Category", x => x.CategoryName),
-        new("Amount", "Amount", x => x.Amount),
-        new("ReceivedBy", "Received By", x => x.ReceivedBy),
-    ];
+    private List<ColumnDefinition<ChargeListDto>>? _chargeColumns;
+    private List<ColumnDefinition<ExpenseListDto>>? _expenseColumns;
 
     protected override async Task OnInitializedAsync()
     {
+        _chargeColumns =
+        [
+            new("Member", L["Finance.Member"], x => x.PersonName),
+            new("Description", L["Common.Description"], x => x.Description),
+            new("DueDate", L["Finance.DueDate"], x => x.DueDate),
+            new("Due", L["Finance.Due"], x => x.TotalDue),
+            new("Paid", L["Finance.Paid"], x => x.TotalPaid),
+            new("Status", L["Common.Status"], x => x.Status),
+        ];
+        _expenseColumns =
+        [
+            new("Date", L["Common.Date"], x => x.ExpenseDate),
+            new("Description", L["Common.Description"], x => x.Description),
+            new("Category", L["Common.Category"], x => x.CategoryName),
+            new("Amount", L["Common.Amount"], x => x.Amount),
+            new("ReceivedBy", L["Finance.ReceivedBy"], x => x.ReceivedBy),
+        ];
         RegisterTenantChangeHandler();
         await LoadFinances();
     }
@@ -149,7 +151,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Expense recorded.", Severity.Success);
+            Snackbar.Add(L["Finance.ExpenseRecorded"], Severity.Success);
             _showExpense = false;
             _expenses = await Mediator.Send(new GetExpensesQuery(orgId));
         }

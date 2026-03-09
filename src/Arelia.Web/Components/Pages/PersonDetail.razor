@@ -1,4 +1,4 @@
-@page "/people/{PersonId:guid}"
+﻿@page "/people/{PersonId:guid}"
 @using Arelia.Application.Interfaces
 @using Arelia.Application.People.Commands
 @using Arelia.Application.People.Queries
@@ -11,9 +11,10 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Person Detail</PageTitle>
+<PageTitle>@(_person is null ? L["People.Title"] : $"{_person.FirstName} {_person.LastName}")</PageTitle>
 
 @if (_person is null)
 {
@@ -27,23 +28,23 @@
     <MudItem xs="12" md="6">
         <MudCard>
             <MudCardContent>
-                <MudTextField @bind-Value="_editFirstName" Label="First Name" />
-                <MudTextField @bind-Value="_editLastName" Label="Last Name" />
-                <MudTextField @bind-Value="_editEmail" Label="Email" />
-                <MudTextField @bind-Value="_editPhone" Label="Phone" />
-                <MudSelect T="VoiceGroup?" @bind-Value="_editVoiceGroup" Label="Voice Group" Clearable="true">
+                <MudTextField @bind-Value="_editFirstName" Label="@L["Common.FirstName"]" />
+                <MudTextField @bind-Value="_editLastName" Label="@L["Common.LastName"]" />
+                <MudTextField @bind-Value="_editEmail" Label="@L["Common.Email"]" />
+                <MudTextField @bind-Value="_editPhone" Label="@L["Common.Phone"]" />
+                <MudSelect T="VoiceGroup?" @bind-Value="_editVoiceGroup" Label="@L["Common.VoiceGroup"]" Clearable="true">
                     @foreach (var vg in Enum.GetValues<VoiceGroup>())
                     {
                         <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
                     }
                 </MudSelect>
-                <MudTextField @bind-Value="_editNotes" Label="Notes" Lines="3" />
+                <MudTextField @bind-Value="_editNotes" Label="@L["Common.Notes"]" Lines="3" />
             </MudCardContent>
             <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Save</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">@L.H("Common.Save")</MudButton>
                 @if (_person.IsActive)
                 {
-                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="DeactivatePerson">Deactivate</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="DeactivatePerson">@L.H("Common.Deactivate")</MudButton>
                 }
             </MudCardActions>
         </MudCard>
@@ -52,20 +53,20 @@
     <MudItem xs="12" md="6">
         <MudCard>
             <MudCardHeader>
-                <MudText Typo="Typo.h6">Role Assignments</MudText>
+                <MudText Typo="Typo.h6">@L.H("PersonDetail.RoleAssignments")</MudText>
             </MudCardHeader>
             <MudCardContent>
                 @if (_person.HasLinkedUser)
                 {
-                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mb-2">Has linked user account</MudChip>
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mb-2">@L["PersonDetail.HasLinkedUser"]</MudChip>
                 }
 
                 <MudTable Items="_person.RoleAssignments" Dense="true" Hover="true">
                     <HeaderContent>
-                        <MudTh>Role</MudTh>
-                        <MudTh>From</MudTh>
-                        <MudTh>To</MudTh>
-                        <MudTh>Status</MudTh>
+                        <MudTh>@L["Common.Role"]</MudTh>
+                        <MudTh>@L["Common.From"]</MudTh>
+                        <MudTh>@L["Common.To"]</MudTh>
+                        <MudTh>@L["Common.Status"]</MudTh>
                         <MudTh></MudTh>
                     </HeaderContent>
                     <RowTemplate>
@@ -75,29 +76,29 @@
                         <MudTd>
                             <MudChip T="string" Size="Size.Small"
                                      Color="@(context.IsCurrentlyActive ? Color.Success : Color.Default)">
-                                @(context.IsCurrentlyActive ? "Active" : "Ended")
+                                @(context.IsCurrentlyActive ? L["Common.Active"] : L["Common.Ended"])
                             </MudChip>
                         </MudTd>
                         <MudTd>
                             @if (context.IsCurrentlyActive)
                             {
                                 <MudIconButton Icon="@Icons.Material.Filled.EventBusy" Size="Size.Small"
-                                               OnClick="@(() => EndRoleAssignment(context.Id))"
-                                               Title="End assignment today" />
+                                                               OnClick="@(() => EndRoleAssignment(context.Id))"
+                                                               Title="@(L["PersonDetail.EndAssignmentTitle"])" />
                             }
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
                                            Color="Color.Error"
                                            OnClick="@(() => RemoveRoleAssignment(context.Id))"
-                                           Title="Remove assignment" />
+                                                          Title="@(L["PersonDetail.RemoveAssignmentTitle"])" />
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
 
                 <MudDivider Class="my-3" />
 
-                <MudText Typo="Typo.subtitle1" GutterBottom="true">Assign Role</MudText>
+                <MudText Typo="Typo.subtitle1" GutterBottom="true">@L.H("PersonDetail.AssignRole")</MudText>
                 <MudStack Row="true" AlignItems="AlignItems.End" Spacing="2">
-                    <MudSelect T="Guid?" @bind-Value="_selectedRoleId" Label="Role" Clearable="true">
+                    <MudSelect T="Guid?" @bind-Value="_selectedRoleId" Label="@L["Common.Role"]" Clearable="true">
                         @if (_roles is not null)
                         {
                             @foreach (var role in _roles.Where(r => r.IsActive))
@@ -106,11 +107,11 @@
                             }
                         }
                     </MudSelect>
-                    <MudDatePicker @bind-Date="_assignFromDate" Label="From" />
-                    <MudDatePicker @bind-Date="_assignToDate" Label="To (optional)" Clearable="true" />
+                    <MudDatePicker @bind-Date="_assignFromDate" Label="@L["Common.From"]" />
+                    <MudDatePicker @bind-Date="_assignToDate" Label="@L["Common.EndDateOptional"]" Clearable="true" />
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AssignRole"
                                Disabled="@(_selectedRoleId is null)">
-                        Assign
+                        @L.H("Common.Assign")
                     </MudButton>
                 </MudStack>
             </MudCardContent>
@@ -161,7 +162,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Person updated.", Severity.Success);
+            Snackbar.Add(L["PersonDetail.Updated"], Severity.Success);
             Navigation.NavigateTo("/people");
         }
         else
@@ -174,16 +175,16 @@
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Deactivate {_person!.FirstName} {_person.LastName}? This will also demote any linked user to Former Member." }
+            { x => x.ContentText, string.Format(L["PersonDetail.DeactivateConfirm"], _person!.FirstName, _person.LastName) }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Deactivate Person", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["PersonDetail.DeactivateTitle"], parameters);
         var dialogResult = await dialog.Result;
         if (dialogResult is null || dialogResult.Canceled) return;
 
         var result = await Mediator.Send(new DeactivatePersonCommand(PersonId));
         if (result.IsSuccess)
         {
-            Snackbar.Add("Person deactivated.", Severity.Success);
+            Snackbar.Add(L["PersonDetail.Deactivated"], Severity.Success);
             await LoadPerson();
         }
         else
@@ -202,7 +203,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Role assigned.", Severity.Success);
+            Snackbar.Add(L["PersonDetail.RoleAssigned"], Severity.Success);
             _selectedRoleId = null;
             _assignToDate = null;
             await LoadPerson();
@@ -215,7 +216,7 @@
 
     private async Task EndRoleAssignment(Guid assignmentId)
     {
-        var dialog = await DialogService.ShowAsync<EndRoleAssignmentDialog>("End Assignment");
+        var dialog = await DialogService.ShowAsync<EndRoleAssignmentDialog>(L["PersonDetail.EndAssignmentDialogTitle"]);
         var dialogResult = await dialog.Result;
         if (dialogResult is null || dialogResult.Canceled) return;
 
@@ -223,7 +224,7 @@
         var result = await Mediator.Send(new EndRoleAssignmentCommand(assignmentId, endDate));
         if (result.IsSuccess)
         {
-            Snackbar.Add("Role assignment ended.", Severity.Success);
+            Snackbar.Add(L["PersonDetail.RoleEnded"], Severity.Success);
             await LoadPerson();
         }
         else
@@ -236,16 +237,16 @@
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, "Remove this role assignment permanently?" }
+            { x => x.ContentText, L["PersonDetail.RemoveAssignmentConfirm"] }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove Assignment", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["PersonDetail.RemoveAssignmentDialogTitle"], parameters);
         var dialogResult = await dialog.Result;
         if (dialogResult is null || dialogResult.Canceled) return;
 
         var result = await Mediator.Send(new RemoveRoleAssignmentCommand(assignmentId));
         if (result.IsSuccess)
         {
-            Snackbar.Add("Role assignment removed.", Severity.Success);
+            Snackbar.Add(L["PersonDetail.RoleRemoved"], Severity.Success);
             await LoadPerson();
         }
         else
@@ -254,10 +255,10 @@
         }
     }
 
-    private static string VoiceGroupLabel(VoiceGroup? vg) => vg switch
+    private string VoiceGroupLabel(VoiceGroup? vg) => vg switch
     {
         null => "—",
-        VoiceGroup.None => "No Voice Group",
+        VoiceGroup.None => L["People.VoiceGroupNone"],
         _ => vg.ToString()!
     };
 }

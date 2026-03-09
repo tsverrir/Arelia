@@ -1,18 +1,27 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject Arelia.Web.Services.TenantService TenantService
+@inject Arelia.Web.Services.CultureService CultureService
+@inject Arelia.Web.Services.AdminHighlightService HighlightService
+@inject ILocalizer L
 @inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
 
 <MudThemeProvider />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
+@if (HighlightService.ShowMissingTranslations)
+{
+    <style>.missing-translation { outline: 2px solid red; outline-offset: 1px; }</style>
+}
+
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
                        OnClick="@ToggleDrawer" />
-        <MudText Typo="Typo.h6" Class="ml-3">Arelia</MudText>
+        <MudText Typo="Typo.h6" Class="ml-3">@L["Layout.AppName"]</MudText>
         <MudSpacer />
         <AuthorizeView>
             <Authorized>
@@ -21,25 +30,35 @@
                            OnClick="@(() => Navigation.NavigateTo("/select-organization"))">
                     @(TenantService.CurrentOrganizationId.HasValue
                         ? TenantService.CurrentOrganizationName
-                        : "Select Organization")
+                        : L["Layout.SelectOrganization"])
                 </MudButton>
                 <NotificationBell />
                 <MudMenu Icon="@Icons.Material.Filled.Person" Color="Color.Inherit">
-                    <MudMenuItem Href="/Account/Manage">Profile</MudMenuItem>
+                    <MudMenuItem Href="/Account/Manage">@L["Layout.Profile"]</MudMenuItem>
+                    <MudDivider />
+                    <MudMenuItem Icon="@Icons.Material.Filled.Language" Disabled="true">@L["Common.Language"]</MudMenuItem>
+                    @foreach (var (code, label) in _languages)
+                    {
+                        var isCurrent = string.Equals(code, CultureService.CurrentCultureName, StringComparison.OrdinalIgnoreCase);
+                        <MudMenuItem Icon="@(isCurrent ? Icons.Material.Filled.Check : Icons.Material.Filled.Circle)"
+                                     IconColor="@(isCurrent ? Color.Primary : Color.Transparent)"
+                                     OnClick="@(() => SetLanguageAsync(code))">@label</MudMenuItem>
+                    }
+                    <MudDivider />
                     <MudMenuItem>
                         <form method="post" action="/Account/Logout">
                             <AntiforgeryToken />
                             <input type="hidden" name="ReturnUrl" value="" />
                             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text"
                                        Color="Color.Default" FullWidth="true" Class="justify-start">
-                                Sign out
+                                @L["Layout.SignOut"]
                             </MudButton>
                         </form>
                     </MudMenuItem>
                 </MudMenu>
             </Authorized>
             <NotAuthorized>
-                <MudButton Href="/Account/Login" Color="Color.Inherit">Sign in</MudButton>
+                <MudButton Href="/Account/Login" Color="Color.Inherit">@L["Layout.SignIn"]</MudButton>
             </NotAuthorized>
         </AuthorizeView>
     </MudAppBar>
@@ -64,9 +83,17 @@
 @code {
     private bool _drawerOpen = true;
 
+    private static readonly (string Code, string Label)[] _languages =
+    [
+        ("en", "English"),
+        ("da", "Dansk"),
+        ("is", "Íslenska"),
+    ];
+
     protected override async Task OnInitializedAsync()
     {
-        TenantService.OnTenantChanged += StateHasChanged;
+        TenantService.OnTenantChanged += OnTenantOrHighlightChanged;
+        HighlightService.OnChanged += OnTenantOrHighlightChanged;
         await TenantService.InitializeAsync();
     }
 
@@ -74,12 +101,28 @@
     {
         if (!firstRender) return;
         await TenantService.TryRestoreFromStorageAsync();
+        await CultureService.TryInitializeAsync();
+    }
+
+    private async Task SetLanguageAsync(string code)
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId is not null)
+            await CultureService.SetCultureAsync(userId, code);
+    }
+
+    private void OnTenantOrHighlightChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
-        TenantService.OnTenantChanged -= StateHasChanged;
+        TenantService.OnTenantChanged -= OnTenantOrHighlightChanged;
+        HighlightService.OnChanged -= OnTenantOrHighlightChanged;
     }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 }
+

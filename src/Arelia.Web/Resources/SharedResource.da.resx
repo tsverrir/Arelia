@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -8,7 +8,15 @@
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="xml:space" use="default" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
@@ -17,40 +25,248 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <data name="AppTitle" xml:space="preserve">
-    <value>Arelia</value>
-  </data>
-  <data name="Welcome" xml:space="preserve">
-    <value>Velkommen til Arelia</value>
-  </data>
-  <data name="SignIn" xml:space="preserve">
-    <value>Log ind</value>
-  </data>
-  <data name="SignOut" xml:space="preserve">
-    <value>Log ud</value>
-  </data>
-  <data name="Home" xml:space="preserve">
-    <value>Hjem</value>
-  </data>
-  <data name="Calendar" xml:space="preserve">
-    <value>Kalender</value>
-  </data>
-  <data name="People" xml:space="preserve">
-    <value>Medlemmer</value>
-  </data>
-  <data name="Activities" xml:space="preserve">
-    <value>Aktiviteter</value>
-  </data>
-  <data name="Finances" xml:space="preserve">
-    <value>Økonomi</value>
-  </data>
-  <data name="Roles" xml:space="preserve">
-    <value>Roller</value>
-  </data>
-  <data name="Management" xml:space="preserve">
-    <value>Administration</value>
-  </data>
-  <data name="Admin" xml:space="preserve">
-    <value>Admin</value>
-  </data>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+  <data name="Common.Cancel" xml:space="preserve"><value>Annuller</value></data>
+  <data name="Common.Save" xml:space="preserve"><value>Gem</value></data>
+  <data name="Common.Create" xml:space="preserve"><value>Opret</value></data>
+  <data name="Common.Delete" xml:space="preserve"><value>Slet</value></data>
+  <data name="Common.Edit" xml:space="preserve"><value>Rediger</value></data>
+  <data name="Common.Confirm" xml:space="preserve"><value>Bekraeft</value></data>
+  <data name="Common.Add" xml:space="preserve"><value>Tilfoej</value></data>
+  <data name="Common.Filter" xml:space="preserve"><value>Filtrer</value></data>
+  <data name="Common.Search" xml:space="preserve"><value>Soeg</value></data>
+  <data name="Common.Active" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="Common.Inactive" xml:space="preserve"><value>Inaktiv</value></data>
+  <data name="Common.Ended" xml:space="preserve"><value>Afsluttet</value></data>
+  <data name="Common.Public" xml:space="preserve"><value>Offentlig</value></data>
+  <data name="Common.Name" xml:space="preserve"><value>Navn</value></data>
+  <data name="Common.Email" xml:space="preserve"><value>E-mail</value></data>
+  <data name="Common.Phone" xml:space="preserve"><value>Telefon</value></data>
+  <data name="Common.Location" xml:space="preserve"><value>Placering</value></data>
+  <data name="Common.Description" xml:space="preserve"><value>Beskrivelse</value></data>
+  <data name="Common.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Common.Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Common.Date" xml:space="preserve"><value>Dato</value></data>
+  <data name="Common.Time" xml:space="preserve"><value>Tid</value></data>
+  <data name="Common.Notes" xml:space="preserve"><value>Bemrkninger</value></data>
+  <data name="Common.Role" xml:space="preserve"><value>Rolle</value></data>
+  <data name="Common.From" xml:space="preserve"><value>Fra</value></data>
+  <data name="Common.To" xml:space="preserve"><value>Til</value></data>
+  <data name="Common.Year" xml:space="preserve"><value>Ar</value></data>
+  <data name="Common.WorkYear" xml:space="preserve"><value>Arbejdsaar</value></data>
+  <data name="Common.Organization" xml:space="preserve"><value>Organisation</value></data>
+  <data name="Common.Assign" xml:space="preserve"><value>Tildel</value></data>
+  <data name="Common.Invite" xml:space="preserve"><value>Inviter</value></data>
+  <data name="Common.Deactivate" xml:space="preserve"><value>Deaktiver</value></data>
+  <data name="Common.FormerMember" xml:space="preserve"><value>Tidligere Medlem</value></data>
+  <data name="Common.Today" xml:space="preserve"><value>I dag</value></data>
+  <data name="Common.File" xml:space="preserve"><value>Fil</value></data>
+  <data name="Common.Size" xml:space="preserve"><value>Stoerrelse</value></data>
+  <data name="Common.Created" xml:space="preserve"><value>Oprettet</value></data>
+  <data name="Common.StartDate" xml:space="preserve"><value>Startdato</value></data>
+  <data name="Common.EndDate" xml:space="preserve"><value>Slutdato</value></data>
+  <data name="Common.StartTime" xml:space="preserve"><value>Starttid</value></data>
+  <data name="Common.EndTime" xml:space="preserve"><value>Sluttid</value></data>
+  <data name="Common.PublicVisible" xml:space="preserve"><value>Offentlig synlig</value></data>
+  <data name="Common.SelectOrgFirst" xml:space="preserve"><value>Vaelg venligst en organisation forst.</value></data>
+  <data name="Common.SignIn" xml:space="preserve"><value>log ind</value></data>
+  <data name="Common.SignedInAs" xml:space="preserve"><value>Logget ind som {0}</value></data>
+  <data name="Common.Language" xml:space="preserve"><value>Sprog</value></data>
+  <data name="Common.DefaultLanguage" xml:space="preserve"><value>Standardsprog</value></data>
+  <data name="Common.FirstName" xml:space="preserve"><value>Fornavn</value></data>
+  <data name="Common.LastName" xml:space="preserve"><value>Efternavn</value></data>
+  <data name="Common.VoiceGroup" xml:space="preserve"><value>Stemmelejer</value></data>
+  <data name="Common.Permission" xml:space="preserve"><value>Rettighed</value></data>
+  <data name="Common.Amount" xml:space="preserve"><value>Beloeb</value></data>
+  <data name="Common.Category" xml:space="preserve"><value>Kategori</value></data>
+  <data name="Common.EndDateOptional" xml:space="preserve"><value>Til (valgfri)</value></data>
+  <data name="Layout.SelectOrganization" xml:space="preserve"><value>Vaelg organisation</value></data>
+  <data name="Layout.Profile" xml:space="preserve"><value>Profil</value></data>
+  <data name="Layout.SignOut" xml:space="preserve"><value>Log ud</value></data>
+  <data name="Layout.SignIn" xml:space="preserve"><value>Log ind</value></data>
+  <data name="Layout.AppName" xml:space="preserve"><value>Arelia</value></data>
+  <data name="Layout.HighlightMissing" xml:space="preserve"><value>Fremhaev manglende oversoettelser</value></data>
+  <data name="Nav.Home" xml:space="preserve"><value>Hjem</value></data>
+  <data name="Nav.Calendar" xml:space="preserve"><value>Kalender</value></data>
+  <data name="Nav.Management" xml:space="preserve"><value>Administration</value></data>
+  <data name="Nav.People" xml:space="preserve"><value>Medlemmer</value></data>
+  <data name="Nav.Semesters" xml:space="preserve"><value>Semestre</value></data>
+  <data name="Nav.Activities" xml:space="preserve"><value>Aktiviteter</value></data>
+  <data name="Nav.Roles" xml:space="preserve"><value>Roller</value></data>
+  <data name="Nav.Finances" xml:space="preserve"><value>Oekonomi</value></data>
+  <data name="Nav.Admin" xml:space="preserve"><value>Administration</value></data>
+  <data name="Nav.Users" xml:space="preserve"><value>Brugere</value></data>
+  <data name="Nav.Organizations" xml:space="preserve"><value>Organisationer</value></data>
+  <data name="Nav.AuditLog" xml:space="preserve"><value>Revisionslog</value></data>
+  <data name="Nav.Backups" xml:space="preserve"><value>Sikkerhedskopier</value></data>
+  <data name="Home.Title" xml:space="preserve"><value>Velkommen til Arelia</value></data>
+  <data name="Home.Tagline" xml:space="preserve"><value>Korstyring gjort nemt.</value></data>
+  <data name="Home.PleaseText" xml:space="preserve"><value>Venligst</value></data>
+  <data name="Home.ToContinue" xml:space="preserve"><value>for at fortsaette.</value></data>
+  <data name="SelectOrg.Title" xml:space="preserve"><value>Vaelg en organisation</value></data>
+  <data name="SelectOrg.NoOrgs" xml:space="preserve"><value>Du er ikke medlem af nogen organisation endnu. Kontakt en administrator.</value></data>
+  <data name="Semester.Title" xml:space="preserve"><value>Semestre</value></data>
+  <data name="Semester.Create" xml:space="preserve"><value>Opret Semester</value></data>
+  <data name="Semester.HidePast" xml:space="preserve"><value>Skjul tidligere semestre</value></data>
+  <data name="Semester.CreateTitle" xml:space="preserve"><value>Opret Semester</value></data>
+  <data name="Semester.Created" xml:space="preserve"><value>Semester oprettet.</value></data>
+  <data name="SemesterDetail.BackToSemesters" xml:space="preserve"><value>Tilbage til semestre</value></data>
+  <data name="SemesterDetail.Summary" xml:space="preserve"><value>Oversigt</value></data>
+  <data name="SemesterDetail.RehearsalSchedule" xml:space="preserve"><value>Proeveplan</value></data>
+  <data name="SemesterDetail.GenerateRehearsals" xml:space="preserve"><value>Generer proever</value></data>
+  <data name="SemesterDetail.Day" xml:space="preserve"><value>Dag</value></data>
+  <data name="SemesterDetail.Duration" xml:space="preserve"><value>Varighed</value></data>
+  <data name="SemesterDetail.DateRange" xml:space="preserve"><value>Datointerval</value></data>
+  <data name="SemesterDetail.DurationLabel" xml:space="preserve"><value>Varighed (min)</value></data>
+  <data name="SemesterDetail.NoTemplates" xml:space="preserve"><value>Ingen proeveskabeloner endnu. Tilfoej en nedenfor for at generere proever.</value></data>
+  <data name="SemesterDetail.AddTemplate" xml:space="preserve"><value>Tilfoej Proeveskabelon</value></data>
+  <data name="SemesterDetail.AddTemplateBtn" xml:space="preserve"><value>Tilfoej skabelon</value></data>
+  <data name="SemesterDetail.FromDate" xml:space="preserve"><value>Fra dato</value></data>
+  <data name="SemesterDetail.ToDate" xml:space="preserve"><value>Til dato</value></data>
+  <data name="SemesterDetail.ActivitiesTitle" xml:space="preserve"><value>Aktiviteter i dette semester</value></data>
+  <data name="SemesterDetail.AddEvent" xml:space="preserve"><value>Tilfoej begivenhed</value></data>
+  <data name="SemesterDetail.NoActivities" xml:space="preserve"><value>Ingen aktiviteter endnu. Generer proever eller tilfoej begivenheder ovenfor.</value></data>
+  <data name="SemesterDetail.AddEventTitle" xml:space="preserve"><value>Tilfoej begivenhed til semester</value></data>
+  <data name="SemesterDetail.EditTemplateTitle" xml:space="preserve"><value>Rediger proeveskabelon</value></data>
+  <data name="SemesterDetail.DeleteTemplateTitle" xml:space="preserve"><value>Slet skabelon</value></data>
+  <data name="SemesterDetail.TemplateAdded" xml:space="preserve"><value>Proeveskabelon tilfoejt.</value></data>
+  <data name="SemesterDetail.TemplateUpdated" xml:space="preserve"><value>Proeveskabelon opdateret.</value></data>
+  <data name="SemesterDetail.TemplateDeleted" xml:space="preserve"><value>Proeveskabelon slettet.</value></data>
+  <data name="SemesterDetail.Rehearsals" xml:space="preserve"><value>Proever: {0}</value></data>
+  <data name="SemesterDetail.Events" xml:space="preserve"><value>Begivenheder: {0}</value></data>
+  <data name="SemesterDetail.TemplatesCount" xml:space="preserve"><value>Skabeloner: {0}</value></data>
+  <data name="SemesterDetail.DeleteTemplateConfirm" xml:space="preserve"><value>Slet proeveskabelon for {0} kl. {1}?</value></data>
+  <data name="SemesterDetail.RehearsalsGenerated" xml:space="preserve"><value>Genererede {0} proever ({1} sprunget over).</value></data>
+  <data name="SemesterDetail.ConflictsDetected" xml:space="preserve"><value>{0} konflikter fundet.</value></data>
+  <data name="SemesterDetail.EventAdded" xml:space="preserve"><value>Begivenhed tilfoejt til semester.</value></data>
+  <data name="Activity.Title" xml:space="preserve"><value>Aktiviteter</value></data>
+  <data name="Activity.Create" xml:space="preserve"><value>Opret aktivitet</value></data>
+  <data name="Activity.GroupByType" xml:space="preserve"><value>Grupper efter type</value></data>
+  <data name="Activity.CreateTitle" xml:space="preserve"><value>Opret aktivitet</value></data>
+  <data name="Activity.Created" xml:space="preserve"><value>Aktivitet oprettet.</value></data>
+  <data name="Activity.Deleted" xml:space="preserve"><value>Aktivitet slettet.</value></data>
+  <data name="Activity.DeleteSelected" xml:space="preserve"><value>Slet {0} valgte</value></data>
+  <data name="Activity.DeleteTitle" xml:space="preserve"><value>Slet aktivitet</value></data>
+  <data name="Activity.DeleteConfirm" xml:space="preserve"><value>Slet &quot;{0}&quot;? Dette vil ogsa fjerne alle underordnede aktiviteter.</value></data>
+  <data name="Activity.BulkDeleteTitle" xml:space="preserve"><value>Massesletning</value></data>
+  <data name="Activity.BulkDeleteConfirm" xml:space="preserve"><value>Slet {0} valgte aktiviteter og deres underordnede aktiviteter?</value></data>
+  <data name="Activity.BulkDeleted" xml:space="preserve"><value>{0} aktiviteter slettet.</value></data>
+  <data name="ActivityDetail.BackToSemester" xml:space="preserve"><value>Tilbage til semester</value></data>
+  <data name="ActivityDetail.BackToActivities" xml:space="preserve"><value>Tilbage til aktiviteter</value></data>
+  <data name="ActivityDetail.Summary" xml:space="preserve"><value>Oversigt</value></data>
+  <data name="ActivityDetail.EditTitle" xml:space="preserve"><value>Rediger aktivitet</value></data>
+  <data name="ActivityDetail.AttendanceTitle" xml:space="preserve"><value>Deltagelse</value></data>
+  <data name="ActivityDetail.Deleted" xml:space="preserve"><value>Aktivitet slettet.</value></data>
+  <data name="ActivityDetail.Updated" xml:space="preserve"><value>Aktivitet opdateret.</value></data>
+  <data name="ActivityDetail.AttendanceSaved" xml:space="preserve"><value>Deltagelse gemt.</value></data>
+  <data name="ActivityDetail.MaxCapacity" xml:space="preserve"><value>Maks. kapacitet</value></data>
+  <data name="ActivityDetail.SignupDeadlineLabel" xml:space="preserve"><value>Tilmeldingsfrist</value></data>
+  <data name="ActivityDetail.ParticipantsAll" xml:space="preserve"><value>Deltagere: {0} (alle aktive medlemmer)</value></data>
+  <data name="ActivityDetail.Capacity" xml:space="preserve"><value>Kapacitet: {0} / {1}</value></data>
+  <data name="ActivityDetail.Participants" xml:space="preserve"><value>Deltagere: {0}</value></data>
+  <data name="ActivityDetail.ChildActivities" xml:space="preserve"><value>Underordnede aktiviteter: {0}</value></data>
+  <data name="ActivityDetail.SignupDeadline" xml:space="preserve"><value>Tilmeldingsfrist: {0}</value></data>
+  <data name="ActivityDetail.AttendanceHeader" xml:space="preserve"><value>Fremmoedt ({0} / {1})</value></data>
+  <data name="ActivityDetail.Comment" xml:space="preserve"><value>Kommentar</value></data>
+  <data name="ActivityDetail.CommentPlaceholder" xml:space="preserve"><value>Kommentar…</value></data>
+  <data name="ActivityDetail.OtherPlaceholder" xml:space="preserve"><value>Andet…</value></data>
+  <data name="ActivityDetail.StatusPresent" xml:space="preserve"><value>Til stede</value></data>
+  <data name="ActivityDetail.StatusLate" xml:space="preserve"><value>For sen</value></data>
+  <data name="ActivityDetail.StatusNoShow" xml:space="preserve"><value>Udeblevet</value></data>
+  <data name="ActivityDetail.StatusSick" xml:space="preserve"><value>Syg</value></data>
+  <data name="ActivityDetail.StatusExplained" xml:space="preserve"><value>Forklaret</value></data>
+  <data name="People.Title" xml:space="preserve"><value>Medlemmer</value></data>
+  <data name="People.AddPerson" xml:space="preserve"><value>Tilfoej person</value></data>
+  <data name="People.AddByEmail" xml:space="preserve"><value>Tilfoej via e-mail</value></data>
+  <data name="People.ImportFromOrg" xml:space="preserve"><value>Importer fra org.</value></data>
+  <data name="People.ShowInactive" xml:space="preserve"><value>Vis inaktive</value></data>
+  <data name="People.AddPersonTitle" xml:space="preserve"><value>Tilfoej person</value></data>
+  <data name="People.PersonAdded" xml:space="preserve"><value>Person tilfoejt.</value></data>
+  <data name="People.AddByEmailTitle" xml:space="preserve"><value>Tilfoej person via e-mail</value></data>
+  <data name="People.ImportTitle" xml:space="preserve"><value>Importer fra en anden organisation</value></data>
+  <data name="People.ImportFromOrgTitle" xml:space="preserve"><value>Importer person fra anden organisation</value></data>
+  <data name="People.VoiceGroupNone" xml:space="preserve"><value>Ingen stemmegruppe</value></data>
+  <data name="People.NameRequired" xml:space="preserve"><value>For- og efternavn er pakraevet.</value></data>
+  <data name="People.EmailRequired" xml:space="preserve"><value>E-mail er pakraevet.</value></data>
+  <data name="People.Created" xml:space="preserve"><value>Person oprettet.</value></data>
+  <data name="People.MemberAdded" xml:space="preserve"><value>Medlem tilfoejt.</value></data>
+  <data name="People.Imported" xml:space="preserve"><value>{0} {1} importeret.</value></data>
+  <data name="People.DuplicateTitle" xml:space="preserve"><value>Duplikeret person</value></data>
+  <data name="People.DuplicateConfirm" xml:space="preserve"><value>{0} {1} eksisterer allerede i denne organisation. Opret alligevel?</value></data>
+  <data name="People.CrossOrgTitle" xml:space="preserve"><value>Person fundet i anden organisation</value></data>
+  <data name="People.CrossOrgFound" xml:space="preserve"><value>{0} {1} eksisterer allerede i &quot;{2}&quot;. Klik Bekraeft for at kopiere oplysningerne, eller Annuller for at udfylde manuelt.</value></data>
+  <data name="People.ImportSearch" xml:space="preserve"><value>Soeg efter navn</value></data>
+  <data name="People.ImportNoResults" xml:space="preserve"><value>Ingen resultater i andre organisationer.</value></data>
+  <data name="People.ImportBtn" xml:space="preserve"><value>Importer</value></data>
+  <data name="PersonDetail.RoleAssignments" xml:space="preserve"><value>Rolletildelinger</value></data>
+  <data name="PersonDetail.HasLinkedUser" xml:space="preserve"><value>Har tilknyttet brugerkonto</value></data>
+  <data name="PersonDetail.AssignRole" xml:space="preserve"><value>Tildel rolle</value></data>
+  <data name="PersonDetail.EndAssignmentTitle" xml:space="preserve"><value>Afslut tildeling i dag</value></data>
+  <data name="EndAssignment.ChooseEndDate" xml:space="preserve"><value>Vaelg slutdato for denne rolletildeling.</value></data>
+  <data name="PersonDetail.RemoveAssignmentTitle" xml:space="preserve"><value>Fjern tildeling</value></data>
+  <data name="PersonDetail.Saved" xml:space="preserve"><value>aendringer gemt.</value></data>
+  <data name="PersonDetail.Deactivated" xml:space="preserve"><value>Person deaktiveret.</value></data>
+  <data name="PersonDetail.RoleAssigned" xml:space="preserve"><value>Rolle tildelt.</value></data>
+  <data name="PersonDetail.RoleEnded" xml:space="preserve"><value>Rolletildeling afsluttet.</value></data>
+  <data name="PersonDetail.RoleRemoved" xml:space="preserve"><value>Rolletildeling fjernet.</value></data>
+  <data name="PersonDetail.Updated" xml:space="preserve"><value>Person opdateret.</value></data>
+  <data name="PersonDetail.DeactivateTitle" xml:space="preserve"><value>Deaktiver person</value></data>
+  <data name="PersonDetail.DeactivateConfirm" xml:space="preserve"><value>Deaktiver {0} {1}? Dette vil ogsa degradere eventuelle tilknyttede brugere til Tidligere Medlem.</value></data>
+  <data name="PersonDetail.EndAssignmentDialogTitle" xml:space="preserve"><value>Afslut tildeling</value></data>
+  <data name="PersonDetail.RemoveAssignmentDialogTitle" xml:space="preserve"><value>Fjern tildeling</value></data>
+  <data name="PersonDetail.RemoveAssignmentConfirm" xml:space="preserve"><value>Fjern denne rolletildeling permanent?</value></data>
+  <data name="Roles.Title" xml:space="preserve"><value>Roller og rettigheder</value></data>
+  <data name="Roles.CreateCustom" xml:space="preserve"><value>Opret brugerdefineret rolle</value></data>
+  <data name="Roles.PermissionMatrix" xml:space="preserve"><value>Rettighedsmatrix</value></data>
+  <data name="Roles.AllRoles" xml:space="preserve"><value>Alle roller</value></data>
+  <data name="Roles.CreateCustomTitle" xml:space="preserve"><value>Opret brugerdefineret rolle</value></data>
+  <data name="Roles.RoleName" xml:space="preserve"><value>Rollenavn</value></data>
+  <data name="Roles.Created" xml:space="preserve"><value>Rolle oprettet.</value></data>
+  <data name="Roles.RoleCreated" xml:space="preserve"><value>Rollen &apos;{0}&apos; er oprettet.</value></data>
+  <data name="Roles.ActiveAssignments" xml:space="preserve"><value>Aktive tildelinger</value></data>
+  <data name="Finance.Title" xml:space="preserve"><value>Oekonomi</value></data>
+  <data name="Finance.Charges" xml:space="preserve"><value>Opkraevninger</value></data>
+  <data name="Finance.Expenses" xml:space="preserve"><value>Udgifter</value></data>
+  <data name="Finance.RecordExpense" xml:space="preserve"><value>Registrer udgift</value></data>
+  <data name="Finance.RecordExpenseTitle" xml:space="preserve"><value>Registrer udgift</value></data>
+  <data name="Finance.Due" xml:space="preserve"><value>Forfaldent</value></data>
+  <data name="Finance.Paid" xml:space="preserve"><value>Betalt</value></data>
+  <data name="Finance.DueDate" xml:space="preserve"><value>Forfaldsdato</value></data>
+  <data name="Finance.ExpenseRecorded" xml:space="preserve"><value>Udgift registreret.</value></data>
+  <data name="Finance.Member" xml:space="preserve"><value>Medlem</value></data>
+  <data name="Finance.ReceivedBy" xml:space="preserve"><value>Modtaget af</value></data>
+  <data name="Calendar.Title" xml:space="preserve"><value>Kalender</value></data>
+  <data name="Calendar.Today" xml:space="preserve"><value>I dag</value></data>
+  <data name="Calendar.More" xml:space="preserve"><value>+{0} flere</value></data>
+  <data name="Admin.Users.Title" xml:space="preserve"><value>Brugeradministration</value></data>
+  <data name="Admin.Users.InviteUser" xml:space="preserve"><value>Inviter bruger</value></data>
+  <data name="Admin.Users.InviteTitle" xml:space="preserve"><value>Inviter bruger</value></data>
+  <data name="Admin.Users.InvitationSent" xml:space="preserve"><value>Invitation sendt til {0}.</value></data>
+  <data name="Admin.Users.DeactivateTitle" xml:space="preserve"><value>Deaktiver bruger</value></data>
+  <data name="Admin.Users.DeactivateConfirm" xml:space="preserve"><value>Degrader {0} til Tidligere Medlem?</value></data>
+  <data name="Admin.Users.Deactivated" xml:space="preserve"><value>Bruger deaktiveret.</value></data>
+  <data name="Admin.Org.Title" xml:space="preserve"><value>Organisationer</value></data>
+  <data name="Admin.Org.Create" xml:space="preserve"><value>Opret organisation</value></data>
+  <data name="Admin.Org.CreateTitle" xml:space="preserve"><value>Opret organisation</value></data>
+  <data name="Admin.Org.OrgName" xml:space="preserve"><value>Organisationsnavn</value></data>
+  <data name="Admin.Org.EditSettingsTitle" xml:space="preserve"><value>Organisationsindstillinger</value></data>
+  <data name="Admin.Org.SettingsSaved" xml:space="preserve"><value>Organisationsindstillinger gemt.</value></data>
+  <data name="Admin.Org.Created" xml:space="preserve"><value>Organisation '{0}' oprettet.</value></data>
+  <data name="Admin.AuditLog.Title" xml:space="preserve"><value>Revisionslog</value></data>
+  <data name="Admin.AuditLog.Timestamp" xml:space="preserve"><value>Tidsstempel</value></data>
+  <data name="Admin.AuditLog.Action" xml:space="preserve"><value>Handling</value></data>
+  <data name="Admin.AuditLog.Entity" xml:space="preserve"><value>Enhed</value></data>
+  <data name="Admin.AuditLog.User" xml:space="preserve"><value>Bruger</value></data>
+  <data name="Admin.AuditLog.Details" xml:space="preserve"><value>Detaljer</value></data>
+  <data name="Admin.Backups.Title" xml:space="preserve"><value>Database-sikkerhedskopier</value></data>
+  <data name="Admin.Backups.Create" xml:space="preserve"><value>Opret sikkerhedskopi nu</value></data>
+  <data name="Admin.Backups.Creating" xml:space="preserve"><value>Opretter...</value></data>
+  <data name="Admin.Backups.NoBackups" xml:space="preserve"><value>Ingen sikkerhedskopier endnu.</value></data>
+  <data name="Admin.Backups.Created" xml:space="preserve"><value>Sikkerhedskopi oprettet: {0}</value></data>
+  <data name="Admin.Backups.Failed" xml:space="preserve"><value>Sikkerhedskopi mislykkedes: {0}</value></data>
+  <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Vaelg slutdatoen for denne rolletildeling.</value></data>
+  <data name="Dialog.EndDate" xml:space="preserve"><value>Slutdato</value></data>
 </root>

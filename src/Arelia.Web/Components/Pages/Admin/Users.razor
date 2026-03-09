@@ -1,4 +1,4 @@
-@page "/admin/users"
+﻿@page "/admin/users"
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Organizations.Commands
 @using Arelia.Application.Organizations.Queries
@@ -7,21 +7,22 @@
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>User Management</PageTitle>
+<PageTitle>@L["Admin.Users.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">User Management</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Admin.Users.Title")</MudText>
 
 @if (TenantService.CurrentOrganizationId is null)
 {
-    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
 }
 else
 {
     <MudButton Variant="Variant.Filled" Color="Color.Primary"
                OnClick="ShowInviteDialog" StartIcon="@Icons.Material.Filled.PersonAdd" Class="mb-4">
-        Invite User
+        @L.H("Admin.Users.InviteUser")
     </MudButton>
 
     @if (_users is not null)
@@ -32,7 +33,7 @@ else
                 {
                     case "Status":
                         <MudChip T="string" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)" Size="Size.Small">
-                            @((bool)(context.Value ?? false) ? "Active" : "Former Member")
+                            @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.FormerMember"])
                         </MudChip>
                         break;
                     default:
@@ -54,16 +55,16 @@ else
 
 <MudDialog @bind-Visible="_showInvite">
     <TitleContent>
-        <MudText Typo="Typo.h6">Invite User</MudText>
+        <MudText Typo="Typo.h6">@L.H("Admin.Users.InviteTitle")</MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_inviteEmail" Label="Email" Required="true" InputType="InputType.Email" />
-        <MudTextField @bind-Value="_inviteFirstName" Label="First Name" />
-        <MudTextField @bind-Value="_inviteLastName" Label="Last Name" />
+        <MudTextField @bind-Value="_inviteEmail" Label="@L["Common.Email"]" Required="true" InputType="InputType.Email" />
+        <MudTextField @bind-Value="_inviteFirstName" Label="@L["Common.FirstName"]" />
+        <MudTextField @bind-Value="_inviteLastName" Label="@L["Common.LastName"]" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showInvite = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="InviteUser">Invite</MudButton>
+        <MudButton OnClick="@(() => _showInvite = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="InviteUser">@L.H("Common.Invite")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -74,15 +75,16 @@ else
     private string? _inviteFirstName;
     private string? _inviteLastName;
 
-    private readonly List<ColumnDefinition<OrganizationUserDto>> _columns =
-    [
-        new("Name", "Name", x => x.PersonName),
-        new("Email", "Email", x => x.Email),
-        new("Status", "Status", x => x.IsActive),
-    ];
+    private List<ColumnDefinition<OrganizationUserDto>>? _columns;
 
     protected override async Task OnInitializedAsync()
     {
+        _columns =
+        [
+            new("Name", L["Common.Name"], x => x.PersonName),
+            new("Email", L["Common.Email"], x => x.Email),
+            new("Status", L["Common.Status"], x => x.IsActive),
+        ];
         RegisterTenantChangeHandler();
         await LoadUsers();
     }
@@ -113,7 +115,7 @@ else
         var result = await Mediator.Send(new InviteUserCommand(_inviteEmail, orgId, _inviteFirstName, _inviteLastName));
         if (result.IsSuccess)
         {
-            Snackbar.Add($"Invitation sent to {_inviteEmail}.", Severity.Success);
+            Snackbar.Add(string.Format(L["Admin.Users.InvitationSent"], _inviteEmail), Severity.Success);
             _showInvite = false;
             await LoadUsers();
         }
@@ -127,9 +129,9 @@ else
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Demote {user.PersonName ?? user.Email ?? "this user"} to Former Member?" }
+            { x => x.ContentText, string.Format(L["Admin.Users.DeactivateConfirm"], user.PersonName ?? user.Email ?? L["Common.FormerMember"]) }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Deactivate User", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Admin.Users.DeactivateTitle"], parameters);
         var dialogResult = await dialog.Result;
 
         if (dialogResult is null || dialogResult.Canceled) return;
@@ -137,7 +139,7 @@ else
         var result = await Mediator.Send(new DeactivateOrganizationUserCommand(user.Id));
         if (result.IsSuccess)
         {
-            Snackbar.Add("User deactivated.", Severity.Success);
+            Snackbar.Add(L["Admin.Users.Deactivated"], Severity.Success);
             await LoadUsers();
         }
         else

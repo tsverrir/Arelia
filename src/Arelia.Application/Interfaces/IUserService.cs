@@ -18,4 +18,14 @@ public interface IUserService
     /// Generates a password reset token for the user.
     /// </summary>
     Task<string?> GeneratePasswordResetTokenAsync(string userId);
+
+    /// <summary>
+    /// Returns the user's preferred language. Null means no personal preference set.
+    /// </summary>
+    Task<string?> GetPreferredLanguageAsync(string userId);
+
+    /// <summary>
+    /// Persists the user's preferred language (null clears the preference, falling back to org default).
+    /// </summary>
+    Task SetPreferredLanguageAsync(string userId, string? language);
 }

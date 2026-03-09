@@ -4,15 +4,16 @@
 @using Arelia.Web.Components.Shared
 @using MediatR
 @inject IMediator Mediator
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Audit Log</PageTitle>
+<PageTitle>@L["Admin.AuditLog.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Audit Log</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Admin.AuditLog.Title")</MudText>
 
 @if (TenantService.CurrentOrganizationId is null)
 {
-    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
     return;
 }
 
@@ -47,17 +48,18 @@
 @code {
     private List<AuditLogEntryDto>? _entries;
 
-    private readonly List<ColumnDefinition<AuditLogEntryDto>> _columns =
-    [
-        new("Timestamp", "Timestamp", x => x.Timestamp),
-        new("Action", "Action", x => x.Action),
-        new("Entity", "Entity", x => x.EntityType),
-        new("User", "User", x => x.UserId),
-        new("Details", "Details", x => x.Details),
-    ];
+    private List<ColumnDefinition<AuditLogEntryDto>>? _columns;
 
     protected override async Task OnInitializedAsync()
     {
+        _columns =
+        [
+            new("Timestamp", L["Admin.AuditLog.Timestamp"], x => x.Timestamp),
+            new("Action", L["Admin.AuditLog.Action"], x => x.Action),
+            new("Entity", L["Admin.AuditLog.Entity"], x => x.EntityType),
+            new("User", L["Admin.AuditLog.User"], x => x.UserId),
+            new("Details", L["Admin.AuditLog.Details"], x => x.Details),
+        ];
         RegisterTenantChangeHandler();
         await LoadEntries();
     }

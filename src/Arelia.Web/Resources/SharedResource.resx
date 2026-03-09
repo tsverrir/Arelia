@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -8,7 +8,15 @@
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="xml:space" use="default" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
@@ -17,40 +25,248 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <data name="AppTitle" xml:space="preserve">
-    <value>Arelia</value>
-  </data>
-  <data name="Welcome" xml:space="preserve">
-    <value>Welcome to Arelia</value>
-  </data>
-  <data name="SignIn" xml:space="preserve">
-    <value>Sign in</value>
-  </data>
-  <data name="SignOut" xml:space="preserve">
-    <value>Sign out</value>
-  </data>
-  <data name="Home" xml:space="preserve">
-    <value>Home</value>
-  </data>
-  <data name="Calendar" xml:space="preserve">
-    <value>Calendar</value>
-  </data>
-  <data name="People" xml:space="preserve">
-    <value>People</value>
-  </data>
-  <data name="Activities" xml:space="preserve">
-    <value>Activities</value>
-  </data>
-  <data name="Finances" xml:space="preserve">
-    <value>Finances</value>
-  </data>
-  <data name="Roles" xml:space="preserve">
-    <value>Roles</value>
-  </data>
-  <data name="Management" xml:space="preserve">
-    <value>Management</value>
-  </data>
-  <data name="Admin" xml:space="preserve">
-    <value>Admin</value>
-  </data>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+  <data name="Common.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Common.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common.Create" xml:space="preserve"><value>Create</value></data>
+  <data name="Common.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Common.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Common.Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="Common.Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Common.Filter" xml:space="preserve"><value>Filter</value></data>
+  <data name="Common.Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Common.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Common.Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="Common.Ended" xml:space="preserve"><value>Ended</value></data>
+  <data name="Common.Public" xml:space="preserve"><value>Public</value></data>
+  <data name="Common.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Common.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Common.Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Common.Location" xml:space="preserve"><value>Location</value></data>
+  <data name="Common.Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Common.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Common.Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Common.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Common.Time" xml:space="preserve"><value>Time</value></data>
+  <data name="Common.Notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="Common.Role" xml:space="preserve"><value>Role</value></data>
+  <data name="Common.From" xml:space="preserve"><value>From</value></data>
+  <data name="Common.To" xml:space="preserve"><value>To</value></data>
+  <data name="Common.Year" xml:space="preserve"><value>Year</value></data>
+  <data name="Common.WorkYear" xml:space="preserve"><value>Work Year</value></data>
+  <data name="Common.Organization" xml:space="preserve"><value>Organization</value></data>
+  <data name="Common.Assign" xml:space="preserve"><value>Assign</value></data>
+  <data name="Common.Invite" xml:space="preserve"><value>Invite</value></data>
+  <data name="Common.Deactivate" xml:space="preserve"><value>Deactivate</value></data>
+  <data name="Common.FormerMember" xml:space="preserve"><value>Former Member</value></data>
+  <data name="Common.Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Common.File" xml:space="preserve"><value>File</value></data>
+  <data name="Common.Size" xml:space="preserve"><value>Size</value></data>
+  <data name="Common.Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Common.StartDate" xml:space="preserve"><value>Start Date</value></data>
+  <data name="Common.EndDate" xml:space="preserve"><value>End Date</value></data>
+  <data name="Common.StartTime" xml:space="preserve"><value>Start Time</value></data>
+  <data name="Common.EndTime" xml:space="preserve"><value>End Time</value></data>
+  <data name="Common.PublicVisible" xml:space="preserve"><value>Public Visible</value></data>
+  <data name="Common.SelectOrgFirst" xml:space="preserve"><value>Please select an organisation first.</value></data>
+  <data name="Common.SignIn" xml:space="preserve"><value>sign in</value></data>
+  <data name="Common.SignedInAs" xml:space="preserve"><value>Signed in as {0}</value></data>
+  <data name="Common.Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Common.DefaultLanguage" xml:space="preserve"><value>Default Language</value></data>
+  <data name="Common.FirstName" xml:space="preserve"><value>First Name</value></data>
+  <data name="Common.LastName" xml:space="preserve"><value>Last Name</value></data>
+  <data name="Common.VoiceGroup" xml:space="preserve"><value>Voice Group</value></data>
+  <data name="Common.Permission" xml:space="preserve"><value>Permission</value></data>
+  <data name="Common.Amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="Common.Category" xml:space="preserve"><value>Category</value></data>
+  <data name="Common.EndDateOptional" xml:space="preserve"><value>To (optional)</value></data>
+  <data name="Layout.SelectOrganization" xml:space="preserve"><value>Select Organisation</value></data>
+  <data name="Layout.Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="Layout.SignOut" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Layout.SignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Layout.AppName" xml:space="preserve"><value>Arelia</value></data>
+  <data name="Layout.HighlightMissing" xml:space="preserve"><value>Highlight Missing Translations</value></data>
+  <data name="Nav.Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Nav.Calendar" xml:space="preserve"><value>Calendar</value></data>
+  <data name="Nav.Management" xml:space="preserve"><value>Management</value></data>
+  <data name="Nav.People" xml:space="preserve"><value>People</value></data>
+  <data name="Nav.Semesters" xml:space="preserve"><value>Semesters</value></data>
+  <data name="Nav.Activities" xml:space="preserve"><value>Activities</value></data>
+  <data name="Nav.Roles" xml:space="preserve"><value>Roles</value></data>
+  <data name="Nav.Finances" xml:space="preserve"><value>Finances</value></data>
+  <data name="Nav.Admin" xml:space="preserve"><value>Admin</value></data>
+  <data name="Nav.Users" xml:space="preserve"><value>Users</value></data>
+  <data name="Nav.Organizations" xml:space="preserve"><value>Organisations</value></data>
+  <data name="Nav.AuditLog" xml:space="preserve"><value>Audit Log</value></data>
+  <data name="Nav.Backups" xml:space="preserve"><value>Backups</value></data>
+  <data name="Home.Title" xml:space="preserve"><value>Welcome to Arelia</value></data>
+  <data name="Home.Tagline" xml:space="preserve"><value>Choir management made simple.</value></data>
+  <data name="Home.PleaseText" xml:space="preserve"><value>Please</value></data>
+  <data name="Home.ToContinue" xml:space="preserve"><value>to continue.</value></data>
+  <data name="SelectOrg.Title" xml:space="preserve"><value>Select an Organisation</value></data>
+  <data name="SelectOrg.NoOrgs" xml:space="preserve"><value>You are not a member of any organisation yet. Contact an administrator.</value></data>
+  <data name="Semester.Title" xml:space="preserve"><value>Semesters</value></data>
+  <data name="Semester.Create" xml:space="preserve"><value>Create Semester</value></data>
+  <data name="Semester.HidePast" xml:space="preserve"><value>Hide past semesters</value></data>
+  <data name="Semester.CreateTitle" xml:space="preserve"><value>Create Semester</value></data>
+  <data name="Semester.Created" xml:space="preserve"><value>Semester created.</value></data>
+  <data name="SemesterDetail.BackToSemesters" xml:space="preserve"><value>Back to Semesters</value></data>
+  <data name="SemesterDetail.Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="SemesterDetail.RehearsalSchedule" xml:space="preserve"><value>Rehearsal Schedule</value></data>
+  <data name="SemesterDetail.GenerateRehearsals" xml:space="preserve"><value>Generate Rehearsals</value></data>
+  <data name="SemesterDetail.Day" xml:space="preserve"><value>Day</value></data>
+  <data name="SemesterDetail.Duration" xml:space="preserve"><value>Duration</value></data>
+  <data name="SemesterDetail.DateRange" xml:space="preserve"><value>Date Range</value></data>
+  <data name="SemesterDetail.DurationLabel" xml:space="preserve"><value>Duration (min)</value></data>
+  <data name="SemesterDetail.NoTemplates" xml:space="preserve"><value>No rehearsal templates yet. Add one below to generate rehearsals.</value></data>
+  <data name="SemesterDetail.AddTemplate" xml:space="preserve"><value>Add Rehearsal Template</value></data>
+  <data name="SemesterDetail.AddTemplateBtn" xml:space="preserve"><value>Add Template</value></data>
+  <data name="SemesterDetail.FromDate" xml:space="preserve"><value>From Date</value></data>
+  <data name="SemesterDetail.ToDate" xml:space="preserve"><value>To Date</value></data>
+  <data name="SemesterDetail.ActivitiesTitle" xml:space="preserve"><value>Activities in this Semester</value></data>
+  <data name="SemesterDetail.AddEvent" xml:space="preserve"><value>Add Event</value></data>
+  <data name="SemesterDetail.NoActivities" xml:space="preserve"><value>No activities yet. Generate rehearsals or add events above.</value></data>
+  <data name="SemesterDetail.AddEventTitle" xml:space="preserve"><value>Add Event to Semester</value></data>
+  <data name="SemesterDetail.EditTemplateTitle" xml:space="preserve"><value>Edit Rehearsal Template</value></data>
+  <data name="SemesterDetail.DeleteTemplateTitle" xml:space="preserve"><value>Delete Template</value></data>
+  <data name="SemesterDetail.TemplateAdded" xml:space="preserve"><value>Rehearsal template added.</value></data>
+  <data name="SemesterDetail.TemplateUpdated" xml:space="preserve"><value>Rehearsal template updated.</value></data>
+  <data name="SemesterDetail.TemplateDeleted" xml:space="preserve"><value>Rehearsal template deleted.</value></data>
+  <data name="SemesterDetail.Rehearsals" xml:space="preserve"><value>Rehearsals: {0}</value></data>
+  <data name="SemesterDetail.Events" xml:space="preserve"><value>Events: {0}</value></data>
+  <data name="SemesterDetail.TemplatesCount" xml:space="preserve"><value>Templates: {0}</value></data>
+  <data name="SemesterDetail.DeleteTemplateConfirm" xml:space="preserve"><value>Delete rehearsal template for {0} at {1}?</value></data>
+  <data name="SemesterDetail.RehearsalsGenerated" xml:space="preserve"><value>Generated {0} rehearsals ({1} skipped).</value></data>
+  <data name="SemesterDetail.ConflictsDetected" xml:space="preserve"><value>{0} conflicts detected.</value></data>
+  <data name="SemesterDetail.EventAdded" xml:space="preserve"><value>Event added to semester.</value></data>
+  <data name="Activity.Title" xml:space="preserve"><value>Activities</value></data>
+  <data name="Activity.Create" xml:space="preserve"><value>Create Activity</value></data>
+  <data name="Activity.GroupByType" xml:space="preserve"><value>Group by type</value></data>
+  <data name="Activity.CreateTitle" xml:space="preserve"><value>Create Activity</value></data>
+  <data name="Activity.Created" xml:space="preserve"><value>Activity created.</value></data>
+  <data name="Activity.Deleted" xml:space="preserve"><value>Activity deleted.</value></data>
+  <data name="Activity.DeleteSelected" xml:space="preserve"><value>Delete {0} selected</value></data>
+  <data name="Activity.DeleteTitle" xml:space="preserve"><value>Delete Activity</value></data>
+  <data name="Activity.DeleteConfirm" xml:space="preserve"><value>Delete &quot;{0}&quot;? This will also remove any child activities.</value></data>
+  <data name="Activity.BulkDeleteTitle" xml:space="preserve"><value>Bulk Delete</value></data>
+  <data name="Activity.BulkDeleteConfirm" xml:space="preserve"><value>Delete {0} selected activities and their child activities?</value></data>
+  <data name="Activity.BulkDeleted" xml:space="preserve"><value>{0} activities deleted.</value></data>
+  <data name="ActivityDetail.BackToSemester" xml:space="preserve"><value>Back to Semester</value></data>
+  <data name="ActivityDetail.BackToActivities" xml:space="preserve"><value>Back to Activities</value></data>
+  <data name="ActivityDetail.Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="ActivityDetail.EditTitle" xml:space="preserve"><value>Edit Activity</value></data>
+  <data name="ActivityDetail.AttendanceTitle" xml:space="preserve"><value>Attendance</value></data>
+  <data name="ActivityDetail.Deleted" xml:space="preserve"><value>Activity deleted.</value></data>
+  <data name="ActivityDetail.Updated" xml:space="preserve"><value>Activity updated.</value></data>
+  <data name="ActivityDetail.AttendanceSaved" xml:space="preserve"><value>Attendance saved.</value></data>
+  <data name="ActivityDetail.MaxCapacity" xml:space="preserve"><value>Max Capacity</value></data>
+  <data name="ActivityDetail.SignupDeadlineLabel" xml:space="preserve"><value>Signup Deadline</value></data>
+  <data name="ActivityDetail.ParticipantsAll" xml:space="preserve"><value>Participants: {0} (all active members)</value></data>
+  <data name="ActivityDetail.Capacity" xml:space="preserve"><value>Capacity: {0} / {1}</value></data>
+  <data name="ActivityDetail.Participants" xml:space="preserve"><value>Participants: {0}</value></data>
+  <data name="ActivityDetail.ChildActivities" xml:space="preserve"><value>Child activities: {0}</value></data>
+  <data name="ActivityDetail.SignupDeadline" xml:space="preserve"><value>Signup deadline: {0}</value></data>
+  <data name="ActivityDetail.AttendanceHeader" xml:space="preserve"><value>Attendance ({0} / {1})</value></data>
+  <data name="ActivityDetail.Comment" xml:space="preserve"><value>Comment</value></data>
+  <data name="ActivityDetail.CommentPlaceholder" xml:space="preserve"><value>Comment…</value></data>
+  <data name="ActivityDetail.OtherPlaceholder" xml:space="preserve"><value>Other…</value></data>
+  <data name="ActivityDetail.StatusPresent" xml:space="preserve"><value>Present</value></data>
+  <data name="ActivityDetail.StatusLate" xml:space="preserve"><value>Late</value></data>
+  <data name="ActivityDetail.StatusNoShow" xml:space="preserve"><value>No-show</value></data>
+  <data name="ActivityDetail.StatusSick" xml:space="preserve"><value>Sick</value></data>
+  <data name="ActivityDetail.StatusExplained" xml:space="preserve"><value>Explained</value></data>
+  <data name="People.Title" xml:space="preserve"><value>People</value></data>
+  <data name="People.AddPerson" xml:space="preserve"><value>Add Person</value></data>
+  <data name="People.AddByEmail" xml:space="preserve"><value>Add by Email</value></data>
+  <data name="People.ImportFromOrg" xml:space="preserve"><value>Import from Org</value></data>
+  <data name="People.ShowInactive" xml:space="preserve"><value>Show inactive</value></data>
+  <data name="People.AddPersonTitle" xml:space="preserve"><value>Add Person</value></data>
+  <data name="People.PersonAdded" xml:space="preserve"><value>Person added.</value></data>
+  <data name="People.AddByEmailTitle" xml:space="preserve"><value>Add Person by Email</value></data>
+  <data name="People.ImportTitle" xml:space="preserve"><value>Import from Another Org</value></data>
+  <data name="People.ImportFromOrgTitle" xml:space="preserve"><value>Import Person from Another Organization</value></data>
+  <data name="People.VoiceGroupNone" xml:space="preserve"><value>No Voice Group</value></data>
+  <data name="People.NameRequired" xml:space="preserve"><value>First and last name are required.</value></data>
+  <data name="People.EmailRequired" xml:space="preserve"><value>Email is required.</value></data>
+  <data name="People.Created" xml:space="preserve"><value>Person created.</value></data>
+  <data name="People.MemberAdded" xml:space="preserve"><value>Member added.</value></data>
+  <data name="People.Imported" xml:space="preserve"><value>{0} {1} imported.</value></data>
+  <data name="People.DuplicateTitle" xml:space="preserve"><value>Duplicate Person</value></data>
+  <data name="People.DuplicateConfirm" xml:space="preserve"><value>{0} {1} already exists in this organization. Create a duplicate anyway?</value></data>
+  <data name="People.CrossOrgTitle" xml:space="preserve"><value>Person Found in Another Organization</value></data>
+  <data name="People.CrossOrgFound" xml:space="preserve"><value>{0} {1} already exists in &quot;{2}&quot;. Click Confirm to copy their details, or Cancel to enter them manually.</value></data>
+  <data name="People.ImportSearch" xml:space="preserve"><value>Search by name</value></data>
+  <data name="People.ImportNoResults" xml:space="preserve"><value>No matches found in other organizations.</value></data>
+  <data name="People.ImportBtn" xml:space="preserve"><value>Import</value></data>
+  <data name="PersonDetail.RoleAssignments" xml:space="preserve"><value>Role Assignments</value></data>
+  <data name="PersonDetail.HasLinkedUser" xml:space="preserve"><value>Has linked user account</value></data>
+  <data name="PersonDetail.AssignRole" xml:space="preserve"><value>Assign Role</value></data>
+  <data name="PersonDetail.EndAssignmentTitle" xml:space="preserve"><value>End assignment today</value></data>
+  <data name="EndAssignment.ChooseEndDate" xml:space="preserve"><value>Choose the end date for this role assignment.</value></data>
+  <data name="PersonDetail.RemoveAssignmentTitle" xml:space="preserve"><value>Remove assignment</value></data>
+  <data name="PersonDetail.Saved" xml:space="preserve"><value>Changes saved.</value></data>
+  <data name="PersonDetail.Deactivated" xml:space="preserve"><value>Person deactivated.</value></data>
+  <data name="PersonDetail.RoleAssigned" xml:space="preserve"><value>Role assigned.</value></data>
+  <data name="PersonDetail.RoleEnded" xml:space="preserve"><value>Role assignment ended.</value></data>
+  <data name="PersonDetail.RoleRemoved" xml:space="preserve"><value>Role assignment removed.</value></data>
+  <data name="PersonDetail.Updated" xml:space="preserve"><value>Person updated.</value></data>
+  <data name="PersonDetail.DeactivateTitle" xml:space="preserve"><value>Deactivate Person</value></data>
+  <data name="PersonDetail.DeactivateConfirm" xml:space="preserve"><value>Deactivate {0} {1}? This will also demote any linked user to Former Member.</value></data>
+  <data name="PersonDetail.EndAssignmentDialogTitle" xml:space="preserve"><value>End Assignment</value></data>
+  <data name="PersonDetail.RemoveAssignmentDialogTitle" xml:space="preserve"><value>Remove Assignment</value></data>
+  <data name="PersonDetail.RemoveAssignmentConfirm" xml:space="preserve"><value>Remove this role assignment permanently?</value></data>
+  <data name="Roles.Title" xml:space="preserve"><value>Roles and Permissions</value></data>
+  <data name="Roles.CreateCustom" xml:space="preserve"><value>Create Custom Role</value></data>
+  <data name="Roles.PermissionMatrix" xml:space="preserve"><value>Permission Matrix</value></data>
+  <data name="Roles.AllRoles" xml:space="preserve"><value>All Roles</value></data>
+  <data name="Roles.CreateCustomTitle" xml:space="preserve"><value>Create Custom Role</value></data>
+  <data name="Roles.RoleName" xml:space="preserve"><value>Role Name</value></data>
+  <data name="Roles.Created" xml:space="preserve"><value>Role created.</value></data>
+  <data name="Roles.RoleCreated" xml:space="preserve"><value>Role &apos;{0}&apos; created.</value></data>
+  <data name="Roles.ActiveAssignments" xml:space="preserve"><value>Active Assignments</value></data>
+  <data name="Finance.Title" xml:space="preserve"><value>Finances</value></data>
+  <data name="Finance.Charges" xml:space="preserve"><value>Charges</value></data>
+  <data name="Finance.Expenses" xml:space="preserve"><value>Expenses</value></data>
+  <data name="Finance.RecordExpense" xml:space="preserve"><value>Record Expense</value></data>
+  <data name="Finance.RecordExpenseTitle" xml:space="preserve"><value>Record Expense</value></data>
+  <data name="Finance.Due" xml:space="preserve"><value>Due</value></data>
+  <data name="Finance.Paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="Finance.DueDate" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Finance.ExpenseRecorded" xml:space="preserve"><value>Expense recorded.</value></data>
+  <data name="Finance.Member" xml:space="preserve"><value>Member</value></data>
+  <data name="Finance.ReceivedBy" xml:space="preserve"><value>Received By</value></data>
+  <data name="Calendar.Title" xml:space="preserve"><value>Calendar</value></data>
+  <data name="Calendar.Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Calendar.More" xml:space="preserve"><value>+{0} more</value></data>
+  <data name="Admin.Users.Title" xml:space="preserve"><value>User Management</value></data>
+  <data name="Admin.Users.InviteUser" xml:space="preserve"><value>Invite User</value></data>
+  <data name="Admin.Users.InviteTitle" xml:space="preserve"><value>Invite User</value></data>
+  <data name="Admin.Users.InvitationSent" xml:space="preserve"><value>Invitation sent to {0}.</value></data>
+  <data name="Admin.Users.DeactivateTitle" xml:space="preserve"><value>Deactivate User</value></data>
+  <data name="Admin.Users.DeactivateConfirm" xml:space="preserve"><value>Demote {0} to Former Member?</value></data>
+  <data name="Admin.Users.Deactivated" xml:space="preserve"><value>User deactivated.</value></data>
+  <data name="Admin.Org.Title" xml:space="preserve"><value>Organisations</value></data>
+  <data name="Admin.Org.Create" xml:space="preserve"><value>Create Organisation</value></data>
+  <data name="Admin.Org.CreateTitle" xml:space="preserve"><value>Create Organisation</value></data>
+  <data name="Admin.Org.OrgName" xml:space="preserve"><value>Organisation Name</value></data>
+  <data name="Admin.Org.EditSettingsTitle" xml:space="preserve"><value>Organisation Settings</value></data>
+  <data name="Admin.Org.SettingsSaved" xml:space="preserve"><value>Organisation settings saved.</value></data>
+  <data name="Admin.Org.Created" xml:space="preserve"><value>Organisation '{0}' created.</value></data>
+  <data name="Admin.AuditLog.Title" xml:space="preserve"><value>Audit Log</value></data>
+  <data name="Admin.AuditLog.Timestamp" xml:space="preserve"><value>Timestamp</value></data>
+  <data name="Admin.AuditLog.Action" xml:space="preserve"><value>Action</value></data>
+  <data name="Admin.AuditLog.Entity" xml:space="preserve"><value>Entity</value></data>
+  <data name="Admin.AuditLog.User" xml:space="preserve"><value>User</value></data>
+  <data name="Admin.AuditLog.Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Admin.Backups.Title" xml:space="preserve"><value>Database Backups</value></data>
+  <data name="Admin.Backups.Create" xml:space="preserve"><value>Create Backup Now</value></data>
+  <data name="Admin.Backups.Creating" xml:space="preserve"><value>Creating...</value></data>
+  <data name="Admin.Backups.NoBackups" xml:space="preserve"><value>No backups yet.</value></data>
+  <data name="Admin.Backups.Created" xml:space="preserve"><value>Backup created: {0}</value></data>
+  <data name="Admin.Backups.Failed" xml:space="preserve"><value>Backup failed: {0}</value></data>
+  <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Choose the end date for this role assignment.</value></data>
+  <data name="Dialog.EndDate" xml:space="preserve"><value>End Date</value></data>
 </root>

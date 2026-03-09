@@ -1,4 +1,4 @@
-@page "/admin/organizations"
+﻿@page "/admin/organizations"
 @using Arelia.Application.Organizations.Commands
 @using Arelia.Application.Organizations.Queries
 @using Arelia.Web.Components.Shared
@@ -8,15 +8,16 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Organizations</PageTitle>
+<PageTitle>@L["Admin.Org.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Organizations</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Admin.Org.Title")</MudText>
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
            StartIcon="@Icons.Material.Filled.Add" Class="mb-4">
-    Create Organization
+    @L.H("Admin.Org.Create")
 </MudButton>
 
 @if (_organizations is not null)
@@ -27,7 +28,7 @@
             {
                 case "Status":
                     <MudChip T="string" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)" Size="Size.Small">
-                        @((bool)(context.Value ?? false) ? "Active" : "Inactive")
+                        @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
                     </MudChip>
                     break;
                 default:
@@ -35,21 +36,42 @@
                     break;
             }
         </CellTemplate>
+        <RowActions>
+            <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small"
+                           Color="Color.Primary" OnClick="@(() => OpenSettings(context))" />
+        </RowActions>
     </ConfigurableTable>
 }
 
 <MudDialog @bind-Visible="_showCreate">
     <TitleContent>
-        <MudText Typo="Typo.h6">Create Organization</MudText>
+        <MudText Typo="Typo.h6">@L.H("Admin.Org.CreateTitle")</MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_newOrgName" Label="Organization Name" Required="true" />
-        <MudTextField @bind-Value="_newOrgEmail" Label="Contact Email" />
-        <MudTextField @bind-Value="_newOrgPhone" Label="Contact Phone" />
+        <MudTextField @bind-Value="_newOrgName" Label="@L["Admin.Org.OrgName"]" Required="true" />
+        <MudTextField @bind-Value="_newOrgEmail" Label="@L["Common.Email"]" />
+        <MudTextField @bind-Value="_newOrgPhone" Label="@L["Common.Phone"]" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateOrganization">Create</MudButton>
+        <MudButton OnClick="@(() => _showCreate = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateOrganization">@L.H("Common.Create")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showSettings">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("Admin.Org.EditSettingsTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect T="string" @bind-Value="_settingsLanguage" Label="@L["Common.DefaultLanguage"]">
+            <MudSelectItem T="string" Value="@("en")">English</MudSelectItem>
+            <MudSelectItem T="string" Value="@("da")">Dansk</MudSelectItem>
+            <MudSelectItem T="string" Value="@("is")">Íslenska</MudSelectItem>
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showSettings = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveSettings">@L.H("Common.Save")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -59,6 +81,10 @@
     private string _newOrgName = string.Empty;
     private string? _newOrgEmail;
     private string? _newOrgPhone;
+
+    private bool _showSettings;
+    private Guid _settingsOrgId;
+    private string _settingsLanguage = "en";
 
     private readonly List<ColumnDefinition<OrganizationDto>> _columns =
     [
@@ -85,7 +111,7 @@
     {
         if (string.IsNullOrWhiteSpace(_newOrgName))
         {
-            Snackbar.Add("Organization name is required.", Severity.Warning);
+            Snackbar.Add(L["Admin.Org.OrgName"] + " is required.", Severity.Warning);
             return;
         }
 
@@ -96,7 +122,7 @@
             return;
 
         var newOrgId = await Mediator.Send(new CreateOrganizationCommand(_newOrgName, _newOrgEmail, _newOrgPhone, userId));
-        Snackbar.Add($"Organization '{_newOrgName}' created.", Severity.Success);
+        Snackbar.Add(string.Format(L["Admin.Org.Created"], _newOrgName), Severity.Success);
 
         _showCreate = false;
         _newOrgName = string.Empty;
@@ -104,5 +130,19 @@
         _newOrgPhone = null;
 
         Navigation.NavigateTo($"/set-tenant/{newOrgId}");
+    }
+
+    private void OpenSettings(OrganizationDto org)
+    {
+        _settingsOrgId = org.Id;
+        _settingsLanguage = "en";
+        _showSettings = true;
+    }
+
+    private async Task SaveSettings()
+    {
+        await Mediator.Send(new UpdateOrganizationLanguageCommand(_settingsOrgId, _settingsLanguage));
+        Snackbar.Add(L["Admin.Org.SettingsSaved"], Severity.Success);
+        _showSettings = false;
     }
 }

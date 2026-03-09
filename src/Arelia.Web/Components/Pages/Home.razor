@@ -1,19 +1,21 @@
 @page "/"
+@inject ILocalizer L
 
-<PageTitle>Arelia</PageTitle>
+<PageTitle>@L["Layout.AppName"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Welcome to Arelia</MudText>
-<MudText Typo="Typo.body1">Choir management made simple.</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">@L.H("Home.Title")</MudText>
+<MudText Typo="Typo.body1">@L.H("Home.Tagline")</MudText>
 
 <AuthorizeView>
     <Authorized>
         <MudAlert Severity="Severity.Info" Class="mt-4">
-            Signed in as @context.User.Identity?.Name
+            @string.Format(L["Common.SignedInAs"], context.User.Identity?.Name)
         </MudAlert>
     </Authorized>
     <NotAuthorized>
         <MudAlert Severity="Severity.Normal" Class="mt-4">
-            Please <MudLink Href="Account/Login">sign in</MudLink> to continue.
+            @L.H("Home.PleaseText") <MudLink Href="Account/Login">@L.H("Common.SignIn")</MudLink> @L.H("Home.ToContinue")
         </MudAlert>
     </NotAuthorized>
 </AuthorizeView>
+

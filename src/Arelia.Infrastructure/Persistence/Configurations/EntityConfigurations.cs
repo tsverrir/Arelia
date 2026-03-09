@@ -1,8 +1,17 @@
 using Arelia.Domain.Entities;
+using Arelia.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Arelia.Infrastructure.Persistence.Configurations;
+
+public class ApplicationUserConfiguration : IEntityTypeConfiguration<ApplicationUser>
+{
+    public void Configure(EntityTypeBuilder<ApplicationUser> builder)
+    {
+        builder.Property(u => u.PreferredLanguage).HasMaxLength(10);
+    }
+}
 
 public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
 {

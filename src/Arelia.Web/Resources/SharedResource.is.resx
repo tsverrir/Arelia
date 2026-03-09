@@ -1,0 +1,272 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="xml:space" use="default" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+  <data name="Common.Cancel" xml:space="preserve"><value>Haetta vid</value></data>
+  <data name="Common.Save" xml:space="preserve"><value>Vista</value></data>
+  <data name="Common.Create" xml:space="preserve"><value>Bua til</value></data>
+  <data name="Common.Delete" xml:space="preserve"><value>Eyda</value></data>
+  <data name="Common.Edit" xml:space="preserve"><value>Breyta</value></data>
+  <data name="Common.Confirm" xml:space="preserve"><value>Stadfesta</value></data>
+  <data name="Common.Add" xml:space="preserve"><value>Baeta vid</value></data>
+  <data name="Common.Filter" xml:space="preserve"><value>Sia</value></data>
+  <data name="Common.Search" xml:space="preserve"><value>Leita</value></data>
+  <data name="Common.Active" xml:space="preserve"><value>Virkt</value></data>
+  <data name="Common.Inactive" xml:space="preserve"><value>Ovirkt</value></data>
+  <data name="Common.Ended" xml:space="preserve"><value>Lokid</value></data>
+  <data name="Common.Public" xml:space="preserve"><value>Opinbert</value></data>
+  <data name="Common.Name" xml:space="preserve"><value>Nafn</value></data>
+  <data name="Common.Email" xml:space="preserve"><value>Netfang</value></data>
+  <data name="Common.Phone" xml:space="preserve"><value>Simi</value></data>
+  <data name="Common.Location" xml:space="preserve"><value>Stadsetning</value></data>
+  <data name="Common.Description" xml:space="preserve"><value>Lysing</value></data>
+  <data name="Common.Status" xml:space="preserve"><value>Stada</value></data>
+  <data name="Common.Type" xml:space="preserve"><value>Tegund</value></data>
+  <data name="Common.Date" xml:space="preserve"><value>Dagsetning</value></data>
+  <data name="Common.Time" xml:space="preserve"><value>Timi</value></data>
+  <data name="Common.Notes" xml:space="preserve"><value>Athugasemdir</value></data>
+  <data name="Common.Role" xml:space="preserve"><value>Hlutverk</value></data>
+  <data name="Common.From" xml:space="preserve"><value>Fra</value></data>
+  <data name="Common.To" xml:space="preserve"><value>Til</value></data>
+  <data name="Common.Year" xml:space="preserve"><value>Ar</value></data>
+  <data name="Common.WorkYear" xml:space="preserve"><value>Starfsar</value></data>
+  <data name="Common.Organization" xml:space="preserve"><value>Felagsskap</value></data>
+  <data name="Common.Assign" xml:space="preserve"><value>Uthluta</value></data>
+  <data name="Common.Invite" xml:space="preserve"><value>Bjoda</value></data>
+  <data name="Common.Deactivate" xml:space="preserve"><value>Gera ovirkt</value></data>
+  <data name="Common.FormerMember" xml:space="preserve"><value>Fyrrverandi medhlimaur</value></data>
+  <data name="Common.Today" xml:space="preserve"><value>I dag</value></data>
+  <data name="Common.File" xml:space="preserve"><value>Skra</value></data>
+  <data name="Common.Size" xml:space="preserve"><value>Staerd</value></data>
+  <data name="Common.Created" xml:space="preserve"><value>Buid til</value></data>
+  <data name="Common.StartDate" xml:space="preserve"><value>Upphafsdagur</value></data>
+  <data name="Common.EndDate" xml:space="preserve"><value>Lokadagur</value></data>
+  <data name="Common.StartTime" xml:space="preserve"><value>Upphafsimi</value></data>
+  <data name="Common.EndTime" xml:space="preserve"><value>Lokatimi</value></data>
+  <data name="Common.PublicVisible" xml:space="preserve"><value>Opinber synileiki</value></data>
+  <data name="Common.SelectOrgFirst" xml:space="preserve"><value>Vinsamlegast veldu fyrst samtok.</value></data>
+  <data name="Common.SignIn" xml:space="preserve"><value>skra inn</value></data>
+  <data name="Common.SignedInAs" xml:space="preserve"><value>Skráður inn sem {0}</value></data>
+  <data name="Common.Language" xml:space="preserve"><value>Tungumad</value></data>
+  <data name="Common.DefaultLanguage" xml:space="preserve"><value>Sjalgefid tungumad</value></data>
+  <data name="Common.FirstName" xml:space="preserve"><value>Fornafn</value></data>
+  <data name="Common.LastName" xml:space="preserve"><value>Eftirnafn</value></data>
+  <data name="Common.VoiceGroup" xml:space="preserve"><value>Raddaflokkur</value></data>
+  <data name="Common.Permission" xml:space="preserve"><value>Heimild</value></data>
+  <data name="Common.Amount" xml:space="preserve"><value>Upphaed</value></data>
+  <data name="Common.Category" xml:space="preserve"><value>Flokkur</value></data>
+  <data name="Common.EndDateOptional" xml:space="preserve"><value>Til (valkvatt)</value></data>
+  <data name="Layout.SelectOrganization" xml:space="preserve"><value>Veldu samtok</value></data>
+  <data name="Layout.Profile" xml:space="preserve"><value>Notandaupplysingar</value></data>
+  <data name="Layout.SignOut" xml:space="preserve"><value>Skra ut</value></data>
+  <data name="Layout.SignIn" xml:space="preserve"><value>Skra inn</value></data>
+  <data name="Layout.AppName" xml:space="preserve"><value>Arelia</value></data>
+  <data name="Layout.HighlightMissing" xml:space="preserve"><value>Undirstrika vantar thyedingar</value></data>
+  <data name="Nav.Home" xml:space="preserve"><value>Heim</value></data>
+  <data name="Nav.Calendar" xml:space="preserve"><value>Dagatal</value></data>
+  <data name="Nav.Management" xml:space="preserve"><value>Stjornun</value></data>
+  <data name="Nav.People" xml:space="preserve"><value>Medhlimaur</value></data>
+  <data name="Nav.Semesters" xml:space="preserve"><value>Onn</value></data>
+  <data name="Nav.Activities" xml:space="preserve"><value>Vidburdir</value></data>
+  <data name="Nav.Roles" xml:space="preserve"><value>Hlutverk</value></data>
+  <data name="Nav.Finances" xml:space="preserve"><value>Fjarmal</value></data>
+  <data name="Nav.Admin" xml:space="preserve"><value>Stjornun</value></data>
+  <data name="Nav.Users" xml:space="preserve"><value>Notendur</value></data>
+  <data name="Nav.Organizations" xml:space="preserve"><value>Samtok</value></data>
+  <data name="Nav.AuditLog" xml:space="preserve"><value>Eftirlit</value></data>
+  <data name="Nav.Backups" xml:space="preserve"><value>Oryggisafrit</value></data>
+  <data name="Home.Title" xml:space="preserve"><value>Velkomin i Arelia</value></data>
+  <data name="Home.Tagline" xml:space="preserve"><value>Koraudeveldun einfoeld.</value></data>
+  <data name="Home.PleaseText" xml:space="preserve"><value>Vinsamlegast</value></data>
+  <data name="Home.ToContinue" xml:space="preserve"><value>til ad halda afram.</value></data>
+  <data name="SelectOrg.Title" xml:space="preserve"><value>Veldu samtok</value></data>
+  <data name="SelectOrg.NoOrgs" xml:space="preserve"><value>Thu ert ekki medhlimaur i neinum samtokum. Hafdu samband vid stjornanda.</value></data>
+  <data name="Semester.Title" xml:space="preserve"><value>Onn</value></data>
+  <data name="Semester.Create" xml:space="preserve"><value>Bua til onn</value></data>
+  <data name="Semester.HidePast" xml:space="preserve"><value>Fela lidnar annir</value></data>
+  <data name="Semester.CreateTitle" xml:space="preserve"><value>Bua til onn</value></data>
+  <data name="Semester.Created" xml:space="preserve"><value>Onn buin til.</value></data>
+  <data name="SemesterDetail.BackToSemesters" xml:space="preserve"><value>Til baka i annir</value></data>
+  <data name="SemesterDetail.Summary" xml:space="preserve"><value>Samantekt</value></data>
+  <data name="SemesterDetail.RehearsalSchedule" xml:space="preserve"><value>Aefingaplan</value></data>
+  <data name="SemesterDetail.GenerateRehearsals" xml:space="preserve"><value>Bua til aefingar</value></data>
+  <data name="SemesterDetail.Day" xml:space="preserve"><value>Dagur</value></data>
+  <data name="SemesterDetail.Duration" xml:space="preserve"><value>Lengd</value></data>
+  <data name="SemesterDetail.DateRange" xml:space="preserve"><value>Dagsetningabil</value></data>
+  <data name="SemesterDetail.DurationLabel" xml:space="preserve"><value>Lengd (min)</value></data>
+  <data name="SemesterDetail.NoTemplates" xml:space="preserve"><value>Engin aefingasnidmat enn. Baeta vid einu her ad nedan til ad bua til aefingar.</value></data>
+  <data name="SemesterDetail.AddTemplate" xml:space="preserve"><value>Baeta vid aefingasnidmati</value></data>
+  <data name="SemesterDetail.AddTemplateBtn" xml:space="preserve"><value>Baeta vid snidmati</value></data>
+  <data name="SemesterDetail.FromDate" xml:space="preserve"><value>Fra dagsetningu</value></data>
+  <data name="SemesterDetail.ToDate" xml:space="preserve"><value>Til dagsetningar</value></data>
+  <data name="SemesterDetail.ActivitiesTitle" xml:space="preserve"><value>Vidburdir a thessari onn</value></data>
+  <data name="SemesterDetail.AddEvent" xml:space="preserve"><value>Baeta vid vidburdi</value></data>
+  <data name="SemesterDetail.NoActivities" xml:space="preserve"><value>Engir vidburdir enn. Bua til aefingar eda baeta vid vidburdum ad ofan.</value></data>
+  <data name="SemesterDetail.AddEventTitle" xml:space="preserve"><value>Baeta vid vidburdi a onn</value></data>
+  <data name="SemesterDetail.EditTemplateTitle" xml:space="preserve"><value>Breyta aefingasnidmati</value></data>
+  <data name="SemesterDetail.DeleteTemplateTitle" xml:space="preserve"><value>Eyda snidmati</value></data>
+  <data name="SemesterDetail.TemplateAdded" xml:space="preserve"><value>Aefingasnidmati baett vid.</value></data>
+  <data name="SemesterDetail.TemplateUpdated" xml:space="preserve"><value>Aefingasnidmat uppfaert.</value></data>
+  <data name="SemesterDetail.TemplateDeleted" xml:space="preserve"><value>Aefingasnidmati eytt.</value></data>
+  <data name="SemesterDetail.Rehearsals" xml:space="preserve"><value>Aefingar: {0}</value></data>
+  <data name="SemesterDetail.Events" xml:space="preserve"><value>Vidburdir: {0}</value></data>
+  <data name="SemesterDetail.TemplatesCount" xml:space="preserve"><value>Snidmot: {0}</value></data>
+  <data name="SemesterDetail.DeleteTemplateConfirm" xml:space="preserve"><value>Eyda aefingasnidmati fyrir {0} kl. {1}?</value></data>
+  <data name="SemesterDetail.RehearsalsGenerated" xml:space="preserve"><value>Bjuggu til {0} aefingar ({1} sleppt).</value></data>
+  <data name="SemesterDetail.ConflictsDetected" xml:space="preserve"><value>{0} atvik greind.</value></data>
+  <data name="SemesterDetail.EventAdded" xml:space="preserve"><value>Vidburdi baett vid onn.</value></data>
+  <data name="Activity.Title" xml:space="preserve"><value>Vidburdir</value></data>
+  <data name="Activity.Create" xml:space="preserve"><value>Bua til vidburdi</value></data>
+  <data name="Activity.GroupByType" xml:space="preserve"><value>Flokka eftir tegund</value></data>
+  <data name="Activity.CreateTitle" xml:space="preserve"><value>Bua til vidburdi</value></data>
+  <data name="Activity.Created" xml:space="preserve"><value>Vidbudhur buinn til.</value></data>
+  <data name="Activity.Deleted" xml:space="preserve"><value>Vidburdi eytt.</value></data>
+  <data name="Activity.DeleteSelected" xml:space="preserve"><value>Eyda {0} völdum</value></data>
+  <data name="Activity.DeleteTitle" xml:space="preserve"><value>Eyda vidburdi</value></data>
+  <data name="Activity.DeleteConfirm" xml:space="preserve"><value>Eyda &quot;{0}&quot;? Thetta mun einnig fjarlaegja alla undirvidburdi.</value></data>
+  <data name="Activity.BulkDeleteTitle" xml:space="preserve"><value>Fjöldaeyding</value></data>
+  <data name="Activity.BulkDeleteConfirm" xml:space="preserve"><value>Eyda {0} völdum vidburdum og undirvidburdur þeirra?</value></data>
+  <data name="Activity.BulkDeleted" xml:space="preserve"><value>{0} vidburdir eyddur.</value></data>
+  <data name="ActivityDetail.BackToSemester" xml:space="preserve"><value>Til baka i onn</value></data>
+  <data name="ActivityDetail.BackToActivities" xml:space="preserve"><value>Til baka i vidburdi</value></data>
+  <data name="ActivityDetail.Summary" xml:space="preserve"><value>Samantekt</value></data>
+  <data name="ActivityDetail.EditTitle" xml:space="preserve"><value>Breyta vidburdi</value></data>
+  <data name="ActivityDetail.AttendanceTitle" xml:space="preserve"><value>Maeting</value></data>
+  <data name="ActivityDetail.Deleted" xml:space="preserve"><value>Vidburdi eytt.</value></data>
+  <data name="ActivityDetail.Updated" xml:space="preserve"><value>Vidbudhur uppfaerdur.</value></data>
+  <data name="ActivityDetail.AttendanceSaved" xml:space="preserve"><value>Maeting vistuud.</value></data>
+  <data name="ActivityDetail.MaxCapacity" xml:space="preserve"><value>Hamarksgeta</value></data>
+  <data name="ActivityDetail.SignupDeadlineLabel" xml:space="preserve"><value>Skraningarfrestur</value></data>
+  <data name="ActivityDetail.ParticipantsAll" xml:space="preserve"><value>Thattakendur: {0} (allir virkir meðlimir)</value></data>
+  <data name="ActivityDetail.Capacity" xml:space="preserve"><value>Rymi: {0} / {1}</value></data>
+  <data name="ActivityDetail.Participants" xml:space="preserve"><value>Thattakendur: {0}</value></data>
+  <data name="ActivityDetail.ChildActivities" xml:space="preserve"><value>Undirvidburdir: {0}</value></data>
+  <data name="ActivityDetail.SignupDeadline" xml:space="preserve"><value>Skraningarfrestur: {0}</value></data>
+  <data name="ActivityDetail.AttendanceHeader" xml:space="preserve"><value>Maeting ({0} / {1})</value></data>
+  <data name="ActivityDetail.Comment" xml:space="preserve"><value>Athugasemd</value></data>
+  <data name="ActivityDetail.CommentPlaceholder" xml:space="preserve"><value>Athugasemd…</value></data>
+  <data name="ActivityDetail.OtherPlaceholder" xml:space="preserve"><value>Annað…</value></data>
+  <data name="ActivityDetail.StatusPresent" xml:space="preserve"><value>Maett</value></data>
+  <data name="ActivityDetail.StatusLate" xml:space="preserve"><value>Seinkominn</value></data>
+  <data name="ActivityDetail.StatusNoShow" xml:space="preserve"><value>Matti ekki</value></data>
+  <data name="ActivityDetail.StatusSick" xml:space="preserve"><value>Veikur</value></data>
+  <data name="ActivityDetail.StatusExplained" xml:space="preserve"><value>Skyrdur fjar</value></data>
+  <data name="People.Title" xml:space="preserve"><value>Medhlimaur</value></data>
+  <data name="People.AddPerson" xml:space="preserve"><value>Baeta vid einstaklingi</value></data>
+  <data name="People.AddByEmail" xml:space="preserve"><value>Baeta vid med netfangi</value></data>
+  <data name="People.ImportFromOrg" xml:space="preserve"><value>Flyja inn fra samtokum</value></data>
+  <data name="People.ShowInactive" xml:space="preserve"><value>Syyna ovirk</value></data>
+  <data name="People.AddPersonTitle" xml:space="preserve"><value>Baeta vid einstaklingi</value></data>
+  <data name="People.PersonAdded" xml:space="preserve"><value>Einstaklingi baett vid.</value></data>
+  <data name="People.AddByEmailTitle" xml:space="preserve"><value>Baeta vid med netfangi</value></data>
+  <data name="People.ImportTitle" xml:space="preserve"><value>Flyja inn fra odrum samtokum</value></data>
+  <data name="People.ImportFromOrgTitle" xml:space="preserve"><value>Flytja inn einstakling fra annarri felagsskap</value></data>
+  <data name="People.VoiceGroupNone" xml:space="preserve"><value>Engin raddhop</value></data>
+  <data name="People.NameRequired" xml:space="preserve"><value>Fornafn og eftirnafn eru nauðsynleg.</value></data>
+  <data name="People.EmailRequired" xml:space="preserve"><value>Netfang er nauðsynlegt.</value></data>
+  <data name="People.Created" xml:space="preserve"><value>Einstaklingur stofnadur.</value></data>
+  <data name="People.MemberAdded" xml:space="preserve"><value>Meðlimi baett vid.</value></data>
+  <data name="People.Imported" xml:space="preserve"><value>{0} {1} flutt inn.</value></data>
+  <data name="People.DuplicateTitle" xml:space="preserve"><value>Tvitekinn einstaklingur</value></data>
+  <data name="People.DuplicateConfirm" xml:space="preserve"><value>{0} {1} er nú þegar til í þessari felagsskap. Stofna þó?</value></data>
+  <data name="People.CrossOrgTitle" xml:space="preserve"><value>Einstaklingur fundinn í annarri felagsskap</value></data>
+  <data name="People.CrossOrgFound" xml:space="preserve"><value>{0} {1} er nú þegar til í &quot;{2}&quot;. Smelltu á Staðfesta til að afrita upplysingar, eða Hætta við til að slá inn handvirkt.</value></data>
+  <data name="People.ImportSearch" xml:space="preserve"><value>Leita að nafni</value></data>
+  <data name="People.ImportNoResults" xml:space="preserve"><value>Engar niðurstöður í öðrum félögum.</value></data>
+  <data name="People.ImportBtn" xml:space="preserve"><value>Flytja inn</value></data>
+  <data name="PersonDetail.RoleAssignments" xml:space="preserve"><value>Hlutverksuthlutanir</value></data>
+  <data name="PersonDetail.HasLinkedUser" xml:space="preserve"><value>Hefur tengdan notandareikningur</value></data>
+  <data name="PersonDetail.AssignRole" xml:space="preserve"><value>Uthluta hlutverki</value></data>
+  <data name="PersonDetail.EndAssignmentTitle" xml:space="preserve"><value>Ljuka uthlutun i dag</value></data>
+  <data name="EndAssignment.ChooseEndDate" xml:space="preserve"><value>Veldu lokadagsetningu fyrir þessa hlutverksúthlutun.</value></data>
+  <data name="PersonDetail.RemoveAssignmentTitle" xml:space="preserve"><value>Fjarlaegja uthlutun</value></data>
+  <data name="PersonDetail.Saved" xml:space="preserve"><value>Breytingar vistadar.</value></data>
+  <data name="PersonDetail.Deactivated" xml:space="preserve"><value>Einstaklingur gerdur ovirkt.</value></data>
+  <data name="PersonDetail.RoleAssigned" xml:space="preserve"><value>Hlutverki uthlutad.</value></data>
+  <data name="PersonDetail.RoleEnded" xml:space="preserve"><value>Hlutverksuthlutun lokid.</value></data>
+  <data name="PersonDetail.RoleRemoved" xml:space="preserve"><value>Hlutverksuthlutun fjarlaegdh.</value></data>
+  <data name="PersonDetail.Updated" xml:space="preserve"><value>Einstaklingur uppfaerður.</value></data>
+  <data name="PersonDetail.DeactivateTitle" xml:space="preserve"><value>Gera einstakling óvirkan</value></data>
+  <data name="PersonDetail.DeactivateConfirm" xml:space="preserve"><value>Gera {0} {1} óvirkan? Þetta mun einnig lækka tengdan notanda í Fyrrverandi Meðlim.</value></data>
+  <data name="PersonDetail.EndAssignmentDialogTitle" xml:space="preserve"><value>Ljúka úthlutun</value></data>
+  <data name="PersonDetail.RemoveAssignmentDialogTitle" xml:space="preserve"><value>Fjarlægja úthlutun</value></data>
+  <data name="PersonDetail.RemoveAssignmentConfirm" xml:space="preserve"><value>Fjarlægja þessa hlutverksúthlutun varanlega?</value></data>
+  <data name="Roles.Title" xml:space="preserve"><value>Hlutverk og heimildir</value></data>
+  <data name="Roles.CreateCustom" xml:space="preserve"><value>Bua til serstaelt hlutverk</value></data>
+  <data name="Roles.PermissionMatrix" xml:space="preserve"><value>Heimildaryfirlit</value></data>
+  <data name="Roles.AllRoles" xml:space="preserve"><value>Oell hlutverk</value></data>
+  <data name="Roles.CreateCustomTitle" xml:space="preserve"><value>Bua til serstaelt hlutverk</value></data>
+  <data name="Roles.RoleName" xml:space="preserve"><value>Heiti hlutverks</value></data>
+  <data name="Roles.Created" xml:space="preserve"><value>Hlutverk buinn til.</value></data>
+  <data name="Roles.RoleCreated" xml:space="preserve"><value>Hlutverkid &apos;{0}&apos; stofnad.</value></data>
+  <data name="Roles.ActiveAssignments" xml:space="preserve"><value>Virkar uthlutanir</value></data>
+  <data name="Finance.Title" xml:space="preserve"><value>Fjarmal</value></data>
+  <data name="Finance.Charges" xml:space="preserve"><value>Gjold</value></data>
+  <data name="Finance.Expenses" xml:space="preserve"><value>Kostnadur</value></data>
+  <data name="Finance.RecordExpense" xml:space="preserve"><value>Skra utgjold</value></data>
+  <data name="Finance.RecordExpenseTitle" xml:space="preserve"><value>Skra utgjold</value></data>
+  <data name="Finance.Due" xml:space="preserve"><value>Gjalddagi</value></data>
+  <data name="Finance.Paid" xml:space="preserve"><value>Greitt</value></data>
+  <data name="Finance.DueDate" xml:space="preserve"><value>Gjalddagur</value></data>
+  <data name="Finance.ExpenseRecorded" xml:space="preserve"><value>Utgjold skrad.</value></data>
+  <data name="Finance.Member" xml:space="preserve"><value>Meðlimur</value></data>
+  <data name="Finance.ReceivedBy" xml:space="preserve"><value>Mottekid af</value></data>
+  <data name="Calendar.Title" xml:space="preserve"><value>Dagatal</value></data>
+  <data name="Calendar.Today" xml:space="preserve"><value>I dag</value></data>
+  <data name="Calendar.More" xml:space="preserve"><value>+{0} fleiri</value></data>
+  <data name="Admin.Users.Title" xml:space="preserve"><value>Notendastjornun</value></data>
+  <data name="Admin.Users.InviteUser" xml:space="preserve"><value>Bjoda notanda</value></data>
+  <data name="Admin.Users.InviteTitle" xml:space="preserve"><value>Bjoda notanda</value></data>
+  <data name="Admin.Users.InvitationSent" xml:space="preserve"><value>Bodin send til {0}.</value></data>
+  <data name="Admin.Users.DeactivateTitle" xml:space="preserve"><value>Gera notanda óvirkan</value></data>
+  <data name="Admin.Users.DeactivateConfirm" xml:space="preserve"><value>Lækka {0} í Fyrrverandi Meðlim?</value></data>
+  <data name="Admin.Users.Deactivated" xml:space="preserve"><value>Notandi gerður óvirkur.</value></data>
+  <data name="Admin.Org.Title" xml:space="preserve"><value>Samtok</value></data>
+  <data name="Admin.Org.Create" xml:space="preserve"><value>Bua til samtok</value></data>
+  <data name="Admin.Org.CreateTitle" xml:space="preserve"><value>Bua til samtok</value></data>
+  <data name="Admin.Org.OrgName" xml:space="preserve"><value>Nafn samtaka</value></data>
+  <data name="Admin.Org.EditSettingsTitle" xml:space="preserve"><value>Stillingar samtaka</value></data>
+  <data name="Admin.Org.SettingsSaved" xml:space="preserve"><value>Stillingar samtaka vistadar.</value></data>
+  <data name="Admin.Org.Created" xml:space="preserve"><value>Samtok '{0}' búið til.</value></data>
+  <data name="Admin.AuditLog.Title" xml:space="preserve"><value>Eftirlit</value></data>
+  <data name="Admin.AuditLog.Timestamp" xml:space="preserve"><value>Timastimpill</value></data>
+  <data name="Admin.AuditLog.Action" xml:space="preserve"><value>Adgerd</value></data>
+  <data name="Admin.AuditLog.Entity" xml:space="preserve"><value>Eining</value></data>
+  <data name="Admin.AuditLog.User" xml:space="preserve"><value>Notandi</value></data>
+  <data name="Admin.AuditLog.Details" xml:space="preserve"><value>Upplysingar</value></data>
+  <data name="Admin.Backups.Title" xml:space="preserve"><value>Gagnagrunnsoryggisafrit</value></data>
+  <data name="Admin.Backups.Create" xml:space="preserve"><value>Bua til oryggisafrit</value></data>
+  <data name="Admin.Backups.Creating" xml:space="preserve"><value>Bua til...</value></data>
+  <data name="Admin.Backups.NoBackups" xml:space="preserve"><value>Engin oryggisafrit enn.</value></data>
+  <data name="Admin.Backups.Created" xml:space="preserve"><value>Oryggisafrit stofnad: {0}</value></data>
+  <data name="Admin.Backups.Failed" xml:space="preserve"><value>Oryggisafrit mistokst: {0}</value></data>
+  <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Veldu lokadagsetningu thessarar hlutverksuthlutanar.</value></data>
+  <data name="Dialog.EndDate" xml:space="preserve"><value>Lokadagur</value></data>
+</root>

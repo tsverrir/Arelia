@@ -4,16 +4,18 @@
 @using Arelia.Domain.Enums
 @using MediatR
 @inject IMediator Mediator
+@using System.Globalization
 @inject NavigationManager Navigation
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Calendar</PageTitle>
+<PageTitle>@L["Calendar.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Calendar</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Calendar.Title")</MudText>
 
 @if (TenantService.CurrentOrganizationId is null)
 {
-    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
     return;
 }
 
@@ -28,13 +30,13 @@ else
         <MudText Typo="Typo.h6">@_currentMonth.ToString("MMMM yyyy")</MudText>
         <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextMonth" />
         <MudSpacer />
-        <MudButton Variant="Variant.Outlined" OnClick="GoToToday">Today</MudButton>
+        <MudButton Variant="Variant.Outlined" OnClick="GoToToday">@L.H("Calendar.Today")</MudButton>
     </MudStack>
 
     <MudSimpleTable Dense="true">
         <thead>
             <tr>
-                @foreach (var day in new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" })
+                @foreach (var day in GetLocalizedDayNames())
                 {
                     <th style="width:14.28%; text-align:center;">@day</th>
                 }
@@ -65,7 +67,7 @@ else
                             }
                             @if (dayActivities.Count > 3)
                             {
-                                <MudText Typo="Typo.caption">+@(dayActivities.Count - 3) more</MudText>
+                                <MudText Typo="Typo.caption">@string.Format(L["Calendar.More"], dayActivities.Count - 3)</MudText>
                             }
                         </td>
                     }
@@ -131,6 +133,13 @@ else
             weeks.Add(week);
         }
         return weeks;
+    }
+
+    private static string[] GetLocalizedDayNames()
+    {
+        var names = CultureInfo.CurrentUICulture.DateTimeFormat.AbbreviatedDayNames;
+        // Reorder from Sun-first (0=Sun) to Mon-first (0=Mon)
+        return [names[1], names[2], names[3], names[4], names[5], names[6], names[0]];
     }
 
     private static Color GetColor(ActivityType type) => type switch

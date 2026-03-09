@@ -3,25 +3,26 @@
 @inject BackupService BackupService
 @inject IConfiguration Configuration
 @inject ISnackbar Snackbar
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Backups</PageTitle>
+<PageTitle>@L["Admin.Backups.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Database Backups</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Admin.Backups.Title")</MudText>
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateBackup"
            StartIcon="@Icons.Material.Filled.Backup" Class="mb-4"
            Disabled="@_isCreating">
-    @(_isCreating ? "Creating..." : "Create Backup Now")
+    @(_isCreating ? L["Admin.Backups.Creating"] : L["Admin.Backups.Create"])
 </MudButton>
 
 @if (_backups is not null && _backups.Count > 0)
 {
     <MudTable Items="_backups" Hover="true" Dense="true">
         <HeaderContent>
-            <MudTh>File</MudTh>
-            <MudTh>Size</MudTh>
-            <MudTh>Created</MudTh>
+            <MudTh>@L["Common.File"]</MudTh>
+            <MudTh>@L["Common.Size"]</MudTh>
+            <MudTh>@L["Common.Created"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.FileName</MudTd>
@@ -32,7 +33,7 @@
 }
 else
 {
-    <MudAlert Severity="Severity.Info">No backups yet.</MudAlert>
+    <MudAlert Severity="Severity.Info">@L["Admin.Backups.NoBackups"]</MudAlert>
 }
 
 @code {
@@ -54,12 +55,12 @@ else
         try
         {
             var path = await BackupService.CreateBackupAsync(DbPath, BackupDir);
-            Snackbar.Add($"Backup created: {Path.GetFileName(path)}", Severity.Success);
+            Snackbar.Add(string.Format(L["Admin.Backups.Created"], Path.GetFileName(path)), Severity.Success);
             _backups = BackupService.GetBackups(BackupDir);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Backup failed: {ex.Message}", Severity.Error);
+            Snackbar.Add(string.Format(L["Admin.Backups.Failed"], ex.Message), Severity.Error);
         }
         finally
         {

@@ -1,4 +1,4 @@
-@page "/semesters/{SemesterId:guid}"
+﻿@page "/semesters/{SemesterId:guid}"
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Activities.Commands
 @using Arelia.Application.Rehearsals.Commands
@@ -9,9 +9,10 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Semester Detail</PageTitle>
+<PageTitle>@(_semester?.Name ?? L["SemesterDetail.BackToSemesters"])</PageTitle>
 
 @if (_semester is null)
 {
@@ -21,7 +22,7 @@
 
 <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/semesters?showList=true"))"
            StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-2">
-    Back to Semesters
+    @L.H("SemesterDetail.BackToSemesters")
 </MudButton>
 
 <MudText Typo="Typo.h5" GutterBottom="true">@_semester.Name</MudText>
@@ -37,7 +38,7 @@
                         <MudChip T="string" Size="Size.Small">@_semester.WorkYear</MudChip>
                         @if (_semester.IsPublicVisible)
                         {
-                            <MudChip T="string" Color="Color.Info" Size="Size.Small">Public</MudChip>
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">@L["Common.Public"]</MudChip>
                         }
                     </MudStack>
 
@@ -68,12 +69,12 @@
     <MudItem xs="12" md="4">
         <MudCard Class="mb-4">
             <MudCardHeader>
-                <MudText Typo="Typo.h6">Summary</MudText>
+                <MudText Typo="Typo.h6">@L.H("SemesterDetail.Summary")</MudText>
             </MudCardHeader>
             <MudCardContent>
-                <MudText>Rehearsals: @_semester.ChildActivities.Count(a => a.ActivityType == ActivityType.Rehearsal)</MudText>
-                <MudText>Events: @_semester.ChildActivities.Count(a => a.ActivityType != ActivityType.Rehearsal)</MudText>
-                <MudText>Templates: @_semester.RehearsalTemplates.Count</MudText>
+                <MudText>@string.Format(L["SemesterDetail.Rehearsals"], _semester.ChildActivities.Count(a => a.ActivityType == ActivityType.Rehearsal))</MudText>
+                <MudText>@string.Format(L["SemesterDetail.Events"], _semester.ChildActivities.Count(a => a.ActivityType != ActivityType.Rehearsal))</MudText>
+                <MudText>@string.Format(L["SemesterDetail.TemplatesCount"], _semester.RehearsalTemplates.Count)</MudText>
             </MudCardContent>
         </MudCard>
     </MudItem>
@@ -83,14 +84,14 @@
         <MudCard Class="mb-4">
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Rehearsal Schedule</MudText>
+                    <MudText Typo="Typo.h6">@L.H("SemesterDetail.RehearsalSchedule")</MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
                     <MudButton Variant="Variant.Filled" Color="Color.Secondary"
                                StartIcon="@Icons.Material.Filled.AutoMode"
                                OnClick="GenerateRehearsals"
                                Disabled="@(_semester.RehearsalTemplates.Count == 0)">
-                        Generate Rehearsals
+                        @L.H("SemesterDetail.GenerateRehearsals")
                     </MudButton>
                 </CardHeaderActions>
             </MudCardHeader>
@@ -100,11 +101,11 @@
                     <MudSimpleTable Dense="true" Hover="true" Class="mb-4">
                         <thead>
                             <tr>
-                                <th>Day</th>
-                                <th>Time</th>
-                                <th>Duration</th>
-                                <th>Location</th>
-                                <th>Date Range</th>
+                                <th>@L["SemesterDetail.Day"]</th>
+                                <th>@L["Common.Time"]</th>
+                                <th>@L["SemesterDetail.Duration"]</th>
+                                <th>@L["Common.Location"]</th>
+                                <th>@L["SemesterDetail.DateRange"]</th>
                                 <th Style="width:100px;"></th>
                             </tr>
                         </thead>
@@ -114,7 +115,7 @@
                                 <tr>
                                     <td>@t.DayOfWeek</td>
                                     <td>@t.StartTime.ToString("HH:mm")</td>
-                                    <td>@t.DurationMinutes min</td>
+                                    <td>@string.Format(L["SemesterDetail.DurationLabel"], t.DurationMinutes)</td>
                                     <td>@(t.Location ?? "—")</td>
                                     <td>@t.StartDate.ToString("dd MMM") – @t.EndDate.ToString("dd MMM")</td>
                                     <td>
@@ -131,7 +132,7 @@
                 else
                 {
                     <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
-                        No rehearsal templates yet. Add one below to generate rehearsals.
+                        @L.H("SemesterDetail.NoTemplates")
                     </MudAlert>
                 }
 
@@ -139,28 +140,28 @@
                            @onclick="@(() => _showAddTemplate = !_showAddTemplate)">
                     <MudIcon Icon="@(_showAddTemplate ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
                              Size="Size.Small" />
-                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">Add Rehearsal Template</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">@L.H("SemesterDetail.AddTemplate")</MudText>
                 </MudStack>
 
                 @if (_showAddTemplate)
                 {
                     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.End" Style="flex-wrap:wrap;">
-                        <MudSelect T="DayOfWeek" @bind-Value="_templateDay" Label="Day" Style="min-width:120px;">
+                        <MudSelect T="DayOfWeek" @bind-Value="_templateDay" Label="@L["SemesterDetail.Day"]" Style="min-width:120px;">
                             @foreach (var d in Enum.GetValues<DayOfWeek>())
                             {
                                 <MudSelectItem T="DayOfWeek" Value="@d">@d</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudTimePicker @bind-Time="_templateStartTime" Label="Start Time" />
-                        <MudNumericField T="int" @bind-Value="_templateDuration" Label="Duration (min)" Min="15" Max="480" />
-                        <MudTextField @bind-Value="_templateLocation" Label="Location" />
+                        <MudTimePicker @bind-Time="_templateStartTime" Label="@L["Common.StartTime"]" />
+                        <MudNumericField T="int" @bind-Value="_templateDuration" Label="@L["SemesterDetail.DurationLabel"]" Min="15" Max="480" />
+                        <MudTextField @bind-Value="_templateLocation" Label="@L["Common.Location"]" />
                     </MudStack>
                     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.End" Class="mt-2">
-                        <MudDatePicker @bind-Date="_templateStartDate" Label="From Date" />
-                        <MudDatePicker @bind-Date="_templateEndDate" Label="To Date" />
+                        <MudDatePicker @bind-Date="_templateStartDate" Label="@L["SemesterDetail.FromDate"]" />
+                        <MudDatePicker @bind-Date="_templateEndDate" Label="@L["SemesterDetail.ToDate"]" />
                         <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddTemplate"
                                    StartIcon="@Icons.Material.Filled.Add">
-                            Add Template
+                            @L.H("SemesterDetail.AddTemplateBtn")
                         </MudButton>
                     </MudStack>
                 }
@@ -173,13 +174,13 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Activities in this Semester</MudText>
+                    <MudText Typo="Typo.h6">@L.H("SemesterDetail.ActivitiesTitle")</MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="@(() => _showAddEvent = true)">
-                        Add Event
+                        @L.H("SemesterDetail.AddEvent")
                     </MudButton>
                 </CardHeaderActions>
             </MudCardHeader>
@@ -189,11 +190,11 @@
                     <MudSimpleTable Dense="true" Hover="true">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Time</th>
-                                <th>Location</th>
+                                <th>@L["Common.Date"]</th>
+                                <th>@L["Common.Name"]</th>
+                                <th>@L["Common.Type"]</th>
+                                <th>@L["Common.Time"]</th>
+                                <th>@L["Common.Location"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -217,7 +218,7 @@
                 else
                 {
                     <MudAlert Severity="Severity.Info" Dense="true">
-                        No activities yet. Generate rehearsals or add events above.
+                        @L.H("SemesterDetail.NoActivities")
                     </MudAlert>
                 }
             </MudCardContent>
@@ -227,48 +228,48 @@
 
 @* ---- Add Event Dialog ---- *@
 <MudDialog @bind-Visible="_showAddEvent">
-    <TitleContent><MudText Typo="Typo.h6">Add Event to Semester</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("SemesterDetail.AddEventTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_eventName" Label="Name" Required="true" />
-        <MudSelect T="ActivityType" @bind-Value="_eventType" Label="Type">
+        <MudTextField @bind-Value="_eventName" Label="@L["Common.Name"]" Required="true" />
+        <MudSelect T="ActivityType" @bind-Value="_eventType" Label="@L["Common.Type"]">
             @foreach (var t in _eventTypes)
             {
                 <MudSelectItem T="ActivityType" Value="@t">@t</MudSelectItem>
             }
         </MudSelect>
-        <MudDatePicker @bind-Date="_eventStartDate" Label="Start Date" Required="true" />
-        <MudTimePicker @bind-Time="_eventStartTime" Label="Start Time" />
-        <MudDatePicker @bind-Date="_eventEndDate" Label="End Date" Required="true" />
-        <MudTimePicker @bind-Time="_eventEndTime" Label="End Time" />
-        <MudTextField @bind-Value="_eventLocation" Label="Location" />
-        <MudTextField @bind-Value="_eventDescription" Label="Description" Lines="3" />
-        <MudCheckBox T="bool" @bind-Value="_eventPublicVisible" Label="Public Visible" />
+        <MudDatePicker @bind-Date="_eventStartDate" Label="@L["Common.StartDate"]" Required="true" />
+        <MudTimePicker @bind-Time="_eventStartTime" Label="@L["Common.StartTime"]" />
+        <MudDatePicker @bind-Date="_eventEndDate" Label="@L["Common.EndDate"]" Required="true" />
+        <MudTimePicker @bind-Time="_eventEndTime" Label="@L["Common.EndTime"]" />
+        <MudTextField @bind-Value="_eventLocation" Label="@L["Common.Location"]" />
+        <MudTextField @bind-Value="_eventDescription" Label="@L["Common.Description"]" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_eventPublicVisible" Label="@L["Common.PublicVisible"]" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showAddEvent = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddEvent">Create</MudButton>
+        <MudButton OnClick="@(() => _showAddEvent = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddEvent">@L.H("Common.Create")</MudButton>
     </DialogActions>
 </MudDialog>
 
 @* ---- Edit Template Dialog ---- *@
 <MudDialog @bind-Visible="_showEditTemplate">
-    <TitleContent><MudText Typo="Typo.h6">Edit Rehearsal Template</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("SemesterDetail.EditTemplateTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudSelect T="DayOfWeek" @bind-Value="_editTemplateDay" Label="Day" Style="min-width:120px;">
+        <MudSelect T="DayOfWeek" @bind-Value="_editTemplateDay" Label="@L["SemesterDetail.Day"]" Style="min-width:120px;">
             @foreach (var d in Enum.GetValues<DayOfWeek>())
             {
                 <MudSelectItem T="DayOfWeek" Value="@d">@d</MudSelectItem>
             }
         </MudSelect>
-        <MudTimePicker @bind-Time="_editTemplateStartTime" Label="Start Time" />
-        <MudNumericField T="int" @bind-Value="_editTemplateDuration" Label="Duration (min)" Min="15" Max="480" />
-        <MudTextField @bind-Value="_editTemplateLocation" Label="Location" />
-        <MudDatePicker @bind-Date="_editTemplateStartDate" Label="From Date" />
-        <MudDatePicker @bind-Date="_editTemplateEndDate" Label="To Date" />
+        <MudTimePicker @bind-Time="_editTemplateStartTime" Label="@L["Common.StartTime"]" />
+        <MudNumericField T="int" @bind-Value="_editTemplateDuration" Label="@L["SemesterDetail.DurationLabel"]" Min="15" Max="480" />
+        <MudTextField @bind-Value="_editTemplateLocation" Label="@L["Common.Location"]" />
+        <MudDatePicker @bind-Date="_editTemplateStartDate" Label="@L["SemesterDetail.FromDate"]" />
+        <MudDatePicker @bind-Date="_editTemplateEndDate" Label="@L["SemesterDetail.ToDate"]" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showEditTemplate = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditTemplate">Save</MudButton>
+        <MudButton OnClick="@(() => _showEditTemplate = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditTemplate">@L.H("Common.Save")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -350,7 +351,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Rehearsal template added.", Severity.Success);
+            Snackbar.Add(L["SemesterDetail.TemplateAdded"], Severity.Success);
             await LoadSemester();
         }
         else
@@ -387,7 +388,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Rehearsal template updated.", Severity.Success);
+            Snackbar.Add(L["SemesterDetail.TemplateUpdated"], Severity.Success);
             _showEditTemplate = false;
             await LoadSemester();
         }
@@ -401,9 +402,9 @@
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Delete rehearsal template for {template.DayOfWeek} at {template.StartTime:HH:mm}?" }
+            { x => x.ContentText, string.Format(L["SemesterDetail.DeleteTemplateConfirm"], template.DayOfWeek, template.StartTime.ToString("HH:mm")) }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Template", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["SemesterDetail.DeleteTemplateTitle"], parameters);
         var dialogResult = await dialog.Result;
 
         if (dialogResult is null || dialogResult.Canceled) return;
@@ -411,7 +412,7 @@
         var result = await Mediator.Send(new DeleteRehearsalTemplateCommand(template.Id));
         if (result.IsSuccess)
         {
-            Snackbar.Add("Rehearsal template deleted.", Severity.Success);
+            Snackbar.Add(L["SemesterDetail.TemplateDeleted"], Severity.Success);
             await LoadSemester();
         }
         else
@@ -429,10 +430,10 @@
         if (result.IsSuccess)
         {
             var r = result.Value;
-            Snackbar.Add($"Generated {r.Created} rehearsals ({r.Skipped} skipped).", Severity.Success);
+            Snackbar.Add(string.Format(L["SemesterDetail.RehearsalsGenerated"], r.Created, r.Skipped), Severity.Success);
             if (r.Conflicts.Count > 0)
             {
-                Snackbar.Add($"{r.Conflicts.Count} conflicts detected.", Severity.Warning);
+                Snackbar.Add(string.Format(L["SemesterDetail.ConflictsDetected"], r.Conflicts.Count), Severity.Warning);
             }
             await LoadSemester();
         }
@@ -457,7 +458,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Event added to semester.", Severity.Success);
+            Snackbar.Add(L["SemesterDetail.EventAdded"], Severity.Success);
             _showAddEvent = false;
             _eventName = string.Empty;
             _eventDescription = null;

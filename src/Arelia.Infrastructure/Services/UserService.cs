@@ -40,4 +40,19 @@ public class UserService(UserManager<ApplicationUser> userManager) : IUserServic
 
         return await userManager.GeneratePasswordResetTokenAsync(user);
     }
+
+    public async Task<string?> GetPreferredLanguageAsync(string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        return user?.PreferredLanguage;
+    }
+
+    public async Task SetPreferredLanguageAsync(string userId, string? language)
+    {
+        var user = await userManager.FindByIdAsync(userId)
+            ?? throw new InvalidOperationException($"User {userId} not found.");
+
+        user.PreferredLanguage = language;
+        await userManager.UpdateAsync(user);
+    }
 }

@@ -1,4 +1,4 @@
-@page "/roles"
+﻿@page "/roles"
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Roles.Commands
 @using Arelia.Application.Roles.Queries
@@ -7,31 +7,32 @@
 @using MediatR
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Roles &amp; Permissions</PageTitle>
+<PageTitle>@L["Roles.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Roles &amp; Permissions</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Roles.Title")</MudText>
 
 @if (TenantService.CurrentOrganizationId is null)
 {
-    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
     return;
 }
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
            StartIcon="@Icons.Material.Filled.Add" Class="mb-4">
-    Create Custom Role
+    @L.H("Roles.CreateCustom")
 </MudButton>
 
 @if (_roles is not null)
 {
-    <MudText Typo="Typo.h6" Class="mt-4 mb-2">Permission Matrix</MudText>
+    <MudText Typo="Typo.h6" Class="mt-4 mb-2">@L.H("Roles.PermissionMatrix")</MudText>
 
     <MudSimpleTable Dense="true" Hover="true" Style="overflow-x: auto;">
         <thead>
             <tr>
-                <th>Permission</th>
+                <th>@L["Common.Permission"]</th>
                 @foreach (var role in _roles.Where(r => r.IsActive))
                 {
                     <th style="text-align:center;">@role.Name</th>
@@ -56,7 +57,7 @@
         </tbody>
     </MudSimpleTable>
 
-    <MudText Typo="Typo.h6" Class="mt-6 mb-2">All Roles</MudText>
+    <MudText Typo="Typo.h6" Class="mt-6 mb-2">@L.H("Roles.AllRoles")</MudText>
 
     <ConfigurableTable TItem="RoleDto" Items="_roles" Columns="_roleColumns">
         <CellTemplate>
@@ -70,7 +71,7 @@
                     break;
                 case "Status":
                     <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
-                        @((bool)(context.Value ?? false) ? "Active" : "Inactive")
+                        @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
                     </MudChip>
                     break;
                 default:
@@ -82,13 +83,13 @@
 }
 
 <MudDialog @bind-Visible="_showCreate">
-    <TitleContent><MudText Typo="Typo.h6">Create Custom Role</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("Roles.CreateCustomTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_newRoleName" Label="Role Name" Required="true" />
+        <MudTextField @bind-Value="_newRoleName" Label="@L["Roles.RoleName"]" Required="true" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateRole">Create</MudButton>
+        <MudButton OnClick="@(() => _showCreate = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateRole">@L.H("Common.Create")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -97,16 +98,17 @@
     private bool _showCreate;
     private string _newRoleName = string.Empty;
 
-    private readonly List<ColumnDefinition<RoleDto>> _roleColumns =
-    [
-        new("Name", "Name", x => x.Name),
-        new("Type", "Type", x => x.RoleType),
-        new("Assignments", "Active Assignments", x => x.AssignmentCount),
-        new("Status", "Status", x => x.IsActive),
-    ];
+    private List<ColumnDefinition<RoleDto>>? _roleColumns;
 
     protected override async Task OnInitializedAsync()
     {
+        _roleColumns =
+        [
+            new("Name", L["Common.Name"], x => x.Name),
+            new("Type", L["Common.Type"], x => x.RoleType),
+            new("Assignments", L["Roles.ActiveAssignments"], x => x.AssignmentCount),
+            new("Status", L["Common.Status"], x => x.IsActive),
+        ];
         RegisterTenantChangeHandler();
         await LoadRoles();
     }
@@ -127,7 +129,7 @@
         var result = await Mediator.Send(new CreateCustomRoleCommand(_newRoleName, orgId));
         if (result.IsSuccess)
         {
-            Snackbar.Add($"Role '{_newRoleName}' created.", Severity.Success);
+            Snackbar.Add(string.Format(L["Roles.RoleCreated"], _newRoleName), Severity.Success);
             _showCreate = false;
             _newRoleName = string.Empty;
             await LoadRoles();

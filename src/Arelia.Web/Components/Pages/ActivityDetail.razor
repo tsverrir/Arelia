@@ -1,4 +1,4 @@
-@page "/activities/{ActivityId:guid}"
+﻿@page "/activities/{ActivityId:guid}"
 @using Arelia.Application.Activities.Commands
 @using Arelia.Application.Activities.Queries
 @using Arelia.Application.Attendance.Commands
@@ -9,9 +9,10 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Activity Detail</PageTitle>
+<PageTitle>@(_activity?.Name ?? L["ActivityDetail.BackToActivities"])</PageTitle>
 
 @if (_activity is null)
 {
@@ -24,24 +25,24 @@
     {
         <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo($"/semesters/{_activity.ParentActivityId}"))"
                    StartIcon="@Icons.Material.Filled.ArrowBack">
-            Back to Semester
+            @L.H("ActivityDetail.BackToSemester")
         </MudButton>
     }
     else
     {
         <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
                    StartIcon="@Icons.Material.Filled.ArrowBack">
-            Back to Activities
+            @L.H("ActivityDetail.BackToActivities")
         </MudButton>
     }
     <MudSpacer />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="StartEdit"
                StartIcon="@Icons.Material.Filled.Edit">
-        Edit
+        @L.H("Common.Edit")
     </MudButton>
     <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteActivity"
                StartIcon="@Icons.Material.Filled.Delete">
-        Delete
+        @L.H("Common.Delete")
     </MudButton>
 </MudStack>
 
@@ -54,10 +55,10 @@
                 <MudStack Spacing="2">
                     <MudStack Row="true" Spacing="2">
                         <MudChip T="string" Color="Color.Primary" Size="Size.Small">@_activity.ActivityType</MudChip>
-                        <MudChip T="string" Size="Size.Small">Work Year @_activity.WorkYear</MudChip>
+                        <MudChip T="string" Size="Size.Small">@L["Common.WorkYear"] @_activity.WorkYear</MudChip>
                         @if (_activity.IsPublicVisible)
                         {
-                            <MudChip T="string" Color="Color.Info" Size="Size.Small">Public</MudChip>
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">@L["Common.Public"]</MudChip>
                         }
                     </MudStack>
 
@@ -95,28 +96,28 @@
     <MudItem xs="12" md="4">
         <MudCard>
             <MudCardHeader>
-                <MudText Typo="Typo.h6">Summary</MudText>
+                <MudText Typo="Typo.h6">@L.H("ActivityDetail.Summary")</MudText>
             </MudCardHeader>
             <MudCardContent>
                 @if (_activity.IsImplicitParticipation)
                 {
-                    <MudText>Participants: @_activity.ParticipantCount (all active members)</MudText>
+                    <MudText>@string.Format(L["ActivityDetail.ParticipantsAll"], _activity.ParticipantCount)</MudText>
                 }
                 else if (_activity.MaxCapacity.HasValue)
                 {
-                    <MudText>Capacity: @_activity.ParticipantCount / @_activity.MaxCapacity</MudText>
+                    <MudText>@string.Format(L["ActivityDetail.Capacity"], _activity.ParticipantCount, _activity.MaxCapacity)</MudText>
                 }
                 else
                 {
-                    <MudText>Participants: @_activity.ParticipantCount</MudText>
+                    <MudText>@string.Format(L["ActivityDetail.Participants"], _activity.ParticipantCount)</MudText>
                 }
                 @if (_activity.ChildActivityCount > 0)
                 {
-                    <MudText>Child activities: @_activity.ChildActivityCount</MudText>
+                    <MudText>@string.Format(L["ActivityDetail.ChildActivities"], _activity.ChildActivityCount)</MudText>
                 }
                 @if (_activity.SignupDeadline.HasValue)
                 {
-                    <MudText>Signup deadline: @_activity.SignupDeadline.Value.ToString("dd MMM yyyy HH:mm")</MudText>
+                    <MudText>@string.Format(L["ActivityDetail.SignupDeadline"], _activity.SignupDeadline.Value.ToString("dd MMM yyyy HH:mm"))</MudText>
                 }
             </MudCardContent>
         </MudCard>
@@ -129,17 +130,17 @@
     <MudCard Class="mt-4">
         <MudCardHeader>
             <CardHeaderContent>
-                <MudText Typo="Typo.h6">Attendance (@_attendance.Participants.Count(p => p.Status is AttendanceStatus.Present or AttendanceStatus.Late) / @_attendance.Participants.Count)</MudText>
+                <MudText Typo="Typo.h6">@string.Format(L["ActivityDetail.AttendanceHeader"], _attendance.Participants.Count(p => p.Status is AttendanceStatus.Present or AttendanceStatus.Late), _attendance.Participants.Count)</MudText>
             </CardHeaderContent>
         </MudCardHeader>
         <MudCardContent>
             <MudSimpleTable Dense="true" Hover="true">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Voice Group</th>
-                        <th Style="width:200px;">Status</th>
-                        <th Style="width:260px;">Comment</th>
+                        <th>@L["Common.Name"]</th>
+                        <th>@L["Common.VoiceGroup"]</th>
+                        <th Style="width:200px;">@L["Common.Status"]</th>
+                        <th Style="width:260px;">@L["ActivityDetail.Comment"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -153,24 +154,24 @@
                                 <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
                                     <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small"
                                                    Color="@(person.Status == AttendanceStatus.Present ? Color.Success : Color.Default)"
-                                                   Title="Present"
-                                                   OnClick="@(() => SetAttendance(person.PersonId, AttendanceStatus.Present))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Schedule" Size="Size.Small"
-                                                   Color="@(person.Status == AttendanceStatus.Late ? Color.Warning : Color.Default)"
-                                                   Title="Late"
-                                                   OnClick="@(() => SetAttendance(person.PersonId, AttendanceStatus.Late))" />
-                                    <MudSelect T="AttendanceStatus?" Value="@(IsOtherStatus(person.Status) ? person.Status : null)"
-                                               Placeholder="Other…" Dense="true" Margin="Margin.Dense"
-                                               Style="min-width:120px;"
-                                               ValueChanged="@(v => OnOtherStatusChanged(person.PersonId, v))">
-                                        <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.NoShow)">No-show</MudSelectItem>
-                                        <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.Sick)">Sick</MudSelectItem>
-                                        <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.ExplainedAbsence)">Explained</MudSelectItem>
+                                                   Title="@(L["ActivityDetail.StatusPresent"])"
+                                                                  OnClick="@(() => SetAttendance(person.PersonId, AttendanceStatus.Present))" />
+                                                   <MudIconButton Icon="@Icons.Material.Filled.Schedule" Size="Size.Small"
+                                                                  Color="@(person.Status == AttendanceStatus.Late ? Color.Warning : Color.Default)"
+                                                                  Title="@(L["ActivityDetail.StatusLate"])"
+                                                                  OnClick="@(() => SetAttendance(person.PersonId, AttendanceStatus.Late))" />
+                                                   <MudSelect T="AttendanceStatus?" Value="@(IsOtherStatus(person.Status) ? person.Status : null)"
+                                                              Placeholder="@(L["ActivityDetail.OtherPlaceholder"])" Dense="true" Margin="Margin.Dense"
+                                                              Style="min-width:120px;"
+                                                              ValueChanged="@(v => OnOtherStatusChanged(person.PersonId, v))">
+                                                       <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.NoShow)">@L["ActivityDetail.StatusNoShow"]</MudSelectItem>
+                                                       <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.Sick)">@L["ActivityDetail.StatusSick"]</MudSelectItem>
+                                                       <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.ExplainedAbsence)">@L["ActivityDetail.StatusExplained"]</MudSelectItem>
                                     </MudSelect>
                                 </MudStack>
                             </td>
                             <td>
-                                <MudTextField T="string" Value="@person.Comment" Placeholder="Comment…"
+                                <MudTextField T="string" Value="@person.Comment" Placeholder="@L["ActivityDetail.CommentPlaceholder"]"
                                               Margin="Margin.Dense" MaxLength="255" Immediate="false"
                                               ValueChanged="@(v => SaveComment(person.PersonId, v))" />
                             </td>
@@ -184,21 +185,21 @@
 
 @* ---- Edit Dialog ---- *@
 <MudDialog @bind-Visible="_showEdit">
-    <TitleContent><MudText Typo="Typo.h6">Edit Activity</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("ActivityDetail.EditTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_editName" Label="Name" Required="true" />
-        <MudDatePicker @bind-Date="_editStartDate" Label="Start Date" Required="true" />
-        <MudTimePicker @bind-Time="_editStartTime" Label="Start Time" />
-        <MudDatePicker @bind-Date="_editEndDate" Label="End Date" Required="true" />
-        <MudTimePicker @bind-Time="_editEndTime" Label="End Time" />
-        <MudTextField @bind-Value="_editLocation" Label="Location" />
-        <MudTextField @bind-Value="_editDescription" Label="Description" Lines="3" />
-        <MudCheckBox T="bool" @bind-Value="_editPublicVisible" Label="Public Visible" />
-        <MudNumericField T="int?" @bind-Value="_editMaxCapacity" Label="Max Capacity" />
+        <MudTextField @bind-Value="_editName" Label="@L["Common.Name"]" Required="true" />
+        <MudDatePicker @bind-Date="_editStartDate" Label="@L["Common.StartDate"]" Required="true" />
+        <MudTimePicker @bind-Time="_editStartTime" Label="@L["Common.StartTime"]" />
+        <MudDatePicker @bind-Date="_editEndDate" Label="@L["Common.EndDate"]" Required="true" />
+        <MudTimePicker @bind-Time="_editEndTime" Label="@L["Common.EndTime"]" />
+        <MudTextField @bind-Value="_editLocation" Label="@L["Common.Location"]" />
+        <MudTextField @bind-Value="_editDescription" Label="@L["Common.Description"]" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_editPublicVisible" Label="@L["Common.PublicVisible"]" />
+        <MudNumericField T="int?" @bind-Value="_editMaxCapacity" Label="@L["ActivityDetail.MaxCapacity"]" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showEdit = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEdit">Save</MudButton>
+        <MudButton OnClick="@(() => _showEdit = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEdit">@L.H("Common.Save")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -263,7 +264,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Activity updated.", Severity.Success);
+            Snackbar.Add(L["ActivityDetail.Updated"], Severity.Success);
             _showEdit = false;
             await LoadActivity();
         }
@@ -279,9 +280,9 @@
 
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Delete \"{_activity.Name}\"? This will also remove any child activities." }
+            { x => x.ContentText, string.Format(L["Activity.DeleteConfirm"], _activity.Name) }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Activity", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Activity.DeleteTitle"], parameters);
         var dialogResult = await dialog.Result;
 
         if (dialogResult is null || dialogResult.Canceled) return;
@@ -289,7 +290,7 @@
         var result = await Mediator.Send(new DeleteActivityCommand(ActivityId));
         if (result.IsSuccess)
         {
-            Snackbar.Add("Activity deleted.", Severity.Success);
+            Snackbar.Add(L["ActivityDetail.Deleted"], Severity.Success);
             if (_activity.ParentActivityId.HasValue)
                 Navigation.NavigateTo($"/semesters/{_activity.ParentActivityId}");
             else

@@ -1,4 +1,4 @@
-@page "/activities"
+﻿@page "/activities"
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Activities.Commands
 @using Arelia.Application.Activities.Queries
@@ -8,29 +8,30 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Activities</PageTitle>
+<PageTitle>@L["Activity.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Activities</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Activity.Title")</MudText>
 
 @if (TenantService.CurrentOrganizationId is null)
 {
-    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
     return;
 }
 
 <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="3">
-    <MudSelect T="ActivityType?" Value="_typeFilter" Label="Type" Clearable="true"
+    <MudSelect T="ActivityType?" Value="_typeFilter" Label="@L["Common.Type"]" Clearable="true"
                ValueChanged="@(async (ActivityType? v) => { _typeFilter = v; await LoadActivities(); })">
         @foreach (var t in _activityTypes)
         {
             <MudSelectItem T="ActivityType?" Value="@t">@t</MudSelectItem>
         }
     </MudSelect>
-    <MudNumericField T="int?" @bind-Value="_workYear" Label="Work Year" />
-    <MudButton OnClick="LoadActivities">Filter</MudButton>
-    <MudCheckBox T="bool" Value="_groupByType" Label="Group by type"
+    <MudNumericField T="int?" @bind-Value="_workYear" Label="@L["Common.WorkYear"]" />
+    <MudButton OnClick="LoadActivities">@L.H("Common.Filter")</MudButton>
+    <MudCheckBox T="bool" Value="_groupByType" Label="@L["Activity.GroupByType"]"
                  ValueChanged="@((bool v) => { _groupByType = v; StateHasChanged(); })" />
     <MudSpacer />
     @if (_selected.Count > 0)
@@ -38,12 +39,12 @@
         <MudButton Variant="Variant.Filled" Color="Color.Error"
                    StartIcon="@Icons.Material.Filled.Delete"
                    OnClick="BulkDelete">
-            Delete @_selected.Count selected
+            @string.Format(L["Activity.DeleteSelected"], _selected.Count)
         </MudButton>
     }
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
                StartIcon="@Icons.Material.Filled.Add">
-        Create Activity
+        @L.H("Activity.Create")
     </MudButton>
 </MudStack>
 
@@ -82,26 +83,26 @@
 }
 
 <MudDialog @bind-Visible="_showCreate">
-    <TitleContent><MudText Typo="Typo.h6">Create Activity</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("Activity.CreateTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_newName" Label="Name" Required="true" />
-        <MudSelect T="ActivityType" @bind-Value="_newType" Label="Type">
+        <MudTextField @bind-Value="_newName" Label="@L["Common.Name"]" Required="true" />
+        <MudSelect T="ActivityType" @bind-Value="_newType" Label="@L["Common.Type"]">
             @foreach (var t in _activityTypes)
             {
                 <MudSelectItem T="ActivityType" Value="@t">@t</MudSelectItem>
             }
         </MudSelect>
-        <MudDatePicker @bind-Date="_newStartDate" Label="Start Date" Required="true" />
-        <MudTimePicker @bind-Time="_newStartTime" Label="Start Time" />
-        <MudDatePicker @bind-Date="_newEndDate" Label="End Date" Required="true" />
-        <MudTimePicker @bind-Time="_newEndTime" Label="End Time" />
-        <MudTextField @bind-Value="_newLocation" Label="Location" />
-        <MudTextField @bind-Value="_newDescription" Label="Description" Lines="3" />
-        <MudCheckBox T="bool" @bind-Value="_newPublicVisible" Label="Public Visible" />
+        <MudDatePicker @bind-Date="_newStartDate" Label="@L["Common.StartDate"]" Required="true" />
+        <MudTimePicker @bind-Time="_newStartTime" Label="@L["Common.StartTime"]" />
+        <MudDatePicker @bind-Date="_newEndDate" Label="@L["Common.EndDate"]" Required="true" />
+        <MudTimePicker @bind-Time="_newEndTime" Label="@L["Common.EndTime"]" />
+        <MudTextField @bind-Value="_newLocation" Label="@L["Common.Location"]" />
+        <MudTextField @bind-Value="_newDescription" Label="@L["Common.Description"]" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_newPublicVisible" Label="@L["Common.PublicVisible"]" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateActivity">Create</MudButton>
+        <MudButton OnClick="@(() => _showCreate = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateActivity">@L.H("Common.Create")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -203,7 +204,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Activity created.", Severity.Success);
+            Snackbar.Add(L["Activity.Created"], Severity.Success);
             _showCreate = false;
             _newName = string.Empty;
             await LoadActivities();
@@ -218,9 +219,9 @@
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Delete \"{activity.Name}\"? This will also remove any child activities." }
+            { x => x.ContentText, string.Format(L["Activity.DeleteConfirm"], activity.Name) }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Activity", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Activity.DeleteTitle"], parameters);
         var dialogResult = await dialog.Result;
 
         if (dialogResult is null || dialogResult.Canceled) return;
@@ -228,7 +229,7 @@
         var result = await Mediator.Send(new DeleteActivityCommand(activity.Id));
         if (result.IsSuccess)
         {
-            Snackbar.Add("Activity deleted.", Severity.Success);
+            Snackbar.Add(L["Activity.Deleted"], Severity.Success);
             await LoadActivities();
         }
         else
@@ -243,9 +244,9 @@
 
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Delete {_selected.Count} selected activities and their child activities?" }
+            { x => x.ContentText, string.Format(L["Activity.BulkDeleteConfirm"], _selected.Count) }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Bulk Delete", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Activity.BulkDeleteTitle"], parameters);
         var dialogResult = await dialog.Result;
 
         if (dialogResult is null || dialogResult.Canceled) return;
@@ -253,7 +254,7 @@
         var result = await Mediator.Send(new BulkDeleteActivitiesCommand(_selected.ToList()));
         if (result.IsSuccess)
         {
-            Snackbar.Add($"{_selected.Count} activities deleted.", Severity.Success);
+            Snackbar.Add(string.Format(L["Activity.BulkDeleted"], _selected.Count), Severity.Success);
             await LoadActivities();
         }
         else

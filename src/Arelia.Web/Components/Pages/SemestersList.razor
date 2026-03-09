@@ -1,4 +1,4 @@
-@page "/semesters"
+﻿@page "/semesters"
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Activities.Commands
 @using Arelia.Application.Activities.Queries
@@ -7,27 +7,28 @@
 @inject IMediator Mediator
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Semesters</PageTitle>
+<PageTitle>@L["Semester.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Semesters</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Semester.Title")</MudText>
 
 @if (TenantService.CurrentOrganizationId is null)
 {
-    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@L.H("Common.SelectOrgFirst")</MudAlert>
     return;
 }
 
 <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="3">
-    <MudNumericField T="int?" @bind-Value="_workYear" Label="Year" />
-    <MudButton OnClick="LoadSemesters">Filter</MudButton>
-    <MudCheckBox T="bool" Value="_hidePastSemesters" Label="Hide past semesters"
+    <MudNumericField T="int?" @bind-Value="_workYear" Label="@L["Common.Year"]" />
+    <MudButton OnClick="LoadSemesters">@L.H("Common.Filter")</MudButton>
+    <MudCheckBox T="bool" Value="_hidePastSemesters" Label="@L["Semester.HidePast"]"
                  ValueChanged="@(async (bool v) => { _hidePastSemesters = v; await LoadSemesters(); })" />
     <MudSpacer />
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
                StartIcon="@Icons.Material.Filled.Add">
-        Create Semester
+        @L.H("Semester.Create")
     </MudButton>
 </MudStack>
 
@@ -64,23 +65,23 @@
 
     @if (_semesters.Count == 0)
     {
-        <MudAlert Severity="Severity.Info" Class="mt-4">No semesters found. Create one to get started.</MudAlert>
+        <MudAlert Severity="Severity.Info" Class="mt-4">@L.H("Semester.Created")</MudAlert>
     }
 }
 
 <MudDialog @bind-Visible="_showCreate">
-    <TitleContent><MudText Typo="Typo.h6">Create Semester</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("Semester.CreateTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_newName" Label="Name" Required="true" Placeholder="e.g. Spring 2025" />
-        <MudDatePicker @bind-Date="_newStartDate" Label="Start Date" Required="true" />
-        <MudDatePicker @bind-Date="_newEndDate" Label="End Date" Required="true" />
-        <MudTextField @bind-Value="_newLocation" Label="Default Location" />
-        <MudTextField @bind-Value="_newDescription" Label="Description" Lines="3" />
-        <MudCheckBox T="bool" @bind-Value="_newPublicVisible" Label="Public Visible" />
+        <MudTextField @bind-Value="_newName" Label="@L["Common.Name"]" Required="true" />
+        <MudDatePicker @bind-Date="_newStartDate" Label="@L["Common.StartDate"]" Required="true" />
+        <MudDatePicker @bind-Date="_newEndDate" Label="@L["Common.EndDate"]" Required="true" />
+        <MudTextField @bind-Value="_newLocation" Label="@L["Common.Location"]" />
+        <MudTextField @bind-Value="_newDescription" Label="@L["Common.Description"]" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_newPublicVisible" Label="@L["Common.PublicVisible"]" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateSemester">Create</MudButton>
+        <MudButton OnClick="@(() => _showCreate = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateSemester">@L.H("Common.Create")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -155,7 +156,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Semester created.", Severity.Success);
+            Snackbar.Add(L["Semester.Created"], Severity.Success);
             _showCreate = false;
             _newName = string.Empty;
             Navigation.NavigateTo($"/semesters/{result.Value}");

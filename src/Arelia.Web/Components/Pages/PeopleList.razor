@@ -1,4 +1,4 @@
-@page "/people"
+﻿@page "/people"
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Interfaces
 @using Arelia.Application.Organizations.Commands
@@ -11,43 +11,44 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>People</PageTitle>
+<PageTitle>@L["People.Title"]</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">People</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("People.Title")</MudText>
 
 @if (TenantService.CurrentOrganizationId is null)
 {
-    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
     return;
 }
 
 <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="3">
-    <MudTextField @bind-Value="_searchTerm" Label="Search" Adornment="Adornment.Start"
+    <MudTextField @bind-Value="_searchTerm" Label="@L["Common.Search"]" Adornment="Adornment.Start"
                   AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"
                   TextChanged="OnSearchChanged" />
-    <MudSelect T="VoiceGroup?" Value="_voiceGroupFilter" Label="Voice Group" Clearable="true"
+    <MudSelect T="VoiceGroup?" Value="_voiceGroupFilter" Label="@L["Common.VoiceGroup"]" Clearable="true"
                ValueChanged="@(async (VoiceGroup? v) => { _voiceGroupFilter = v; await LoadPeople(); })">
         @foreach (var vg in Enum.GetValues<VoiceGroup>())
         {
             <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
         }
     </MudSelect>
-    <MudCheckBox T="bool" Value="_showInactive" Label="Show inactive"
+    <MudCheckBox T="bool" Value="_showInactive" Label="@L["People.ShowInactive"]"
                  ValueChanged="@(async (bool v) => { _showInactive = v; await LoadPeople(); })" />
     <MudSpacer />
     <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _showAddByEmail = true)"
                StartIcon="@Icons.Material.Filled.PersonSearch">
-        Add by Email
+        @L.H("People.AddByEmail")
     </MudButton>
     <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="@(() => _showImport = true)"
                StartIcon="@Icons.Material.Filled.TransferWithinAStation">
-        Import from Org
+        @L.H("People.ImportFromOrg")
     </MudButton>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
                StartIcon="@Icons.Material.Filled.PersonAdd">
-        Add Person
+        @L.H("People.AddPerson")
     </MudButton>
 </MudStack>
 
@@ -62,7 +63,7 @@
                     break;
                 case "Status":
                     <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
-                        @((bool)(context.Value ?? false) ? "Active" : "Inactive")
+                        @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
                     </MudChip>
                     break;
                 default:
@@ -74,58 +75,58 @@
 }
 
 <MudDialog @bind-Visible="_showCreate">
-    <TitleContent><MudText Typo="Typo.h6">Add Person</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("People.AddPersonTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_firstName" Label="First Name" Required="true" />
-        <MudTextField @bind-Value="_lastName" Label="Last Name" Required="true" />
-        <MudTextField @bind-Value="_email" Label="Email" />
-        <MudTextField @bind-Value="_phone" Label="Phone" />
-        <MudSelect T="VoiceGroup?" @bind-Value="_voiceGroup" Label="Voice Group" Clearable="true">
+        <MudTextField @bind-Value="_firstName" Label="@L["Common.FirstName"]" Required="true" />
+        <MudTextField @bind-Value="_lastName" Label="@L["Common.LastName"]" Required="true" />
+        <MudTextField @bind-Value="_email" Label="@L["Common.Email"]" />
+        <MudTextField @bind-Value="_phone" Label="@L["Common.Phone"]" />
+        <MudSelect T="VoiceGroup?" @bind-Value="_voiceGroup" Label="@L["Common.VoiceGroup"]" Clearable="true">
             @foreach (var vg in Enum.GetValues<VoiceGroup>())
             {
                 <MudSelectItem T="VoiceGroup?" Value="@vg">@VoiceGroupLabel(vg)</MudSelectItem>
             }
         </MudSelect>
-        <MudTextField @bind-Value="_notes" Label="Notes" Lines="3" />
+        <MudTextField @bind-Value="_notes" Label="@L["Common.Notes"]" Lines="3" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreatePerson">Create</MudButton>
+        <MudButton OnClick="@(() => _showCreate = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreatePerson">@L.H("Common.Create")</MudButton>
     </DialogActions>
 </MudDialog>
 
 <MudDialog @bind-Visible="_showAddByEmail">
-    <TitleContent><MudText Typo="Typo.h6">Add Member by Email</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("People.AddByEmailTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_inviteEmail" Label="Email" Required="true" />
-        <MudTextField @bind-Value="_inviteFirstName" Label="First Name" />
-        <MudTextField @bind-Value="_inviteLastName" Label="Last Name" />
+        <MudTextField @bind-Value="_inviteEmail" Label="@L["Common.Email"]" Required="true" />
+        <MudTextField @bind-Value="_inviteFirstName" Label="@L["Common.FirstName"]" />
+        <MudTextField @bind-Value="_inviteLastName" Label="@L["Common.LastName"]" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showAddByEmail = false)">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddByEmail">Add</MudButton>
+        <MudButton OnClick="@(() => _showAddByEmail = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddByEmail">@L.H("Common.Add")</MudButton>
     </DialogActions>
 </MudDialog>
 
 <MudDialog @bind-Visible="_showImport">
-    <TitleContent><MudText Typo="Typo.h6">Import Person from Another Organization</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@L.H("People.ImportFromOrgTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_importSearch" Label="Search by name" Immediate="true"
+        <MudTextField @bind-Value="_importSearch" Label="@L["People.ImportSearch"]" Immediate="true"
                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
                       TextChanged="OnImportSearchChanged" />
         @if (_importResults is not null)
         {
             @if (_importResults.Count == 0)
             {
-                <MudText Class="mt-2" Color="Color.Secondary">No matches found in other organizations.</MudText>
+                <MudText Class="mt-2" Color="Color.Secondary">@L["People.ImportNoResults"]</MudText>
             }
             else
             {
                 <MudTable Items="_importResults" Dense="true" Hover="true" Class="mt-2">
                     <HeaderContent>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Organization</MudTh>
-                        <MudTh>Email</MudTh>
+                        <MudTh>@L["Common.Name"]</MudTh>
+                        <MudTh>@L["Common.Organization"]</MudTh>
+                        <MudTh>@L["Common.Email"]</MudTh>
                         <MudTh></MudTh>
                     </HeaderContent>
                     <RowTemplate>
@@ -134,7 +135,7 @@
                         <MudTd>@context.Email</MudTd>
                         <MudTd>
                             <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
-                                       OnClick="@(() => ImportPerson(context))">Import</MudButton>
+                                       OnClick="@(() => ImportPerson(context))">@L["People.ImportBtn"]</MudButton>
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -142,7 +143,7 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="CloseImportDialog">Close</MudButton>
+        <MudButton OnClick="CloseImportDialog">@L.H("Common.Cancel")</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -159,15 +160,7 @@
     private VoiceGroup? _voiceGroup;
     private string? _notes;
 
-    private readonly List<ColumnDefinition<PersonListDto>> _columns =
-    [
-        new("FirstName", "First Name", x => x.FirstName, SortBy: x => x.FirstName),
-        new("LastName", "Last Name", x => x.LastName, SortBy: x => x.LastName),
-        new("Email", "Email", x => x.Email),
-        new("Phone", "Phone", x => x.Phone),
-        new("VoiceGroup", "Voice Group", x => x.VoiceGroup),
-        new("Status", "Status", x => x.IsActive),
-    ];
+    private List<ColumnDefinition<PersonListDto>>? _columns;
 
     private bool _showAddByEmail;
     private string _inviteEmail = string.Empty;
@@ -180,6 +173,15 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _columns =
+        [
+            new("FirstName", L["Common.FirstName"], x => x.FirstName, SortBy: x => x.FirstName),
+            new("LastName", L["Common.LastName"], x => x.LastName, SortBy: x => x.LastName),
+            new("Email", L["Common.Email"], x => x.Email),
+            new("Phone", L["Common.Phone"], x => x.Phone),
+            new("VoiceGroup", L["Common.VoiceGroup"], x => x.VoiceGroup),
+            new("Status", L["Common.Status"], x => x.IsActive),
+        ];
         RegisterTenantChangeHandler();
         await LoadPeople();
     }
@@ -210,7 +212,7 @@
     {
         if (string.IsNullOrWhiteSpace(_firstName) || string.IsNullOrWhiteSpace(_lastName))
         {
-            Snackbar.Add("First and last name are required.", Severity.Warning);
+            Snackbar.Add(L["People.NameRequired"], Severity.Warning);
             return;
         }
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
@@ -224,9 +226,9 @@
         {
             var dlgParams = new DialogParameters<ConfirmDialog>
             {
-                { x => x.ContentText, $"{_firstName} {_lastName} already exists in this organization. Create a duplicate anyway?" }
+                { x => x.ContentText, string.Format(L["People.DuplicateConfirm"], _firstName, _lastName) }
             };
-            var dlg = await DialogService.ShowAsync<ConfirmDialog>("Duplicate Person", dlgParams);
+            var dlg = await DialogService.ShowAsync<ConfirmDialog>(L["People.DuplicateTitle"], dlgParams);
             var dlgResult = await dlg.Result;
             if (dlgResult is null || dlgResult.Canceled) return;
         }
@@ -247,10 +249,9 @@
                 var dlgParams = new DialogParameters<ConfirmDialog>
                 {
                     { x => x.ContentText,
-                      $"{_firstName} {_lastName} already exists in \"{match.OrganizationName}\". " +
-                      $"Click Confirm to copy their details into this organization, or Cancel to enter details manually." }
+                      string.Format(L["People.CrossOrgFound"], _firstName, _lastName, match.OrganizationName) }
                 };
-                var dlg = await DialogService.ShowAsync<ConfirmDialog>("Person Found in Another Organization", dlgParams);
+                var dlg = await DialogService.ShowAsync<ConfirmDialog>(L["People.CrossOrgTitle"], dlgParams);
                 var dlgResult = await dlg.Result;
                 if (dlgResult is not null && !dlgResult.Canceled)
                 {
@@ -266,7 +267,7 @@
         var id = await Mediator.Send(new CreatePersonCommand(
             _firstName, _lastName, _email, _phone, _voiceGroup, _notes, orgId));
 
-        Snackbar.Add("Person created.", Severity.Success);
+        Snackbar.Add(L["People.Created"], Severity.Success);
         _showCreate = false;
         _firstName = string.Empty;
         _lastName = string.Empty;
@@ -281,7 +282,7 @@
     {
         if (string.IsNullOrWhiteSpace(_inviteEmail))
         {
-            Snackbar.Add("Email is required.", Severity.Warning);
+            Snackbar.Add(L["People.EmailRequired"], Severity.Warning);
             return;
         }
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
@@ -291,7 +292,7 @@
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Member added.", Severity.Success);
+            Snackbar.Add(L["People.MemberAdded"], Severity.Success);
             _showAddByEmail = false;
             _inviteEmail = string.Empty;
             _inviteFirstName = null;
@@ -323,7 +324,7 @@
             source.FirstName, source.LastName, source.Email, source.Phone,
             source.VoiceGroup, null, orgId));
 
-        Snackbar.Add($"{source.FirstName} {source.LastName} imported.", Severity.Success);
+        Snackbar.Add(string.Format(L["People.Imported"], source.FirstName, source.LastName), Severity.Success);
         CloseImportDialog();
         await LoadPeople();
     }
@@ -335,10 +336,10 @@
         _importResults = null;
     }
 
-    private static string VoiceGroupLabel(VoiceGroup? vg) => vg switch
+    private string VoiceGroupLabel(VoiceGroup? vg) => vg switch
     {
         null => "—",
-        VoiceGroup.None => "No Voice Group",
+        VoiceGroup.None => L["People.VoiceGroupNone"],
         _ => vg.ToString()!
     };
 }

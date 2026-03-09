@@ -5,12 +5,13 @@
 @inject IMediator Mediator
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+@inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Select Organization</PageTitle>
+<PageTitle>@L["SelectOrg.Title"]</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
-    <MudText Typo="Typo.h5" GutterBottom="true">Select an Organization</MudText>
+    <MudText Typo="Typo.h5" GutterBottom="true">@L.H("SelectOrg.Title")</MudText>
 
     @if (_organizations is null)
     {
@@ -19,7 +20,7 @@
     else if (_organizations.Count == 0)
     {
         <MudAlert Severity="Severity.Info">
-            You are not a member of any organization yet. Contact an administrator.
+            @L.H("SelectOrg.NoOrgs")
         </MudAlert>
     }
     else

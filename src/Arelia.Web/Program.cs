@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Arelia.Web.Components;
 using Arelia.Web.Components.Account;
+using Arelia.Web.Localization;
 using Arelia.Web.Services;
 using Arelia.Application;
 using Arelia.Infrastructure;
@@ -49,7 +51,10 @@ public class Program
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, DevEmailSender>();
 
         // Localization
-        builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+        builder.Services.AddLocalization();
+        builder.Services.AddScoped<CultureService>();
+        builder.Services.AddScoped<AdminHighlightService>();
+        builder.Services.AddScoped<ILocalizer, Localizer>();
 
         var app = builder.Build();
 
@@ -67,7 +72,20 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-        app.UseRequestLocalization("en", "da");
+
+        var supportedCultures = CultureService.SupportedCultures;
+        app.UseRequestLocalization(options =>
+        {
+            options.SetDefaultCulture("en")
+                   .AddSupportedCultures(supportedCultures)
+                   .AddSupportedUICultures(supportedCultures);
+
+            // Read culture from the cookie written by CultureService
+            options.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider
+            {
+                CookieName = ".AspNetCore.Culture"
+            });
+        });
         app.UseAntiforgery();
 
         app.MapStaticAssets();
