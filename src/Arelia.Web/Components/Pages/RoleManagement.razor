@@ -3,6 +3,7 @@
 @using Arelia.Application.Roles.Commands
 @using Arelia.Application.Roles.Queries
 @using Arelia.Domain.Enums
+@using Arelia.Web.Components.Shared
 @using MediatR
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
@@ -57,29 +58,27 @@
 
     <MudText Typo="Typo.h6" Class="mt-6 mb-2">All Roles</MudText>
 
-    <MudTable Items="_roles" Hover="true" Dense="true">
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Type</MudTh>
-            <MudTh>Active Assignments</MudTh>
-            <MudTh>Status</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.Name</MudTd>
-            <MudTd>
-                <MudChip T="string" Size="Size.Small"
-                         Color="@(context.RoleType == RoleType.System ? Color.Primary : Color.Secondary)">
-                    @context.RoleType
-                </MudChip>
-            </MudTd>
-            <MudTd>@context.AssignmentCount</MudTd>
-            <MudTd>
-                <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
-                    @(context.IsActive ? "Active" : "Inactive")
-                </MudChip>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+    <ConfigurableTable TItem="RoleDto" Items="_roles" Columns="_roleColumns">
+        <CellTemplate>
+            @switch (context.ColumnKey)
+            {
+                case "Type":
+                    <MudChip T="string" Size="Size.Small"
+                             Color="@((RoleType)context.Value! == RoleType.System ? Color.Primary : Color.Secondary)">
+                        @context.Value
+                    </MudChip>
+                    break;
+                case "Status":
+                    <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
+                        @((bool)(context.Value ?? false) ? "Active" : "Inactive")
+                    </MudChip>
+                    break;
+                default:
+                    @(context.Value?.ToString() ?? "—")
+                    break;
+            }
+        </CellTemplate>
+    </ConfigurableTable>
 }
 
 <MudDialog @bind-Visible="_showCreate">
@@ -97,6 +96,14 @@
     private List<RoleDto>? _roles;
     private bool _showCreate;
     private string _newRoleName = string.Empty;
+
+    private readonly List<ColumnDefinition<RoleDto>> _roleColumns =
+    [
+        new("Name", "Name", x => x.Name),
+        new("Type", "Type", x => x.RoleType),
+        new("Assignments", "Active Assignments", x => x.AssignmentCount),
+        new("Status", "Status", x => x.IsActive),
+    ];
 
     protected override async Task OnInitializedAsync()
     {

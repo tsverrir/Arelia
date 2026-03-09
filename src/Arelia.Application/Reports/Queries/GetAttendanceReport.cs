@@ -17,8 +17,8 @@ public record AttendancePersonRow(
     string PersonName,
     VoiceGroup? VoiceGroup,
     int Present,
+    int Late,
     int Absent,
-    int Excused,
     decimal AttendanceRate);
 
 public class GetAttendanceReportHandler(IAreliaDbContext context)
@@ -46,8 +46,11 @@ public class GetAttendanceReportHandler(IAreliaDbContext context)
             {
                 PersonId = g.Key,
                 Present = g.Count(ar => ar.Status == AttendanceStatus.Present),
-                Absent = g.Count(ar => ar.Status == AttendanceStatus.Absent),
-                Excused = g.Count(ar => ar.Status == AttendanceStatus.Excused),
+                Late = g.Count(ar => ar.Status == AttendanceStatus.Late),
+                Absent = g.Count(ar =>
+                    ar.Status == AttendanceStatus.NoShow ||
+                    ar.Status == AttendanceStatus.Sick ||
+                    ar.Status == AttendanceStatus.ExplainedAbsence),
             })
             .ToListAsync(cancellationToken);
 
@@ -59,11 +62,11 @@ public class GetAttendanceReportHandler(IAreliaDbContext context)
         var rows = persons.Select(p =>
         {
             var record = records.FirstOrDefault(r => r.PersonId == p.Id);
-            var present = record?.Present ?? 0;
+            var present = (record?.Present ?? 0) + (record?.Late ?? 0);
             var rate = totalRehearsals > 0 ? (decimal)present / totalRehearsals * 100 : 0;
             return new AttendancePersonRow(
                 p.Id, p.Name, p.VoiceGroup,
-                present, record?.Absent ?? 0, record?.Excused ?? 0,
+                record?.Present ?? 0, record?.Late ?? 0, record?.Absent ?? 0,
                 Math.Round(rate, 1));
         })
         .OrderByDescending(r => r.AttendanceRate)

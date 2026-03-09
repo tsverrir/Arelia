@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Arelia.Infrastructure.Migrations
 {
     [DbContext(typeof(AreliaDbContext))]
-    [Migration("20260308192231_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260309080346_AddAttendanceComment")]
+    partial class AddAttendanceComment
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,6 +42,9 @@ namespace Arelia.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsImplicitParticipation")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsPublicVisible")
@@ -144,6 +147,9 @@ namespace Arelia.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("ActivityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Comment")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -348,6 +354,7 @@ namespace Arelia.Infrastructure.Migrations
 
                     b.Property<string>("CurrencyCode")
                         .IsRequired()
+                        .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")

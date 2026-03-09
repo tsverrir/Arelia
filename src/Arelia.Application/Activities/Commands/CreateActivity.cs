@@ -41,9 +41,12 @@ public class CreateActivityHandler(IAreliaDbContext context)
                 return Domain.Common.Result.Failure<Guid>("Activities can only be nested under semesters.");
         }
 
-        // Validate semester non-overlap
+        // Validate semester dates within a single calendar year
         if (request.ActivityType == ActivityType.Semester)
         {
+            if (request.StartDateTime.Year != request.EndDateTime.Year)
+                return Domain.Common.Result.Failure<Guid>("Semesters cannot cross calendar year boundaries.");
+
             var overlap = await context.Activities
                 .Where(a =>
                     a.OrganizationId == request.OrganizationId &&
@@ -67,6 +70,7 @@ public class CreateActivityHandler(IAreliaDbContext context)
             ParentActivityId = request.ParentActivityId,
             WorkYear = request.StartDateTime.Year,
             IsPublicVisible = request.IsPublicVisible,
+            IsImplicitParticipation = request.ActivityType == ActivityType.Rehearsal,
             MaxCapacity = request.MaxCapacity,
             SignupDeadline = request.SignupDeadline,
             OrganizationId = request.OrganizationId,

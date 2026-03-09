@@ -86,6 +86,7 @@ public class GenerateRehearsalsHandler(IAreliaDbContext context)
                         Location = template.Location,
                         ParentActivityId = request.SemesterId,
                         WorkYear = start.Year,
+                        IsImplicitParticipation = true,
                         OrganizationId = request.OrganizationId,
                     });
 

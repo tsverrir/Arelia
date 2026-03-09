@@ -140,6 +140,7 @@ public class AttendanceRecordConfiguration
 
         builder.HasIndex(ar => new { ar.ActivityId, ar.PersonId }).IsUnique();
         builder.Property(ar => ar.RecordedByUserId).HasMaxLength(450);
+        builder.Property(ar => ar.Comment).HasMaxLength(255);
     }
 }
 

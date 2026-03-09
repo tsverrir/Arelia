@@ -5,6 +5,7 @@
 @using Arelia.Application.People.Commands
 @using Arelia.Application.People.Queries
 @using Arelia.Domain.Enums
+@using Arelia.Web.Components.Shared
 @using MediatR
 @inject IMediator Mediator
 @inject NavigationManager Navigation
@@ -52,28 +53,24 @@
 
 @if (_people is not null)
 {
-    <MudTable Items="_people" Hover="true" Dense="true" OnRowClick="OnRowClick" T="PersonListDto">
-        <HeaderContent>
-            <MudTh><MudTableSortLabel T="PersonListDto" SortBy="new Func<PersonListDto, object>(x => x.LastName)">Last Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel T="PersonListDto" SortBy="new Func<PersonListDto, object>(x => x.FirstName)">First Name</MudTableSortLabel></MudTh>
-            <MudTh>Email</MudTh>
-            <MudTh>Phone</MudTh>
-            <MudTh>Voice Group</MudTh>
-            <MudTh>Status</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.LastName</MudTd>
-            <MudTd>@context.FirstName</MudTd>
-            <MudTd>@context.Email</MudTd>
-            <MudTd>@context.Phone</MudTd>
-            <MudTd>@VoiceGroupLabel(context.VoiceGroup)</MudTd>
-            <MudTd>
-                <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
-                    @(context.IsActive ? "Active" : "Inactive")
-                </MudChip>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+    <ConfigurableTable TItem="PersonListDto" Items="_people" Columns="_columns" OnRowClick="OnRowClick">
+        <CellTemplate>
+            @switch (context.ColumnKey)
+            {
+                case "VoiceGroup":
+                    @VoiceGroupLabel((VoiceGroup?)context.Value)
+                    break;
+                case "Status":
+                    <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
+                        @((bool)(context.Value ?? false) ? "Active" : "Inactive")
+                    </MudChip>
+                    break;
+                default:
+                    @(context.Value?.ToString() ?? "—")
+                    break;
+            }
+        </CellTemplate>
+    </ConfigurableTable>
 }
 
 <MudDialog @bind-Visible="_showCreate">
@@ -161,6 +158,16 @@
     private string? _phone;
     private VoiceGroup? _voiceGroup;
     private string? _notes;
+
+    private readonly List<ColumnDefinition<PersonListDto>> _columns =
+    [
+        new("FirstName", "First Name", x => x.FirstName, SortBy: x => x.FirstName),
+        new("LastName", "Last Name", x => x.LastName, SortBy: x => x.LastName),
+        new("Email", "Email", x => x.Email),
+        new("Phone", "Phone", x => x.Phone),
+        new("VoiceGroup", "Voice Group", x => x.VoiceGroup),
+        new("Status", "Status", x => x.IsActive),
+    ];
 
     private bool _showAddByEmail;
     private string _inviteEmail = string.Empty;

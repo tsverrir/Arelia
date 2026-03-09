@@ -7,6 +7,7 @@
 @inject IMediator Mediator
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <PageTitle>Activities</PageTitle>
@@ -22,14 +23,24 @@
 <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="3">
     <MudSelect T="ActivityType?" Value="_typeFilter" Label="Type" Clearable="true"
                ValueChanged="@(async (ActivityType? v) => { _typeFilter = v; await LoadActivities(); })">
-        @foreach (var t in Enum.GetValues<ActivityType>())
+        @foreach (var t in _activityTypes)
         {
             <MudSelectItem T="ActivityType?" Value="@t">@t</MudSelectItem>
         }
     </MudSelect>
     <MudNumericField T="int?" @bind-Value="_workYear" Label="Work Year" />
     <MudButton OnClick="LoadActivities">Filter</MudButton>
+    <MudCheckBox T="bool" Value="_groupByType" Label="Group by type"
+                 ValueChanged="@((bool v) => { _groupByType = v; StateHasChanged(); })" />
     <MudSpacer />
+    @if (_selected.Count > 0)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.Delete"
+                   OnClick="BulkDelete">
+            Delete @_selected.Count selected
+        </MudButton>
+    }
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
                StartIcon="@Icons.Material.Filled.Add">
         Create Activity
@@ -38,31 +49,34 @@
 
 @if (_activities is not null)
 {
-    @foreach (var group in _activities.GroupBy(a => a.StartDateTime.ToString("MMMM yyyy")))
+    @if (_groupByType)
     {
-        <MudText Typo="Typo.h6" Class="mt-4 mb-2">@group.Key</MudText>
-
-        @foreach (var activity in group)
+        @foreach (var group in _activities.GroupBy(a => a.ActivityType).OrderBy(g => g.Key))
         {
-            <MudCard Class="mb-2" Outlined="true" @onclick="@(() => Navigation.NavigateTo($"/activities/{activity.Id}"))">
-                <MudCardContent>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
-                        <MudIcon Icon="@GetIcon(activity.ActivityType)" Color="@GetColor(activity.ActivityType)" />
-                        <MudStack Spacing="0">
-                            <MudText Typo="Typo.subtitle1">@activity.Name</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Tertiary">
-                                @activity.StartDateTime.ToString("ddd dd MMM HH:mm") — @activity.EndDateTime.ToString("HH:mm")
-                                @if (!string.IsNullOrEmpty(activity.Location))
-                                {
-                                    <text> · @activity.Location</text>
-                                }
-                            </MudText>
-                        </MudStack>
-                        <MudSpacer />
-                        <MudChip T="string" Size="Size.Small" Color="@GetColor(activity.ActivityType)">@activity.ActivityType</MudChip>
-                    </MudStack>
-                </MudCardContent>
-            </MudCard>
+            var type = group.Key;
+            var isExpanded = !_collapsedGroups.Contains(type);
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-4 mb-2" Style="cursor:pointer;"
+                       @onclick="@(() => ToggleGroup(type))">
+                <MudIcon Icon="@(isExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                         Size="Size.Small" />
+                <MudText Typo="Typo.h6">@type (@group.Count())</MudText>
+            </MudStack>
+
+            @if (isExpanded)
+            {
+                @foreach (var activity in group.OrderBy(a => a.StartDateTime))
+                {
+                    @RenderActivityCard(activity)
+                }
+            }
+        }
+    }
+    else
+    {
+        @foreach (var activity in _activities)
+        {
+            @RenderActivityCard(activity)
         }
     }
 }
@@ -72,7 +86,7 @@
     <DialogContent>
         <MudTextField @bind-Value="_newName" Label="Name" Required="true" />
         <MudSelect T="ActivityType" @bind-Value="_newType" Label="Type">
-            @foreach (var t in Enum.GetValues<ActivityType>())
+            @foreach (var t in _activityTypes)
             {
                 <MudSelectItem T="ActivityType" Value="@t">@t</MudSelectItem>
             }
@@ -95,6 +109,7 @@
     private List<ActivityListDto>? _activities;
     private ActivityType? _typeFilter;
     private int? _workYear;
+    private bool _groupByType = true;
     private bool _showCreate;
     private string _newName = string.Empty;
     private ActivityType _newType = ActivityType.Rehearsal;
@@ -106,6 +121,9 @@
     private string? _newDescription;
     private bool _newPublicVisible;
 
+    private readonly HashSet<Guid> _selected = [];
+    private readonly HashSet<ActivityType> _collapsedGroups = [];
+
     protected override async Task OnInitializedAsync()
     {
         RegisterTenantChangeHandler();
@@ -115,11 +133,60 @@
 
     protected override Task OnTenantChangedAsync() => LoadActivities();
 
+    private static readonly ActivityType[] _activityTypes =
+        [ActivityType.Rehearsal, ActivityType.Concert, ActivityType.Trip, ActivityType.Social, ActivityType.Other];
+
     private async Task LoadActivities()
     {
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
-        _activities = await Mediator.Send(new GetActivitiesQuery(orgId, _workYear, _typeFilter));
+        var all = await Mediator.Send(new GetActivitiesQuery(orgId, _workYear, _typeFilter));
+        _activities = all.Where(a => a.ActivityType != ActivityType.Semester).ToList();
+        _selected.Clear();
     }
+
+    private void ToggleGroup(ActivityType type)
+    {
+        if (!_collapsedGroups.Remove(type))
+            _collapsedGroups.Add(type);
+    }
+
+    private void ToggleSelection(Guid id, bool isChecked)
+    {
+        if (isChecked)
+            _selected.Add(id);
+        else
+            _selected.Remove(id);
+    }
+
+    private RenderFragment RenderActivityCard(ActivityListDto activity) => __builder =>
+    {
+        <MudCard Class="mb-2" Outlined="true">
+            <MudCardContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                    <MudCheckBox T="bool" Value="@_selected.Contains(activity.Id)"
+                                 ValueChanged="@(v => ToggleSelection(activity.Id, v))"
+                                 Size="Size.Small" />
+                    <MudIcon Icon="@GetIcon(activity.ActivityType)" Color="@GetColor(activity.ActivityType)"
+                             Style="cursor:pointer;" @onclick="@(() => Navigation.NavigateTo($"/activities/{activity.Id}"))" />
+                    <MudStack Spacing="0" Style="cursor:pointer; flex:1;"
+                              @onclick="@(() => Navigation.NavigateTo($"/activities/{activity.Id}"))">
+                        <MudText Typo="Typo.subtitle1">@activity.Name</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Tertiary">
+                            @activity.StartDateTime.ToString("ddd dd MMM HH:mm") — @activity.EndDateTime.ToString("HH:mm")
+                            @if (!string.IsNullOrEmpty(activity.Location))
+                            {
+                                <text> · @activity.Location</text>
+                            }
+                        </MudText>
+                    </MudStack>
+                    <MudSpacer />
+                    <MudChip T="string" Size="Size.Small" Color="@GetColor(activity.ActivityType)">@activity.ActivityType</MudChip>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   OnClick="@(() => DeleteActivity(activity))" />
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    };
 
     private async Task CreateActivity()
     {
@@ -139,6 +206,54 @@
             Snackbar.Add("Activity created.", Severity.Success);
             _showCreate = false;
             _newName = string.Empty;
+            await LoadActivities();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task DeleteActivity(ActivityListDto activity)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Delete \"{activity.Name}\"? This will also remove any child activities." }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Activity", parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new DeleteActivityCommand(activity.Id));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Activity deleted.", Severity.Success);
+            await LoadActivities();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task BulkDelete()
+    {
+        if (_selected.Count == 0) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Delete {_selected.Count} selected activities and their child activities?" }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Bulk Delete", parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new BulkDeleteActivitiesCommand(_selected.ToList()));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add($"{_selected.Count} activities deleted.", Severity.Success);
             await LoadActivities();
         }
         else

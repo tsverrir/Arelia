@@ -8,6 +8,7 @@ public class AttendanceRecord : BaseEntity
     public Guid ActivityId { get; set; }
     public Guid PersonId { get; set; }
     public AttendanceStatus Status { get; set; } = AttendanceStatus.Present;
+    public string? Comment { get; set; }
     public string? RecordedByUserId { get; set; }
     public DateTime RecordedAt { get; set; }
 

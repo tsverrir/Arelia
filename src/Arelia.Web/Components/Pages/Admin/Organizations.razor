@@ -1,6 +1,7 @@
 @page "/admin/organizations"
 @using Arelia.Application.Organizations.Commands
 @using Arelia.Application.Organizations.Queries
+@using Arelia.Web.Components.Shared
 @using MediatR
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IMediator Mediator
@@ -20,20 +21,21 @@
 
 @if (_organizations is not null)
 {
-    <MudTable Items="_organizations" Hover="true" Dense="true">
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Status</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.Name</MudTd>
-            <MudTd>
-                <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
-                    @(context.IsActive ? "Active" : "Inactive")
-                </MudChip>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+    <ConfigurableTable TItem="OrganizationDto" Items="_organizations" Columns="_columns">
+        <CellTemplate>
+            @switch (context.ColumnKey)
+            {
+                case "Status":
+                    <MudChip T="string" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)" Size="Size.Small">
+                        @((bool)(context.Value ?? false) ? "Active" : "Inactive")
+                    </MudChip>
+                    break;
+                default:
+                    @(context.Value?.ToString() ?? "—")
+                    break;
+            }
+        </CellTemplate>
+    </ConfigurableTable>
 }
 
 <MudDialog @bind-Visible="_showCreate">
@@ -57,6 +59,12 @@
     private string _newOrgName = string.Empty;
     private string? _newOrgEmail;
     private string? _newOrgPhone;
+
+    private readonly List<ColumnDefinition<OrganizationDto>> _columns =
+    [
+        new("Name", "Name", x => x.Name),
+        new("Status", "Status", x => x.IsActive),
+    ];
 
     protected override async Task OnInitializedAsync()
     {

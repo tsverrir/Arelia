@@ -1,9 +1,14 @@
 @page "/activities/{ActivityId:guid}"
+@using Arelia.Application.Activities.Commands
 @using Arelia.Application.Activities.Queries
+@using Arelia.Application.Attendance.Commands
+@using Arelia.Application.Attendance.Queries
 @using Arelia.Domain.Enums
 @using MediatR
 @inject IMediator Mediator
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <PageTitle>Activity Detail</PageTitle>
@@ -14,10 +19,31 @@
     return;
 }
 
-<MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
-           StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-2">
-    Back to Activities
-</MudButton>
+<MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
+    @if (_activity.ParentActivityId.HasValue)
+    {
+        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo($"/semesters/{_activity.ParentActivityId}"))"
+                   StartIcon="@Icons.Material.Filled.ArrowBack">
+            Back to Semester
+        </MudButton>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
+                   StartIcon="@Icons.Material.Filled.ArrowBack">
+            Back to Activities
+        </MudButton>
+    }
+    <MudSpacer />
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="StartEdit"
+               StartIcon="@Icons.Material.Filled.Edit">
+        Edit
+    </MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteActivity"
+               StartIcon="@Icons.Material.Filled.Delete">
+        Delete
+    </MudButton>
+</MudStack>
 
 <MudText Typo="Typo.h5" GutterBottom="true">@_activity.Name</MudText>
 
@@ -72,7 +98,11 @@
                 <MudText Typo="Typo.h6">Summary</MudText>
             </MudCardHeader>
             <MudCardContent>
-                @if (_activity.MaxCapacity.HasValue)
+                @if (_activity.IsImplicitParticipation)
+                {
+                    <MudText>Participants: @_activity.ParticipantCount (all active members)</MudText>
+                }
+                else if (_activity.MaxCapacity.HasValue)
                 {
                     <MudText>Capacity: @_activity.ParticipantCount / @_activity.MaxCapacity</MudText>
                 }
@@ -93,13 +123,219 @@
     </MudItem>
 </MudGrid>
 
+@* ---- Attendance ---- *@
+@if (_attendance is not null && _attendance.Participants.Count > 0)
+{
+    <MudCard Class="mt-4">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Attendance (@_attendance.Participants.Count(p => p.Status is AttendanceStatus.Present or AttendanceStatus.Late) / @_attendance.Participants.Count)</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudSimpleTable Dense="true" Hover="true">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Voice Group</th>
+                        <th Style="width:200px;">Status</th>
+                        <th Style="width:260px;">Comment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in _attendance.Participants)
+                    {
+                        var person = p;
+                        <tr>
+                            <td>@person.FirstName @person.LastName</td>
+                            <td>@(person.VoiceGroup?.ToString() ?? "—")</td>
+                            <td>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small"
+                                                   Color="@(person.Status == AttendanceStatus.Present ? Color.Success : Color.Default)"
+                                                   Title="Present"
+                                                   OnClick="@(() => SetAttendance(person.PersonId, AttendanceStatus.Present))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Schedule" Size="Size.Small"
+                                                   Color="@(person.Status == AttendanceStatus.Late ? Color.Warning : Color.Default)"
+                                                   Title="Late"
+                                                   OnClick="@(() => SetAttendance(person.PersonId, AttendanceStatus.Late))" />
+                                    <MudSelect T="AttendanceStatus?" Value="@(IsOtherStatus(person.Status) ? person.Status : null)"
+                                               Placeholder="Other…" Dense="true" Margin="Margin.Dense"
+                                               Style="min-width:120px;"
+                                               ValueChanged="@(v => OnOtherStatusChanged(person.PersonId, v))">
+                                        <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.NoShow)">No-show</MudSelectItem>
+                                        <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.Sick)">Sick</MudSelectItem>
+                                        <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)AttendanceStatus.ExplainedAbsence)">Explained</MudSelectItem>
+                                    </MudSelect>
+                                </MudStack>
+                            </td>
+                            <td>
+                                <MudTextField T="string" Value="@person.Comment" Placeholder="Comment…"
+                                              Margin="Margin.Dense" MaxLength="255" Immediate="false"
+                                              ValueChanged="@(v => SaveComment(person.PersonId, v))" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        </MudCardContent>
+    </MudCard>
+}
+
+@* ---- Edit Dialog ---- *@
+<MudDialog @bind-Visible="_showEdit">
+    <TitleContent><MudText Typo="Typo.h6">Edit Activity</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_editName" Label="Name" Required="true" />
+        <MudDatePicker @bind-Date="_editStartDate" Label="Start Date" Required="true" />
+        <MudTimePicker @bind-Time="_editStartTime" Label="Start Time" />
+        <MudDatePicker @bind-Date="_editEndDate" Label="End Date" Required="true" />
+        <MudTimePicker @bind-Time="_editEndTime" Label="End Time" />
+        <MudTextField @bind-Value="_editLocation" Label="Location" />
+        <MudTextField @bind-Value="_editDescription" Label="Description" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_editPublicVisible" Label="Public Visible" />
+        <MudNumericField T="int?" @bind-Value="_editMaxCapacity" Label="Max Capacity" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showEdit = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEdit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter] public Guid ActivityId { get; set; }
 
     private ActivityDetailDto? _activity;
+    private ActivityAttendanceDto? _attendance;
+
+    // Edit form fields
+    private bool _showEdit;
+    private string _editName = string.Empty;
+    private string? _editDescription;
+    private DateTime? _editStartDate;
+    private TimeSpan? _editStartTime;
+    private DateTime? _editEndDate;
+    private TimeSpan? _editEndTime;
+    private string? _editLocation;
+    private bool _editPublicVisible;
+    private int? _editMaxCapacity;
+    private DateTime? _editSignupDeadline;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadActivity();
+    }
+
+    private async Task LoadActivity()
+    {
         _activity = await Mediator.Send(new GetActivityDetailQuery(ActivityId));
+        _attendance = await Mediator.Send(new GetActivityAttendanceQuery(ActivityId));
+    }
+
+    private void StartEdit()
+    {
+        if (_activity is null) return;
+
+        _editName = _activity.Name;
+        _editDescription = _activity.Description;
+        _editStartDate = _activity.StartDateTime.Date;
+        _editStartTime = _activity.StartDateTime.TimeOfDay;
+        _editEndDate = _activity.EndDateTime.Date;
+        _editEndTime = _activity.EndDateTime.TimeOfDay;
+        _editLocation = _activity.Location;
+        _editPublicVisible = _activity.IsPublicVisible;
+        _editMaxCapacity = _activity.MaxCapacity;
+        _editSignupDeadline = _activity.SignupDeadline;
+        _showEdit = true;
+    }
+
+    private async Task SaveEdit()
+    {
+        if (string.IsNullOrWhiteSpace(_editName) || _editStartDate is null || _editEndDate is null)
+            return;
+
+        var start = _editStartDate.Value + (_editStartTime ?? TimeSpan.Zero);
+        var end = _editEndDate.Value + (_editEndTime ?? TimeSpan.Zero);
+
+        var result = await Mediator.Send(new UpdateActivityCommand(
+            ActivityId, _editName, _editDescription, start, end,
+            _editLocation, _editPublicVisible, _editMaxCapacity, _editSignupDeadline));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Activity updated.", Severity.Success);
+            _showEdit = false;
+            await LoadActivity();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task DeleteActivity()
+    {
+        if (_activity is null) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Delete \"{_activity.Name}\"? This will also remove any child activities." }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Activity", parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new DeleteActivityCommand(ActivityId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Activity deleted.", Severity.Success);
+            if (_activity.ParentActivityId.HasValue)
+                Navigation.NavigateTo($"/semesters/{_activity.ParentActivityId}");
+            else
+                Navigation.NavigateTo("/activities");
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private static bool IsOtherStatus(AttendanceStatus? status) =>
+        status is AttendanceStatus.NoShow or AttendanceStatus.Sick or AttendanceStatus.ExplainedAbsence;
+
+    private async Task SetAttendance(Guid personId, AttendanceStatus status)
+    {
+        var existing = _attendance?.Participants.FirstOrDefault(p => p.PersonId == personId);
+        var comment = existing?.Comment;
+        await SaveAttendance(personId, status, comment);
+    }
+
+    private async Task OnOtherStatusChanged(Guid personId, AttendanceStatus? status)
+    {
+        if (status is null) return;
+        var existing = _attendance?.Participants.FirstOrDefault(p => p.PersonId == personId);
+        var comment = existing?.Comment;
+        await SaveAttendance(personId, status.Value, comment);
+    }
+
+    private async Task SaveComment(Guid personId, string? comment)
+    {
+        var existing = _attendance?.Participants.FirstOrDefault(p => p.PersonId == personId);
+        var status = existing?.Status ?? AttendanceStatus.Present;
+        await SaveAttendance(personId, status, comment);
+    }
+
+    private async Task SaveAttendance(Guid personId, AttendanceStatus status, string? comment)
+    {
+        var result = await Mediator.Send(new UpsertAttendanceCommand(ActivityId, personId, status, comment));
+        if (result.IsSuccess)
+        {
+            _attendance = await Mediator.Send(new GetActivityAttendanceQuery(ActivityId));
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
     }
 }

@@ -2,6 +2,7 @@
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Finance.Commands
 @using Arelia.Application.Finance.Queries
+@using Arelia.Web.Components.Shared
 @using MediatR
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
@@ -21,28 +22,30 @@
     <MudTabPanel Text="Charges">
         @if (_charges is not null)
         {
-            <MudTable Items="_charges" Hover="true" Dense="true">
-                <HeaderContent>
-                    <MudTh>Member</MudTh>
-                    <MudTh>Description</MudTh>
-                    <MudTh>Due Date</MudTh>
-                    <MudTh>Due</MudTh>
-                    <MudTh>Paid</MudTh>
-                    <MudTh>Status</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.PersonName</MudTd>
-                    <MudTd>@context.Description</MudTd>
-                    <MudTd>@context.DueDate.ToString("yyyy-MM-dd")</MudTd>
-                    <MudTd>@context.TotalDue.ToString("N2") @context.CurrencyCode</MudTd>
-                    <MudTd>@context.TotalPaid.ToString("N2") @context.CurrencyCode</MudTd>
-                    <MudTd>
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
-                            @context.Status
-                        </MudChip>
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
+            <ConfigurableTable TItem="ChargeListDto" Items="_charges" Columns="_chargeColumns">
+                <CellTemplate>
+                    @switch (context.ColumnKey)
+                    {
+                        case "Status":
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor((Arelia.Domain.Enums.ChargeStatus)context.Value!)">
+                                @context.Value
+                            </MudChip>
+                            break;
+                        case "Due":
+                            @($"{context.Item.TotalDue:N2} {context.Item.CurrencyCode}")
+                            break;
+                        case "Paid":
+                            @($"{context.Item.TotalPaid:N2} {context.Item.CurrencyCode}")
+                            break;
+                        case "DueDate":
+                            @(context.Value is DateTime dtDue ? dtDue.ToString("yyyy-MM-dd") : "—")
+                            break;
+                        default:
+                            @(context.Value?.ToString() ?? "—")
+                            break;
+                    }
+                </CellTemplate>
+            </ConfigurableTable>
         }
     </MudTabPanel>
 
@@ -53,22 +56,22 @@
         </MudButton>
         @if (_expenses is not null)
         {
-            <MudTable Items="_expenses" Hover="true" Dense="true">
-                <HeaderContent>
-                    <MudTh>Date</MudTh>
-                    <MudTh>Description</MudTh>
-                    <MudTh>Category</MudTh>
-                    <MudTh>Amount</MudTh>
-                    <MudTh>Received By</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.ExpenseDate.ToString("yyyy-MM-dd")</MudTd>
-                    <MudTd>@context.Description</MudTd>
-                    <MudTd>@context.CategoryName</MudTd>
-                    <MudTd>@context.Amount.ToString("N2") @context.CurrencyCode</MudTd>
-                    <MudTd>@context.ReceivedBy</MudTd>
-                </RowTemplate>
-            </MudTable>
+            <ConfigurableTable TItem="ExpenseListDto" Items="_expenses" Columns="_expenseColumns">
+                <CellTemplate>
+                    @switch (context.ColumnKey)
+                    {
+                        case "Date":
+                            @(context.Value is DateTime dtExp ? dtExp.ToString("yyyy-MM-dd") : "—")
+                            break;
+                        case "Amount":
+                            @($"{context.Item.Amount:N2} {context.Item.CurrencyCode}")
+                            break;
+                        default:
+                            @(context.Value?.ToString() ?? "—")
+                            break;
+                    }
+                </CellTemplate>
+            </ConfigurableTable>
         }
     </MudTabPanel>
 </MudTabs>
@@ -99,6 +102,25 @@
     private string _expCategory = string.Empty;
     private string? _expReceivedBy;
     private string? _expNotes;
+
+    private readonly List<ColumnDefinition<ChargeListDto>> _chargeColumns =
+    [
+        new("Member", "Member", x => x.PersonName),
+        new("Description", "Description", x => x.Description),
+        new("DueDate", "Due Date", x => x.DueDate),
+        new("Due", "Due", x => x.TotalDue),
+        new("Paid", "Paid", x => x.TotalPaid),
+        new("Status", "Status", x => x.Status),
+    ];
+
+    private readonly List<ColumnDefinition<ExpenseListDto>> _expenseColumns =
+    [
+        new("Date", "Date", x => x.ExpenseDate),
+        new("Description", "Description", x => x.Description),
+        new("Category", "Category", x => x.CategoryName),
+        new("Amount", "Amount", x => x.Amount),
+        new("ReceivedBy", "Received By", x => x.ReceivedBy),
+    ];
 
     protected override async Task OnInitializedAsync()
     {

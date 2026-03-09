@@ -1,0 +1,481 @@
+@page "/semesters/{SemesterId:guid}"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Activities.Commands
+@using Arelia.Application.Rehearsals.Commands
+@using Arelia.Application.Semesters.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Semester Detail</PageTitle>
+
+@if (_semester is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+    return;
+}
+
+<MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/semesters?showList=true"))"
+           StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-2">
+    Back to Semesters
+</MudButton>
+
+<MudText Typo="Typo.h5" GutterBottom="true">@_semester.Name</MudText>
+
+<MudGrid>
+    @* ---- Semester Info ---- *@
+    <MudItem xs="12" md="8">
+        <MudCard Class="mb-4">
+            <MudCardContent>
+                <MudStack Spacing="2">
+                    <MudStack Row="true" Spacing="2">
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">Semester</MudChip>
+                        <MudChip T="string" Size="Size.Small">@_semester.WorkYear</MudChip>
+                        @if (_semester.IsPublicVisible)
+                        {
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">Public</MudChip>
+                        }
+                    </MudStack>
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                        <MudText>@_semester.StartDateTime.ToString("dd MMM yyyy") — @_semester.EndDateTime.ToString("dd MMM yyyy")</MudText>
+                    </MudStack>
+
+                    @if (!string.IsNullOrEmpty(_semester.Location))
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                            <MudText>@_semester.Location</MudText>
+                        </MudStack>
+                    }
+
+                    @if (!string.IsNullOrEmpty(_semester.Description))
+                    {
+                        <MudDivider Class="my-2" />
+                        <MudText>@_semester.Description</MudText>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @* ---- Summary ---- *@
+    <MudItem xs="12" md="4">
+        <MudCard Class="mb-4">
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">Summary</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText>Rehearsals: @_semester.ChildActivities.Count(a => a.ActivityType == ActivityType.Rehearsal)</MudText>
+                <MudText>Events: @_semester.ChildActivities.Count(a => a.ActivityType != ActivityType.Rehearsal)</MudText>
+                <MudText>Templates: @_semester.RehearsalTemplates.Count</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @* ---- Rehearsal Templates ---- *@
+    <MudItem xs="12">
+        <MudCard Class="mb-4">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Rehearsal Schedule</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.AutoMode"
+                               OnClick="GenerateRehearsals"
+                               Disabled="@(_semester.RehearsalTemplates.Count == 0)">
+                        Generate Rehearsals
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_semester.RehearsalTemplates.Count > 0)
+                {
+                    <MudSimpleTable Dense="true" Hover="true" Class="mb-4">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Time</th>
+                                <th>Duration</th>
+                                <th>Location</th>
+                                <th>Date Range</th>
+                                <th Style="width:100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in _semester.RehearsalTemplates)
+                            {
+                                <tr>
+                                    <td>@t.DayOfWeek</td>
+                                    <td>@t.StartTime.ToString("HH:mm")</td>
+                                    <td>@t.DurationMinutes min</td>
+                                    <td>@(t.Location ?? "—")</td>
+                                    <td>@t.StartDate.ToString("dd MMM") – @t.EndDate.ToString("dd MMM")</td>
+                                    <td>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                                       Color="Color.Primary" OnClick="@(() => StartEditTemplate(t))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                                       Color="Color.Error" OnClick="@(() => DeleteTemplate(t))" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
+                        No rehearsal templates yet. Add one below to generate rehearsals.
+                    </MudAlert>
+                }
+
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Style="cursor:pointer;"
+                           @onclick="@(() => _showAddTemplate = !_showAddTemplate)">
+                    <MudIcon Icon="@(_showAddTemplate ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                             Size="Size.Small" />
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">Add Rehearsal Template</MudText>
+                </MudStack>
+
+                @if (_showAddTemplate)
+                {
+                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.End" Style="flex-wrap:wrap;">
+                        <MudSelect T="DayOfWeek" @bind-Value="_templateDay" Label="Day" Style="min-width:120px;">
+                            @foreach (var d in Enum.GetValues<DayOfWeek>())
+                            {
+                                <MudSelectItem T="DayOfWeek" Value="@d">@d</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTimePicker @bind-Time="_templateStartTime" Label="Start Time" />
+                        <MudNumericField T="int" @bind-Value="_templateDuration" Label="Duration (min)" Min="15" Max="480" />
+                        <MudTextField @bind-Value="_templateLocation" Label="Location" />
+                    </MudStack>
+                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.End" Class="mt-2">
+                        <MudDatePicker @bind-Date="_templateStartDate" Label="From Date" />
+                        <MudDatePicker @bind-Date="_templateEndDate" Label="To Date" />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddTemplate"
+                                   StartIcon="@Icons.Material.Filled.Add">
+                            Add Template
+                        </MudButton>
+                    </MudStack>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @* ---- Child Activities ---- *@
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Activities in this Semester</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@(() => _showAddEvent = true)">
+                        Add Event
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_semester.ChildActivities.Count > 0)
+                {
+                    <MudSimpleTable Dense="true" Hover="true">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Time</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var activity in _semester.ChildActivities)
+                            {
+                                <tr Style="cursor:pointer;" @onclick="@(() => Navigation.NavigateTo($"/activities/{activity.Id}"))">
+                                    <td>@activity.StartDateTime.ToString("ddd dd MMM")</td>
+                                    <td>@activity.Name</td>
+                                    <td>
+                                        <MudChip T="string" Size="Size.Small" Color="@GetColor(activity.ActivityType)">
+                                            @activity.ActivityType
+                                        </MudChip>
+                                    </td>
+                                    <td>@activity.StartDateTime.ToString("HH:mm") – @activity.EndDateTime.ToString("HH:mm")</td>
+                                    <td>@(activity.Location ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true">
+                        No activities yet. Generate rehearsals or add events above.
+                    </MudAlert>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@* ---- Add Event Dialog ---- *@
+<MudDialog @bind-Visible="_showAddEvent">
+    <TitleContent><MudText Typo="Typo.h6">Add Event to Semester</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_eventName" Label="Name" Required="true" />
+        <MudSelect T="ActivityType" @bind-Value="_eventType" Label="Type">
+            @foreach (var t in _eventTypes)
+            {
+                <MudSelectItem T="ActivityType" Value="@t">@t</MudSelectItem>
+            }
+        </MudSelect>
+        <MudDatePicker @bind-Date="_eventStartDate" Label="Start Date" Required="true" />
+        <MudTimePicker @bind-Time="_eventStartTime" Label="Start Time" />
+        <MudDatePicker @bind-Date="_eventEndDate" Label="End Date" Required="true" />
+        <MudTimePicker @bind-Time="_eventEndTime" Label="End Time" />
+        <MudTextField @bind-Value="_eventLocation" Label="Location" />
+        <MudTextField @bind-Value="_eventDescription" Label="Description" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_eventPublicVisible" Label="Public Visible" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showAddEvent = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddEvent">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---- Edit Template Dialog ---- *@
+<MudDialog @bind-Visible="_showEditTemplate">
+    <TitleContent><MudText Typo="Typo.h6">Edit Rehearsal Template</MudText></TitleContent>
+    <DialogContent>
+        <MudSelect T="DayOfWeek" @bind-Value="_editTemplateDay" Label="Day" Style="min-width:120px;">
+            @foreach (var d in Enum.GetValues<DayOfWeek>())
+            {
+                <MudSelectItem T="DayOfWeek" Value="@d">@d</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTimePicker @bind-Time="_editTemplateStartTime" Label="Start Time" />
+        <MudNumericField T="int" @bind-Value="_editTemplateDuration" Label="Duration (min)" Min="15" Max="480" />
+        <MudTextField @bind-Value="_editTemplateLocation" Label="Location" />
+        <MudDatePicker @bind-Date="_editTemplateStartDate" Label="From Date" />
+        <MudDatePicker @bind-Date="_editTemplateEndDate" Label="To Date" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showEditTemplate = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditTemplate">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Guid SemesterId { get; set; }
+
+    private SemesterDetailDto? _semester;
+
+    // Template form fields
+    private bool _showAddTemplate;
+    private DayOfWeek _templateDay = DayOfWeek.Thursday;
+    private TimeSpan? _templateStartTime = new(19, 0, 0);
+    private int _templateDuration = 150;
+    private string? _templateLocation;
+    private DateTime? _templateStartDate;
+    private DateTime? _templateEndDate;
+
+    // Edit template dialog fields
+    private bool _showEditTemplate;
+    private Guid _editTemplateId;
+    private DayOfWeek _editTemplateDay;
+    private TimeSpan? _editTemplateStartTime;
+    private int _editTemplateDuration;
+    private string? _editTemplateLocation;
+    private DateTime? _editTemplateStartDate;
+    private DateTime? _editTemplateEndDate;
+
+    // Add-event dialog fields
+    private bool _showAddEvent;
+    private string _eventName = string.Empty;
+    private ActivityType _eventType = ActivityType.Concert;
+    private DateTime? _eventStartDate;
+    private TimeSpan? _eventStartTime = new(19, 0, 0);
+    private DateTime? _eventEndDate;
+    private TimeSpan? _eventEndTime = new(21, 30, 0);
+    private string? _eventLocation;
+    private string? _eventDescription;
+    private bool _eventPublicVisible;
+
+    private static readonly ActivityType[] _eventTypes =
+        [ActivityType.Concert, ActivityType.Trip, ActivityType.Social, ActivityType.Other];
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadSemester();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadSemester();
+
+    private async Task LoadSemester()
+    {
+        _semester = await Mediator.Send(new GetSemesterDetailQuery(SemesterId));
+        if (_semester is not null)
+        {
+            _templateStartDate ??= _semester.StartDateTime.Date;
+            _templateEndDate ??= _semester.EndDateTime.Date;
+            _templateLocation ??= _semester.Location;
+            _eventStartDate ??= DateTime.Today < _semester.EndDateTime.Date ? DateTime.Today : _semester.StartDateTime.Date;
+            _eventEndDate ??= _eventStartDate;
+        }
+    }
+
+    private async Task AddTemplate()
+    {
+        if (_templateStartTime is null || _templateStartDate is null || _templateEndDate is null)
+            return;
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var result = await Mediator.Send(new CreateRehearsalTemplateCommand(
+            SemesterId,
+            _templateDay,
+            TimeOnly.FromTimeSpan(_templateStartTime.Value),
+            _templateDuration,
+            _templateLocation,
+            _templateStartDate.Value,
+            _templateEndDate.Value,
+            orgId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Rehearsal template added.", Severity.Success);
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private void StartEditTemplate(RehearsalTemplateDto template)
+    {
+        _editTemplateId = template.Id;
+        _editTemplateDay = template.DayOfWeek;
+        _editTemplateStartTime = template.StartTime.ToTimeSpan();
+        _editTemplateDuration = template.DurationMinutes;
+        _editTemplateLocation = template.Location;
+        _editTemplateStartDate = template.StartDate;
+        _editTemplateEndDate = template.EndDate;
+        _showEditTemplate = true;
+    }
+
+    private async Task SaveEditTemplate()
+    {
+        if (_editTemplateStartTime is null || _editTemplateStartDate is null || _editTemplateEndDate is null)
+            return;
+
+        var result = await Mediator.Send(new UpdateRehearsalTemplateCommand(
+            _editTemplateId,
+            _editTemplateDay,
+            TimeOnly.FromTimeSpan(_editTemplateStartTime.Value),
+            _editTemplateDuration,
+            _editTemplateLocation,
+            _editTemplateStartDate.Value,
+            _editTemplateEndDate.Value));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Rehearsal template updated.", Severity.Success);
+            _showEditTemplate = false;
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task DeleteTemplate(RehearsalTemplateDto template)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Delete rehearsal template for {template.DayOfWeek} at {template.StartTime:HH:mm}?" }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Template", parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new DeleteRehearsalTemplateCommand(template.Id));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Rehearsal template deleted.", Severity.Success);
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task GenerateRehearsals()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var result = await Mediator.Send(new GenerateRehearsalsCommand(SemesterId, orgId));
+
+        if (result.IsSuccess)
+        {
+            var r = result.Value;
+            Snackbar.Add($"Generated {r.Created} rehearsals ({r.Skipped} skipped).", Severity.Success);
+            if (r.Conflicts.Count > 0)
+            {
+                Snackbar.Add($"{r.Conflicts.Count} conflicts detected.", Severity.Warning);
+            }
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task AddEvent()
+    {
+        if (string.IsNullOrWhiteSpace(_eventName) || _eventStartDate is null || _eventEndDate is null)
+            return;
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var start = _eventStartDate.Value + (_eventStartTime ?? TimeSpan.Zero);
+        var end = _eventEndDate.Value + (_eventEndTime ?? TimeSpan.Zero);
+
+        var result = await Mediator.Send(new CreateActivityCommand(
+            _eventName, _eventDescription, _eventType, start, end,
+            _eventLocation, SemesterId, _eventPublicVisible, null, null, orgId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Event added to semester.", Severity.Success);
+            _showAddEvent = false;
+            _eventName = string.Empty;
+            _eventDescription = null;
+            _eventLocation = null;
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private static Color GetColor(ActivityType type) => type switch
+    {
+        ActivityType.Rehearsal => Color.Info,
+        ActivityType.Concert => Color.Secondary,
+        ActivityType.Trip => Color.Tertiary,
+        ActivityType.Social => Color.Warning,
+        _ => Color.Default,
+    };
+}

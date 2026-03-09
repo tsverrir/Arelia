@@ -1,0 +1,73 @@
+@typeparam TItem
+
+<MudTable Items="Items" Hover="true" Dense="true" OnRowClick="OnRowClick" T="TItem">
+    <ToolBarContent>
+        @if (ToolBarContent is not null)
+        {
+            @ToolBarContent
+        }
+        <MudSpacer />
+        <ColumnChooser TItem="TItem" Columns="Columns" OnColumnsChanged="StateHasChanged" />
+    </ToolBarContent>
+    <HeaderContent>
+        @foreach (var col in Columns.Where(c => c.Visible))
+        {
+            @if (col.SortBy is not null)
+            {
+                <MudTh><MudTableSortLabel T="TItem" SortBy="col.SortBy">@col.Title</MudTableSortLabel></MudTh>
+            }
+            else
+            {
+                <MudTh>@col.Title</MudTh>
+            }
+        }
+        @if (RowActions is not null)
+        {
+            <MudTh></MudTh>
+        }
+    </HeaderContent>
+    <RowTemplate>
+        @foreach (var col in Columns.Where(c => c.Visible))
+        {
+            var value = col.ValueSelector(context);
+            @if (CellTemplate is not null)
+            {
+                <MudTd>@CellTemplate((context, col.Key, value))</MudTd>
+            }
+            else
+            {
+                <MudTd>@(value?.ToString() ?? "—")</MudTd>
+            }
+        }
+        @if (RowActions is not null)
+        {
+            <MudTd>@RowActions(context)</MudTd>
+        }
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<ColumnDefinition<TItem>> Columns { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IEnumerable<TItem>? Items { get; set; }
+
+    [Parameter]
+    public EventCallback<TableRowClickEventArgs<TItem>> OnRowClick { get; set; }
+
+    [Parameter]
+    public RenderFragment? ToolBarContent { get; set; }
+
+    /// <summary>
+    /// Custom cell renderer. Receives (item, columnKey, cellValue).
+    /// </summary>
+    [Parameter]
+    public RenderFragment<(TItem Item, string ColumnKey, object? Value)>? CellTemplate { get; set; }
+
+    /// <summary>
+    /// Optional actions column content per row.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<TItem>? RowActions { get; set; }
+}

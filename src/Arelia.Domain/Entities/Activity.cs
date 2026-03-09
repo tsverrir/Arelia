@@ -17,6 +17,12 @@ public class Activity : BaseEntity
     public int? MaxCapacity { get; set; }
     public DateTime? SignupDeadline { get; set; }
 
+    /// <summary>
+    /// When true, all active members are assumed to be participants (e.g. rehearsals).
+    /// When false, participants must be added explicitly.
+    /// </summary>
+    public bool IsImplicitParticipation { get; set; }
+
     // Navigation
     public Activity? ParentActivity { get; set; }
     public ICollection<Activity> ChildActivities { get; set; } = [];

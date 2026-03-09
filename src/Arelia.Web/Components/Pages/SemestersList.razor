@@ -1,0 +1,168 @@
+@page "/semesters"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Activities.Commands
+@using Arelia.Application.Activities.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Semesters</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Semesters</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">Please select an organization first.</MudAlert>
+    return;
+}
+
+<MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="3">
+    <MudNumericField T="int?" @bind-Value="_workYear" Label="Year" />
+    <MudButton OnClick="LoadSemesters">Filter</MudButton>
+    <MudCheckBox T="bool" Value="_hidePastSemesters" Label="Hide past semesters"
+                 ValueChanged="@(async (bool v) => { _hidePastSemesters = v; await LoadSemesters(); })" />
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _showCreate = true)"
+               StartIcon="@Icons.Material.Filled.Add">
+        Create Semester
+    </MudButton>
+</MudStack>
+
+@if (_semesters is not null)
+{
+    @foreach (var group in _semesters.GroupBy(s => s.WorkYear).OrderByDescending(g => g.Key))
+    {
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">@group.Key</MudText>
+
+        @foreach (var semester in group)
+        {
+            <MudCard Class="mb-2" Outlined="true" Style="cursor:pointer;"
+                     @onclick="@(() => Navigation.NavigateTo($"/semesters/{semester.Id}"))">
+                <MudCardContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                        <MudIcon Icon="@Icons.Material.Filled.DateRange" Color="Color.Primary" />
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.subtitle1">@semester.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Tertiary">
+                                @semester.StartDateTime.ToString("dd MMM yyyy") — @semester.EndDateTime.ToString("dd MMM yyyy")
+                                @if (!string.IsNullOrEmpty(semester.Location))
+                                {
+                                    <text> · @semester.Location</text>
+                                }
+                            </MudText>
+                        </MudStack>
+                        <MudSpacer />
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@semester.WorkYear</MudChip>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+    }
+
+    @if (_semesters.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-4">No semesters found. Create one to get started.</MudAlert>
+    }
+}
+
+<MudDialog @bind-Visible="_showCreate">
+    <TitleContent><MudText Typo="Typo.h6">Create Semester</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newName" Label="Name" Required="true" Placeholder="e.g. Spring 2025" />
+        <MudDatePicker @bind-Date="_newStartDate" Label="Start Date" Required="true" />
+        <MudDatePicker @bind-Date="_newEndDate" Label="End Date" Required="true" />
+        <MudTextField @bind-Value="_newLocation" Label="Default Location" />
+        <MudTextField @bind-Value="_newDescription" Label="Description" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_newPublicVisible" Label="Public Visible" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showCreate = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateSemester">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [SupplyParameterFromQuery] public bool? ShowList { get; set; }
+
+    private List<ActivityListDto>? _semesters;
+    private int? _workYear;
+    private bool _hidePastSemesters = true;
+    private bool _showCreate;
+    private string _newName = string.Empty;
+    private DateTime? _newStartDate = DateTime.Today;
+    private DateTime? _newEndDate = DateTime.Today.AddMonths(6);
+    private string? _newLocation;
+    private string? _newDescription;
+    private bool _newPublicVisible;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        _workYear = DateTime.Now.Year;
+        await LoadSemesters();
+
+        // Auto-navigate to the current semester unless user explicitly requested the list
+        if (ShowList is not true && _semesters is not null)
+        {
+            var today = DateTime.Today;
+            var current = _semesters
+                .FirstOrDefault(s => s.StartDateTime.Date <= today && s.EndDateTime.Date >= today);
+
+            current ??= _semesters
+                .Where(s => s.EndDateTime.Date >= today)
+                .MinBy(s => s.StartDateTime);
+
+            if (current is not null)
+            {
+                Navigation.NavigateTo($"/semesters/{current.Id}", replace: true);
+                return;
+            }
+        }
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadSemesters();
+
+    private async Task LoadSemesters()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        var all = await Mediator.Send(new GetActivitiesQuery(orgId, _workYear, ActivityType.Semester));
+        _semesters = _hidePastSemesters
+            ? all.Where(s => s.EndDateTime >= DateTime.Today).ToList()
+            : all;
+    }
+
+    private async Task CreateSemester()
+    {
+        if (string.IsNullOrWhiteSpace(_newName) || _newStartDate is null || _newEndDate is null)
+            return;
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var start = _newStartDate.Value;
+        var end = _newEndDate.Value;
+
+        if (start.Year != end.Year)
+        {
+            Snackbar.Add("Semesters cannot cross calendar year boundaries.", Severity.Error);
+            return;
+        }
+
+        var result = await Mediator.Send(new CreateActivityCommand(
+            _newName, _newDescription, ActivityType.Semester, start, end,
+            _newLocation, null, _newPublicVisible, null, null, orgId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Semester created.", Severity.Success);
+            _showCreate = false;
+            _newName = string.Empty;
+            Navigation.NavigateTo($"/semesters/{result.Value}");
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+}
