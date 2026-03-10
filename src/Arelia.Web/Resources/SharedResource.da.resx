@@ -322,4 +322,54 @@
   <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Slet alle ugyldige</value></data>
   <data name="Admin.Backups.DeletedInvalid" xml:space="preserve"><value>{0} ugyldige sikkerhedskopier slettet.</value></data>
   <data name="Admin.Backups.Unknown" xml:space="preserve"><value>Ukendt</value></data>
+  <data name="Nav.Documents" xml:space="preserve"><value>Dokumenter</value></data>
+  <data name="Nav.DocumentCategories" xml:space="preserve"><value>Dokumentkategorier</value></data>
+  <data name="DocumentCategories.Title" xml:space="preserve"><value>Dokumentkategorier</value></data>
+  <data name="DocumentCategories.Create" xml:space="preserve"><value>Opret kategori</value></data>
+  <data name="DocumentCategories.CreateTitle" xml:space="preserve"><value>Opret dokumentkategori</value></data>
+  <data name="DocumentCategories.EditTitle" xml:space="preserve"><value>Rediger dokumentkategori</value></data>
+  <data name="DocumentCategories.DeleteTitle" xml:space="preserve"><value>Slet dokumentkategori</value></data>
+  <data name="DocumentCategories.DeleteConfirm" xml:space="preserve"><value>Slet dokumentkategorien "{0}"?</value></data>
+  <data name="DocumentCategories.DeleteHasDocuments" xml:space="preserve"><value>Kategorien "{1}" har {0} dokument(er) tilknyttet. Vælg hvordan du vil fortsætte:</value></data>
+  <data name="DocumentCategories.DeleteUnassign" xml:space="preserve"><value>Fjern kategori fra alle dokumenter</value></data>
+  <data name="DocumentCategories.DeleteMove" xml:space="preserve"><value>Flyt dokumenter til en anden kategori</value></data>
+  <data name="DocumentCategories.MoveTo" xml:space="preserve"><value>Flyt til kategori</value></data>
+  <data name="DocumentCategories.SelectTarget" xml:space="preserve"><value>Vælg venligst en målkategori.</value></data>
+  <data name="DocumentCategories.SortOrder" xml:space="preserve"><value>Sorteringsrækkefølge</value></data>
+  <data name="DocumentCategories.DocumentCount" xml:space="preserve"><value>Dokumenter</value></data>
+  <data name="DocumentCategories.NameRequired" xml:space="preserve"><value>Kategorinavn er påkrævet.</value></data>
+  <data name="DocumentCategories.Created" xml:space="preserve"><value>Dokumentkategori oprettet.</value></data>
+  <data name="DocumentCategories.Updated" xml:space="preserve"><value>Dokumentkategori opdateret.</value></data>
+  <data name="DocumentCategories.Deleted" xml:space="preserve"><value>Dokumentkategori slettet.</value></data>
+  <data name="Documents.Title" xml:space="preserve"><value>Dokumenter</value></data>
+  <data name="Documents.NewDocument" xml:space="preserve"><value>Nyt dokument</value></data>
+  <data name="Documents.NoCategory" xml:space="preserve"><value>Ingen kategori</value></data>
+  <data name="Documents.AllCategories" xml:space="preserve"><value>Alle kategorier</value></data>
+  <data name="Documents.SearchPlaceholder" xml:space="preserve"><value>Søg efter titel...</value></data>
+  <data name="Documents.CategoryColumn" xml:space="preserve"><value>Kategori</value></data>
+  <data name="Documents.CreatedBy" xml:space="preserve"><value>Oprettet af</value></data>
+  <data name="Documents.LastUpdated" xml:space="preserve"><value>Sidst opdateret</value></data>
+  <data name="Documents.Uncategorised" xml:space="preserve"><value>—</value></data>
+  <data name="Documents.DeleteConfirm" xml:space="preserve"><value>Slet dokumentet "{0}"?</value></data>
+  <data name="Documents.DeleteTitle" xml:space="preserve"><value>Slet dokument</value></data>
+  <data name="Documents.Created" xml:space="preserve"><value>Dokument oprettet.</value></data>
+  <data name="Documents.Updated" xml:space="preserve"><value>Dokument gemt.</value></data>
+  <data name="Documents.Deleted" xml:space="preserve"><value>Dokument slettet.</value></data>
+  <data name="Documents.DownloadPdf" xml:space="preserve"><value>Download PDF</value></data>
+  <data name="Documents.EditTitle" xml:space="preserve"><value>Rediger dokument</value></data>
+  <data name="Documents.NewTitle" xml:space="preserve"><value>Nyt dokument</value></data>
+  <data name="Documents.TitleLabel" xml:space="preserve"><value>Titel</value></data>
+  <data name="Documents.CategoryLabel" xml:space="preserve"><value>Kategori</value></data>
+  <data name="Documents.ContentLabel" xml:space="preserve"><value>Indhold</value></data>
+  <data name="Documents.TitleRequired" xml:space="preserve"><value>Titel er påkrævet.</value></data>
+  <data name="Documents.ContentRequired" xml:space="preserve"><value>Indhold er påkrævet.</value></data>
+  <data name="Documents.BackToList" xml:space="preserve"><value>Tilbage til dokumenter</value></data>
+  <data name="ActivityDetail.Attachments" xml:space="preserve"><value>Vedhæftede filer</value></data>
+  <data name="ActivityDetail.UploadAttachment" xml:space="preserve"><value>Upload</value></data>
+  <data name="ActivityDetail.AttachmentDeleteTitle" xml:space="preserve"><value>Slet vedhæftet fil</value></data>
+  <data name="ActivityDetail.AttachmentDeleteConfirm" xml:space="preserve"><value>Slet vedhæftet fil "{0}"?</value></data>
+  <data name="ActivityDetail.AttachmentDeleted" xml:space="preserve"><value>Vedhæftet fil slettet.</value></data>
+  <data name="ActivityDetail.AttachmentUploaded" xml:space="preserve"><value>Fil uploadet.</value></data>
+  <data name="ActivityDetail.AttachmentTooLarge" xml:space="preserve"><value>Filen overstiger grænsen på 20 MB.</value></data>
+  <data name="ActivityDetail.AttachmentTypeNotAllowed" xml:space="preserve"><value>Filtypen er ikke tilladt.</value></data>
 </root>

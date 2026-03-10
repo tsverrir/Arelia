@@ -355,3 +355,41 @@ public class AuditLogEntryConfiguration : IEntityTypeConfiguration<AuditLogEntry
         builder.HasIndex(a => a.OrganizationId);
     }
 }
+
+public class DocumentCategoryConfiguration : IEntityTypeConfiguration<DocumentCategory>
+{
+    public void Configure(EntityTypeBuilder<DocumentCategory> builder)
+    {
+        builder.Property(dc => dc.Name).IsRequired().HasMaxLength(100);
+        builder.HasIndex(dc => new { dc.OrganizationId, dc.Name }).IsUnique();
+
+        builder.HasMany(dc => dc.Documents)
+            .WithOne(d => d.Category)
+            .HasForeignKey(d => d.DocumentCategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+public class DocumentConfiguration : IEntityTypeConfiguration<Document>
+{
+    public void Configure(EntityTypeBuilder<Document> builder)
+    {
+        builder.Property(d => d.Title).IsRequired().HasMaxLength(300);
+        builder.Property(d => d.ContentHtml).IsRequired();
+    }
+}
+
+public class ActivityAttachmentConfiguration : IEntityTypeConfiguration<ActivityAttachment>
+{
+    public void Configure(EntityTypeBuilder<ActivityAttachment> builder)
+    {
+        builder.Property(aa => aa.FileName).IsRequired().HasMaxLength(500);
+        builder.Property(aa => aa.ContentType).IsRequired().HasMaxLength(100);
+        builder.Property(aa => aa.FilePath).IsRequired().HasMaxLength(1000);
+
+        builder.HasOne(aa => aa.Activity)
+            .WithMany(a => a.Attachments)
+            .HasForeignKey(aa => aa.ActivityId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

@@ -371,4 +371,54 @@
   <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Delete All Invalid</value></data>
   <data name="Admin.Backups.DeletedInvalid" xml:space="preserve"><value>{0} invalid backup(s) deleted.</value></data>
   <data name="Admin.Backups.Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="Nav.Documents" xml:space="preserve"><value>Documents</value></data>
+  <data name="Nav.DocumentCategories" xml:space="preserve"><value>Document Categories</value></data>
+  <data name="DocumentCategories.Title" xml:space="preserve"><value>Document Categories</value></data>
+  <data name="DocumentCategories.Create" xml:space="preserve"><value>Create Category</value></data>
+  <data name="DocumentCategories.CreateTitle" xml:space="preserve"><value>Create Document Category</value></data>
+  <data name="DocumentCategories.EditTitle" xml:space="preserve"><value>Edit Document Category</value></data>
+  <data name="DocumentCategories.DeleteTitle" xml:space="preserve"><value>Delete Document Category</value></data>
+  <data name="DocumentCategories.DeleteConfirm" xml:space="preserve"><value>Delete document category "{0}"?</value></data>
+  <data name="DocumentCategories.DeleteHasDocuments" xml:space="preserve"><value>The category "{1}" has {0} document(s) assigned. Choose how to proceed:</value></data>
+  <data name="DocumentCategories.DeleteUnassign" xml:space="preserve"><value>Remove category from all documents</value></data>
+  <data name="DocumentCategories.DeleteMove" xml:space="preserve"><value>Move documents to another category</value></data>
+  <data name="DocumentCategories.MoveTo" xml:space="preserve"><value>Move to category</value></data>
+  <data name="DocumentCategories.SelectTarget" xml:space="preserve"><value>Please select a target category.</value></data>
+  <data name="DocumentCategories.SortOrder" xml:space="preserve"><value>Sort Order</value></data>
+  <data name="DocumentCategories.DocumentCount" xml:space="preserve"><value>Documents</value></data>
+  <data name="DocumentCategories.NameRequired" xml:space="preserve"><value>Category name is required.</value></data>
+  <data name="DocumentCategories.Created" xml:space="preserve"><value>Document category created.</value></data>
+  <data name="DocumentCategories.Updated" xml:space="preserve"><value>Document category updated.</value></data>
+  <data name="DocumentCategories.Deleted" xml:space="preserve"><value>Document category deleted.</value></data>
+  <data name="Documents.Title" xml:space="preserve"><value>Documents</value></data>
+  <data name="Documents.NewDocument" xml:space="preserve"><value>New Document</value></data>
+  <data name="Documents.NoCategory" xml:space="preserve"><value>No category</value></data>
+  <data name="Documents.AllCategories" xml:space="preserve"><value>All categories</value></data>
+  <data name="Documents.SearchPlaceholder" xml:space="preserve"><value>Search by title...</value></data>
+  <data name="Documents.CategoryColumn" xml:space="preserve"><value>Category</value></data>
+  <data name="Documents.CreatedBy" xml:space="preserve"><value>Created by</value></data>
+  <data name="Documents.LastUpdated" xml:space="preserve"><value>Last updated</value></data>
+  <data name="Documents.Uncategorised" xml:space="preserve"><value>—</value></data>
+  <data name="Documents.DeleteConfirm" xml:space="preserve"><value>Delete document "{0}"?</value></data>
+  <data name="Documents.DeleteTitle" xml:space="preserve"><value>Delete Document</value></data>
+  <data name="Documents.Created" xml:space="preserve"><value>Document created.</value></data>
+  <data name="Documents.Updated" xml:space="preserve"><value>Document saved.</value></data>
+  <data name="Documents.Deleted" xml:space="preserve"><value>Document deleted.</value></data>
+  <data name="Documents.DownloadPdf" xml:space="preserve"><value>Download PDF</value></data>
+  <data name="Documents.EditTitle" xml:space="preserve"><value>Edit Document</value></data>
+  <data name="Documents.NewTitle" xml:space="preserve"><value>New Document</value></data>
+  <data name="Documents.TitleLabel" xml:space="preserve"><value>Title</value></data>
+  <data name="Documents.CategoryLabel" xml:space="preserve"><value>Category</value></data>
+  <data name="Documents.ContentLabel" xml:space="preserve"><value>Content</value></data>
+  <data name="Documents.TitleRequired" xml:space="preserve"><value>Title is required.</value></data>
+  <data name="Documents.ContentRequired" xml:space="preserve"><value>Content is required.</value></data>
+  <data name="Documents.BackToList" xml:space="preserve"><value>Back to Documents</value></data>
+  <data name="ActivityDetail.Attachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="ActivityDetail.UploadAttachment" xml:space="preserve"><value>Upload</value></data>
+  <data name="ActivityDetail.AttachmentDeleteTitle" xml:space="preserve"><value>Delete Attachment</value></data>
+  <data name="ActivityDetail.AttachmentDeleteConfirm" xml:space="preserve"><value>Delete attachment "{0}"?</value></data>
+  <data name="ActivityDetail.AttachmentDeleted" xml:space="preserve"><value>Attachment deleted.</value></data>
+  <data name="ActivityDetail.AttachmentUploaded" xml:space="preserve"><value>File uploaded.</value></data>
+  <data name="ActivityDetail.AttachmentTooLarge" xml:space="preserve"><value>File exceeds the 20 MB limit.</value></data>
+  <data name="ActivityDetail.AttachmentTypeNotAllowed" xml:space="preserve"><value>File type is not allowed.</value></data>
 </root>

@@ -37,6 +37,9 @@ public class AreliaDbContext : IdentityDbContext<ApplicationUser>, IAreliaDbCont
 	public DbSet<Expense> Expenses => Set<Expense>();
 	public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
 	public DbSet<ExpenseAttachment> ExpenseAttachments => Set<ExpenseAttachment>();
+	public DbSet<DocumentCategory> DocumentCategories => Set<DocumentCategory>();
+	public DbSet<Document> Documents => Set<Document>();
+	public DbSet<ActivityAttachment> ActivityAttachments => Set<ActivityAttachment>();
 	public DbSet<Notification> Notifications => Set<Notification>();
 	public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 

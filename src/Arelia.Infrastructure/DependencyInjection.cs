@@ -37,6 +37,9 @@ public static class DependencyInjection
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IFileStorageService, DiskFileStorageService>();
+        services.AddScoped<IHtmlSanitizerService, HtmlSanitizerService>();
+        services.AddScoped<IPdfExportService, QuestPdfExportService>();
         services.AddSingleton<BackupService>();
         services.AddSingleton<MaintenanceState>();
 

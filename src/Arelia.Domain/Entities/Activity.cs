@@ -28,4 +28,5 @@ public class Activity : BaseEntity
     public ICollection<Activity> ChildActivities { get; set; } = [];
     public ICollection<ActivityParticipant> Participants { get; set; } = [];
     public ICollection<AttendanceRecord> AttendanceRecords { get; set; } = [];
+    public ICollection<ActivityAttachment> Attachments { get; set; } = [];
 }

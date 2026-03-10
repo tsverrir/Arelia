@@ -1,0 +1,97 @@
+@page "/documents/{DocumentId:guid}"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Documents.Queries
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@(_document?.Title ?? L["Documents.Title"])</PageTitle>
+
+@if (_document is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+    return;
+}
+
+<MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
+    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/documents"))"
+               StartIcon="@Icons.Material.Filled.ArrowBack">
+        @L.H("Documents.BackToList")
+    </MudButton>
+    <MudSpacer />
+    <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+               StartIcon="@Icons.Material.Filled.PictureAsPdf"
+               OnClick="DownloadPdf">
+        @L.H("Documents.DownloadPdf")
+    </MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Edit"
+               Href="@($"/documents/{DocumentId}/edit")">
+        @L.H("Common.Edit")
+    </MudButton>
+</MudStack>
+
+<MudCard>
+    <MudCardContent Class="pa-6">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.h4">@_document.Title</MudText>
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                @if (!string.IsNullOrEmpty(_document.CategoryName))
+                {
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small">@_document.CategoryName</MudChip>
+                }
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @if (!string.IsNullOrEmpty(_document.CreatedBy))
+                    {
+                        @string.Format(L["Documents.CreatedBy"] + " {0}", _document.CreatedBy)
+                        @(", ")
+                    }
+                    @_document.CreatedAt.ToString("dd MMM yyyy")
+                    @if (_document.UpdatedAt.HasValue)
+                    {
+                        @("  •  " + (_document.UpdatedAt.Value.ToString("dd MMM yyyy")))
+                    }
+                </MudText>
+            </MudStack>
+
+            <MudDivider Class="my-3" />
+
+            <div class="document-content">
+                @((MarkupString)_document.ContentHtml)
+            </div>
+        </MudStack>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public Guid DocumentId { get; set; }
+
+    private DocumentDetailDto? _document;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadDocument();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadDocument();
+    }
+
+    private async Task LoadDocument()
+    {
+        _document = await Mediator.Send(new GetDocumentDetailQuery(DocumentId));
+        if (_document is null)
+            Navigation.NavigateTo("/documents");
+    }
+
+    private void DownloadPdf()
+    {
+        Navigation.NavigateTo($"/api/documents/{DocumentId}/pdf", forceLoad: true);
+    }
+}

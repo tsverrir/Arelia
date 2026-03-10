@@ -7,11 +7,15 @@ using Arelia.Web.Localization;
 using Arelia.Web.Middleware;
 using Arelia.Web.Services;
 using Arelia.Application;
+using Arelia.Application.Documents.Queries;
+using Arelia.Application.Interfaces;
 using Arelia.Infrastructure;
 using Arelia.Infrastructure.Identity;
 using Arelia.Infrastructure.Persistence;
 using Arelia.Infrastructure.Services;
+using MediatR;
 using MudBlazor.Services;
+using Radzen;
 
 namespace Arelia.Web;
 
@@ -31,6 +35,9 @@ public class Program
 
         // MudBlazor
         builder.Services.AddMudServices();
+
+        // Radzen
+        builder.Services.AddRadzenComponents();
 
         // Tenant service
         builder.Services.AddScoped<TenantService>();
@@ -97,6 +104,44 @@ public class Program
             .AddInteractiveServerRenderMode();
 
         app.MapAdditionalIdentityEndpoints();
+
+        // --- Minimal API: document PDF download ---
+        app.MapGet("/api/documents/{documentId:guid}/pdf", async (
+            Guid documentId,
+            IMediator mediator,
+            IPdfExportService pdfService,
+            HttpContext http) =>
+        {
+            if (http.User.Identity?.IsAuthenticated != true)
+                return Results.Unauthorized();
+
+            var document = await mediator.Send(new GetDocumentDetailQuery(documentId));
+            if (document is null)
+                return Results.NotFound();
+
+            var bytes = await pdfService.ExportDocumentAsync(document);
+            var fileName = $"{document.Title.Replace(" ", "_")}.pdf";
+            return Results.File(bytes, "application/pdf", fileName);
+        }).RequireAuthorization();
+
+        // --- Minimal API: activity attachment download ---
+        app.MapGet("/api/attachments/{attachmentId:guid}", async (
+            Guid attachmentId,
+            IFileStorageService fileStorage,
+            AreliaDbContext db,
+            HttpContext http) =>
+        {
+            if (http.User.Identity?.IsAuthenticated != true)
+                return Results.Unauthorized();
+
+            var attachment = await db.ActivityAttachments.FindAsync(attachmentId);
+            if (attachment is null || !attachment.IsActive)
+                return Results.NotFound();
+
+            var stream = await fileStorage.ReadAsync(attachment.FilePath);
+            return Results.File(stream, attachment.ContentType,
+                attachment.FileName, enableRangeProcessing: false);
+        }).RequireAuthorization();
 
         app.Run();
     }

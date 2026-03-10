@@ -1,0 +1,163 @@
+@page "/documents"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Documents.Commands
+@using Arelia.Application.Documents.Queries
+@using Arelia.Web.Components.Shared
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@L["Documents.Title"]</PageTitle>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
+    return;
+}
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudText Typo="Typo.h5">@L.H("Documents.Title")</MudText>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => Navigation.NavigateTo("/documents/new"))">
+        @L.H("Documents.NewDocument")
+    </MudButton>
+</MudStack>
+
+<MudStack Row="true" Spacing="2" Class="mb-4">
+    <MudSelect T="Guid?" Value="_filterCategoryId" ValueChanged="OnCategoryFilterChanged"
+               Label="@L["Documents.CategoryLabel"]" Style="min-width:200px;" Clearable="true">
+        <MudSelectItem T="Guid?" Value="@((Guid?)null)">@L["Documents.AllCategories"]</MudSelectItem>
+        @if (_categories is not null)
+        {
+            @foreach (var cat in _categories)
+            {
+                <MudSelectItem T="Guid?" Value="@cat.Id">@cat.Name</MudSelectItem>
+            }
+        }
+    </MudSelect>
+    <MudTextField T="string" Value="_titleSearch"
+                  Label="@L["Documents.SearchPlaceholder"]"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  Immediate="true" DebounceInterval="300"
+                  ValueChanged="@OnTitleSearchChanged"
+                  Style="min-width:260px;" />
+</MudStack>
+
+@if (_filtered is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_filtered.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">@L["Common.NoResults"]</MudAlert>
+}
+else
+{
+    <MudTable Items="_filtered" Dense="true" Hover="true">
+        <HeaderContent>
+            <MudTh>@L["Common.Title"]</MudTh>
+            <MudTh>@L["Documents.CategoryColumn"]</MudTh>
+            <MudTh>@L["Documents.CreatedBy"]</MudTh>
+            <MudTh>@L["Documents.LastUpdated"]</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudLink Href="@($"/documents/{context.Id}")">@context.Title</MudLink>
+            </MudTd>
+            <MudTd>@(context.CategoryName ?? L["Documents.Uncategorised"])</MudTd>
+            <MudTd>@(context.CreatedBy ?? "—")</MudTd>
+            <MudTd>@((context.UpdatedAt ?? context.CreatedAt).ToString("dd MMM yyyy"))</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small"
+                               Href="@($"/documents/{context.Id}")" Title="@L["Common.View"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               Href="@($"/documents/{context.Id}/edit")" Title="@L["Common.Edit"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error"
+                               OnClick="@(() => DeleteDocument(context))" Title="@L["Common.Delete"]" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<DocumentSummaryDto>? _allDocuments;
+    private List<DocumentSummaryDto>? _filtered;
+    private List<DocumentCategoryDto>? _categories;
+    private Guid? _filterCategoryId;
+    private string _titleSearch = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadAll();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadAll();
+
+    private async Task LoadAll()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _categories = await Mediator.Send(new GetDocumentCategoriesQuery(orgId));
+        _allDocuments = await Mediator.Send(new GetDocumentsQuery(orgId));
+        FilterDocuments();
+    }
+
+    private async Task OnCategoryFilterChanged(Guid? value)
+    {
+        _filterCategoryId = value;
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _allDocuments = await Mediator.Send(new GetDocumentsQuery(orgId));
+        FilterDocuments();
+    }
+
+    private void OnTitleSearchChanged(string value)
+    {
+        _titleSearch = value;
+        FilterDocuments();
+    }
+
+    private void FilterDocuments()
+    {
+        if (_allDocuments is null) return;
+        var result = _allDocuments.AsEnumerable();
+
+        if (_filterCategoryId.HasValue)
+            result = result.Where(d => d.DocumentCategoryId == _filterCategoryId.Value);
+
+        if (!string.IsNullOrWhiteSpace(_titleSearch))
+            result = result.Where(d => d.Title.Contains(_titleSearch, StringComparison.OrdinalIgnoreCase));
+
+        _filtered = result.ToList();
+    }
+
+    private async Task DeleteDocument(DocumentSummaryDto doc)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(L["Documents.DeleteConfirm"], doc.Title) }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Documents.DeleteTitle"], parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new DeleteDocumentCommand(doc.Id));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["Documents.Deleted"], Severity.Success);
+            await LoadAll();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+}

@@ -37,7 +37,7 @@ public class CreateOrganizationHandler(IAreliaDbContext context) : IRequestHandl
         var defaultRoles = new (string Name, Permission[] Permissions)[]
         {
             ("Member",    []),
-            ("Board",     [Permission.ManagePeople, Permission.ManageActivities, Permission.ManageAttendance, Permission.RsvpOnBehalf, Permission.ViewAttendanceReports, Permission.ViewMembershipReports]),
+            ("Board",     [Permission.ManagePeople, Permission.ManageActivities, Permission.ManageAttendance, Permission.RsvpOnBehalf, Permission.ViewAttendanceReports, Permission.ViewMembershipReports, Permission.ManageDocuments]),
             ("Treasurer", [Permission.ManageCharges, Permission.ManageExpenses, Permission.ViewFinanceReports, Permission.ViewMembershipReports]),
             ("Conductor", [Permission.ManageAttendance, Permission.ViewAttendanceReports]),
             ("Admin",     Enum.GetValues<Permission>()),
@@ -116,6 +116,22 @@ public class CreateOrganizationHandler(IAreliaDbContext context) : IRequestHandl
         foreach (var (name, sortOrder) in defaultVoiceGroups)
         {
             context.VoiceGroups.Add(new VoiceGroup
+            {
+                Name = name,
+                SortOrder = sortOrder,
+                OrganizationId = org.Id,
+            });
+        }
+
+        // Seed default document categories
+        var defaultDocumentCategories = new (string Name, int SortOrder)[]
+        {
+            ("Meeting Minutes", 1), ("Internal Document", 2), ("Policy", 3),
+        };
+
+        foreach (var (name, sortOrder) in defaultDocumentCategories)
+        {
+            context.DocumentCategories.Add(new DocumentCategory
             {
                 Name = name,
                 SortOrder = sortOrder,

@@ -8,6 +8,7 @@ public enum Permission
     RsvpOnBehalf,
     ManageCharges,
     ManageExpenses,
+    ManageDocuments,
     ViewAttendanceReports,
     ViewFinanceReports,
     ViewMembershipReports,

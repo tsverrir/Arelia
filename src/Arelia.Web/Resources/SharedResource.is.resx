@@ -322,4 +322,54 @@
   <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Eyda ollum ogyldum</value></data>
   <data name="Admin.Backups.DeletedInvalid" xml:space="preserve"><value>{0} ogild oryggisafrit eydd.</value></data>
   <data name="Admin.Backups.Unknown" xml:space="preserve"><value>Oekkt</value></data>
+  <data name="Nav.Documents" xml:space="preserve"><value>Skjöl</value></data>
+  <data name="Nav.DocumentCategories" xml:space="preserve"><value>Skjalaflokkur</value></data>
+  <data name="DocumentCategories.Title" xml:space="preserve"><value>Skjalaflokkur</value></data>
+  <data name="DocumentCategories.Create" xml:space="preserve"><value>Búa til flokk</value></data>
+  <data name="DocumentCategories.CreateTitle" xml:space="preserve"><value>Búa til skjalaflokk</value></data>
+  <data name="DocumentCategories.EditTitle" xml:space="preserve"><value>Breyta skjalaflokk</value></data>
+  <data name="DocumentCategories.DeleteTitle" xml:space="preserve"><value>Eyða skjalaflokk</value></data>
+  <data name="DocumentCategories.DeleteConfirm" xml:space="preserve"><value>Eyða skjalaflokki "{0}"?</value></data>
+  <data name="DocumentCategories.DeleteHasDocuments" xml:space="preserve"><value>Flokkurinn "{1}" hefur {0} skjal(a) tengd. Veldu hvernig á að halda áfram:</value></data>
+  <data name="DocumentCategories.DeleteUnassign" xml:space="preserve"><value>Fjarlægja flokk úr öllum skjölum</value></data>
+  <data name="DocumentCategories.DeleteMove" xml:space="preserve"><value>Færa skjöl í annan flokk</value></data>
+  <data name="DocumentCategories.MoveTo" xml:space="preserve"><value>Færa í flokk</value></data>
+  <data name="DocumentCategories.SelectTarget" xml:space="preserve"><value>Vinsamlegast veldu marksflokk.</value></data>
+  <data name="DocumentCategories.SortOrder" xml:space="preserve"><value>Röðun</value></data>
+  <data name="DocumentCategories.DocumentCount" xml:space="preserve"><value>Skjöl</value></data>
+  <data name="DocumentCategories.NameRequired" xml:space="preserve"><value>Heiti flokks er nauðsynlegt.</value></data>
+  <data name="DocumentCategories.Created" xml:space="preserve"><value>Skjalaflokkur búinn til.</value></data>
+  <data name="DocumentCategories.Updated" xml:space="preserve"><value>Skjalaflokkur uppfærður.</value></data>
+  <data name="DocumentCategories.Deleted" xml:space="preserve"><value>Skjalaflokkur eyddur.</value></data>
+  <data name="Documents.Title" xml:space="preserve"><value>Skjöl</value></data>
+  <data name="Documents.NewDocument" xml:space="preserve"><value>Nýtt skjal</value></data>
+  <data name="Documents.NoCategory" xml:space="preserve"><value>Enginn flokkur</value></data>
+  <data name="Documents.AllCategories" xml:space="preserve"><value>Allir flokkar</value></data>
+  <data name="Documents.SearchPlaceholder" xml:space="preserve"><value>Leita eftir titli...</value></data>
+  <data name="Documents.CategoryColumn" xml:space="preserve"><value>Flokkur</value></data>
+  <data name="Documents.CreatedBy" xml:space="preserve"><value>Búið til af</value></data>
+  <data name="Documents.LastUpdated" xml:space="preserve"><value>Síðast uppfært</value></data>
+  <data name="Documents.Uncategorised" xml:space="preserve"><value>—</value></data>
+  <data name="Documents.DeleteConfirm" xml:space="preserve"><value>Eyða skjali "{0}"?</value></data>
+  <data name="Documents.DeleteTitle" xml:space="preserve"><value>Eyða skjali</value></data>
+  <data name="Documents.Created" xml:space="preserve"><value>Skjal búið til.</value></data>
+  <data name="Documents.Updated" xml:space="preserve"><value>Skjal vistað.</value></data>
+  <data name="Documents.Deleted" xml:space="preserve"><value>Skjal eytt.</value></data>
+  <data name="Documents.DownloadPdf" xml:space="preserve"><value>Sækja PDF</value></data>
+  <data name="Documents.EditTitle" xml:space="preserve"><value>Breyta skjali</value></data>
+  <data name="Documents.NewTitle" xml:space="preserve"><value>Nýtt skjal</value></data>
+  <data name="Documents.TitleLabel" xml:space="preserve"><value>Titill</value></data>
+  <data name="Documents.CategoryLabel" xml:space="preserve"><value>Flokkur</value></data>
+  <data name="Documents.ContentLabel" xml:space="preserve"><value>Efni</value></data>
+  <data name="Documents.TitleRequired" xml:space="preserve"><value>Titill er nauðsynlegur.</value></data>
+  <data name="Documents.ContentRequired" xml:space="preserve"><value>Efni er nauðsynlegt.</value></data>
+  <data name="Documents.BackToList" xml:space="preserve"><value>Til baka í skjöl</value></data>
+  <data name="ActivityDetail.Attachments" xml:space="preserve"><value>Viðhengi</value></data>
+  <data name="ActivityDetail.UploadAttachment" xml:space="preserve"><value>Hlaða upp</value></data>
+  <data name="ActivityDetail.AttachmentDeleteTitle" xml:space="preserve"><value>Eyða viðhengi</value></data>
+  <data name="ActivityDetail.AttachmentDeleteConfirm" xml:space="preserve"><value>Eyða viðhengi "{0}"?</value></data>
+  <data name="ActivityDetail.AttachmentDeleted" xml:space="preserve"><value>Viðhengi eytt.</value></data>
+  <data name="ActivityDetail.AttachmentUploaded" xml:space="preserve"><value>Skrá hlaðin upp.</value></data>
+  <data name="ActivityDetail.AttachmentTooLarge" xml:space="preserve"><value>Skráin er of stór (hámark 20 MB).</value></data>
+  <data name="ActivityDetail.AttachmentTypeNotAllowed" xml:space="preserve"><value>Þessi skráargerð er ekki leyfð.</value></data>
 </root>

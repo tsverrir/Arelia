@@ -1,0 +1,182 @@
+@page "/documents/new"
+@page "/documents/{DocumentId:guid}/edit"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Documents.Commands
+@using Arelia.Application.Documents.Queries
+@using Arelia.Application.Organizations.Queries
+@using MediatR
+@using Radzen.Blazor
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@(DocumentId.HasValue ? L["Documents.EditTitle"] : L["Documents.NewTitle"])</PageTitle>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
+    return;
+}
+
+<MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
+    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo(CancelTarget))"
+               StartIcon="@Icons.Material.Filled.ArrowBack">
+        @L.H("Documents.BackToList")
+    </MudButton>
+</MudStack>
+
+<MudText Typo="Typo.h5" GutterBottom="true">
+    @(DocumentId.HasValue ? L.H("Documents.EditTitle") : L.H("Documents.NewTitle"))
+</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="9">
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_title"
+                          Label="@L["Documents.TitleLabel"]"
+                          Required="true"
+                          Variant="Variant.Outlined" />
+
+            <MudSelect T="Guid?" @bind-Value="_categoryId"
+                       Label="@L["Documents.CategoryLabel"]"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                <MudSelectItem T="Guid?" Value="@((Guid?)null)">@L["Documents.NoCategory"]</MudSelectItem>
+                @if (_categories is not null)
+                {
+                    @foreach (var cat in _categories)
+                    {
+                        <MudSelectItem T="Guid?" Value="@cat.Id">@cat.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+
+            <div>
+                <MudText Typo="Typo.body2" Class="mb-1 mud-text-secondary">@L["Documents.ContentLabel"]</MudText>
+                <RadzenHtmlEditor @bind-Value="_content"
+                                  Style="height: 500px; width: 100%;"
+                                  UploadUrl="upload/image">
+                    <RadzenHtmlEditorUndo />
+                    <RadzenHtmlEditorRedo />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorBold />
+                    <RadzenHtmlEditorItalic />
+                    <RadzenHtmlEditorUnderline />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorColor />
+                    <RadzenHtmlEditorBackground />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorOrderedList />
+                    <RadzenHtmlEditorUnorderedList />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorAlignLeft />
+                    <RadzenHtmlEditorAlignCenter />
+                    <RadzenHtmlEditorAlignRight />
+                    <RadzenHtmlEditorAlignJustify />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorLink />
+                    <RadzenHtmlEditorUnlink />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorFormatBlock />
+                </RadzenHtmlEditor>
+            </div>
+
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           OnClick="Save" StartIcon="@Icons.Material.Filled.Save">
+                    @L.H("Common.Save")
+                </MudButton>
+                <MudButton Variant="Variant.Text"
+                           OnClick="@(() => Navigation.NavigateTo(CancelTarget))">
+                    @L.H("Common.Cancel")
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public Guid? DocumentId { get; set; }
+
+    private string _title = string.Empty;
+    private Guid? _categoryId;
+    private string _content = string.Empty;
+    private List<DocumentCategoryDto>? _categories;
+
+    private string CancelTarget => DocumentId.HasValue ? $"/documents/{DocumentId}" : "/documents";
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        _categories = await Mediator.Send(new GetDocumentCategoriesQuery(orgId));
+
+        if (DocumentId.HasValue)
+        {
+            var doc = await Mediator.Send(new GetDocumentDetailQuery(DocumentId.Value));
+            if (doc is not null)
+            {
+                _title = doc.Title;
+                _categoryId = doc.DocumentCategoryId;
+                _content = doc.ContentHtml;
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(_title))
+        {
+            Snackbar.Add(L["Documents.TitleRequired"], Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_content))
+        {
+            Snackbar.Add(L["Documents.ContentRequired"], Severity.Warning);
+            return;
+        }
+
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        if (DocumentId.HasValue)
+        {
+            var result = await Mediator.Send(new UpdateDocumentCommand(DocumentId.Value, _title, _content, _categoryId));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["Documents.Updated"], Severity.Success);
+                Navigation.NavigateTo($"/documents/{DocumentId}");
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+            }
+        }
+        else
+        {
+            var result = await Mediator.Send(new CreateDocumentCommand(_title, _content, _categoryId, orgId));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["Documents.Created"], Severity.Success);
+                Navigation.NavigateTo($"/documents/{result.Value}");
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+            }
+        }
+    }
+}

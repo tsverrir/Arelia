@@ -5,11 +5,13 @@
 @using Arelia.Application.Attendance.Queries
 @using Arelia.Domain.Enums
 @using MediatR
+@using Microsoft.AspNetCore.Components.Forms
 @inject IMediator Mediator
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject ILocalizer L
+@inject Arelia.Web.Services.TenantService TenantService
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <PageTitle>@(_activity?.Name ?? L["ActivityDetail.BackToActivities"])</PageTitle>
@@ -173,6 +175,75 @@
     </MudCard>
 }
 
+@* ---- Attachments ---- *@
+<MudCard Class="mt-4">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.h6">@L.H("ActivityDetail.Attachments")</MudText>
+                @if (_attachments is not null && _attachments.Count > 0)
+                {
+                    <MudChip T="int" Size="Size.Small" Color="Color.Default">@_attachments.Count</MudChip>
+                }
+                <MudSpacer />
+                <InputFile id="attachmentInput" OnChange="OnFileSelected"
+                           style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif" />
+                <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Upload"
+                           HtmlTag="label" for="attachmentInput"
+                           Disabled="_uploading">
+                    @L.H("ActivityDetail.UploadAttachment")
+                </MudButton>
+            </MudStack>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (_attachments is null)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+        else if (_attachments.Count == 0)
+        {
+            <MudText Class="mud-text-secondary">@L["Common.NoResults"]</MudText>
+        }
+        else
+        {
+            <MudSimpleTable Dense="true" Hover="true">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>@L["Common.Name"]</th>
+                        <th>@L["Documents.LastUpdated"]</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in _attachments)
+                    {
+                        var att = a;
+                        <tr>
+                            <td style="width:36px;">
+                                <MudIcon Icon="@GetFileIcon(att.ContentType)" Size="Size.Small" />
+                            </td>
+                            <td>@att.FileName</td>
+                            <td>@att.UploadedAt.ToString("dd MMM yyyy HH:mm")</td>
+                            <td style="white-space:nowrap;">
+                                <MudIconButton Icon="@Icons.Material.Filled.Download" Size="Size.Small"
+                                               Title="@L["Common.Download"]"
+                                               OnClick="@(() => Navigation.NavigateTo($"/api/attachments/{att.Id}", forceLoad: true))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                               Color="Color.Error"
+                                               Title="@L["Common.Delete"]"
+                                               OnClick="@(() => DeleteAttachment(att))" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudCardContent>
+</MudCard>
+
 @* ---- Edit Dialog ---- *@
 <MudDialog @bind-Visible="_showEdit">
     <TitleContent><MudText Typo="Typo.h6">@L.H("ActivityDetail.EditTitle")</MudText></TitleContent>
@@ -198,6 +269,8 @@
 
     private ActivityDetailDto? _activity;
     private ActivityAttendanceDto? _attendance;
+    private List<ActivityAttachmentDto>? _attachments;
+    private bool _uploading;
 
     // Edit form fields
     private bool _showEdit;
@@ -221,6 +294,7 @@
     {
         _activity = await Mediator.Send(new GetActivityDetailQuery(ActivityId));
         _attendance = await Mediator.Send(new GetActivityAttendanceQuery(ActivityId));
+        _attachments = await Mediator.Send(new GetActivityAttachmentsQuery(ActivityId));
     }
 
     private void StartEdit()
@@ -294,6 +368,72 @@
 
     private static bool IsOtherStatus(AttendanceStatus? status) =>
         status is AttendanceStatus.NoShow or AttendanceStatus.Sick or AttendanceStatus.ExplainedAbsence;
+
+    private static string GetFileIcon(string contentType) => contentType switch
+    {
+        "application/pdf" => Icons.Material.Filled.PictureAsPdf,
+        var ct when ct.StartsWith("image/") => Icons.Material.Filled.Image,
+        var ct when ct.Contains("spreadsheet") || ct.Contains("excel") => Icons.Material.Filled.TableChart,
+        _ => Icons.Material.Filled.InsertDriveFile,
+    };
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        const long maxBytes = 20_971_520L; // 20 MB
+        var file = e.File;
+
+        if (file.Size > maxBytes)
+        {
+            Snackbar.Add(L["ActivityDetail.AttachmentTooLarge"], Severity.Warning);
+            return;
+        }
+
+        _uploading = true;
+        try
+        {
+            await using var stream = file.OpenReadStream(maxBytes);
+            var result = await Mediator.Send(new AttachFileToActivityCommand(
+                ActivityId, file.Name, file.ContentType, stream, orgId));
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["ActivityDetail.AttachmentUploaded"], Severity.Success);
+                _attachments = await Mediator.Send(new GetActivityAttachmentsQuery(ActivityId));
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+            }
+        }
+        finally
+        {
+            _uploading = false;
+        }
+    }
+
+    private async Task DeleteAttachment(ActivityAttachmentDto att)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(L["ActivityDetail.AttachmentDeleteConfirm"], att.FileName) }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["ActivityDetail.AttachmentDeleteTitle"], parameters);
+        var dialogResult = await dialog.Result;
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new DeleteActivityAttachmentCommand(att.Id));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["ActivityDetail.AttachmentDeleted"], Severity.Success);
+            _attachments = await Mediator.Send(new GetActivityAttachmentsQuery(ActivityId));
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
 
     private async Task SetAttendance(Guid personId, AttendanceStatus status)
     {

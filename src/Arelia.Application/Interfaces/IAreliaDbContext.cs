@@ -14,6 +14,7 @@ public interface IAreliaDbContext
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<Activity> Activities { get; }
     DbSet<ActivityParticipant> ActivityParticipants { get; }
+    DbSet<ActivityAttachment> ActivityAttachments { get; }
     DbSet<AttendanceRecord> AttendanceRecords { get; }
     DbSet<RehearsalRecurrenceTemplate> RehearsalRecurrenceTemplates { get; }
     DbSet<Charge> Charges { get; }
@@ -24,6 +25,8 @@ public interface IAreliaDbContext
     DbSet<Expense> Expenses { get; }
     DbSet<ExpenseCategory> ExpenseCategories { get; }
     DbSet<ExpenseAttachment> ExpenseAttachments { get; }
+    DbSet<DocumentCategory> DocumentCategories { get; }
+    DbSet<Document> Documents { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<AuditLogEntry> AuditLogEntries { get; }
 
