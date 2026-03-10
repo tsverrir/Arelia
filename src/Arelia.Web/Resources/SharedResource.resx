@@ -360,4 +360,15 @@
   <data name="Admin.Users.DeleteTitle" xml:space="preserve"><value>Delete User Permanently</value></data>
   <data name="Admin.Users.DeleteConfirm" xml:space="preserve"><value>Permanently delete {0}? This will remove the user from this organization and cannot be undone.</value></data>
   <data name="Admin.Users.Deleted" xml:space="preserve"><value>User permanently deleted.</value></data>
+  <data name="Common.Version" xml:space="preserve"><value>Version</value></data>
+  <data name="Common.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Admin.Backups.Restore" xml:space="preserve"><value>Restore</value></data>
+  <data name="Admin.Backups.RestoreConfirmTitle" xml:space="preserve"><value>Restore Backup</value></data>
+  <data name="Admin.Backups.RestoreWarning" xml:space="preserve"><value>This will replace the current database. The application will restart automatically.</value></data>
+  <data name="Admin.Backups.RestoreConfirmMessage" xml:space="preserve"><value>Are you sure you want to restore the backup "{0}"?</value></data>
+  <data name="Admin.Backups.RestoreSuccess" xml:space="preserve"><value>Backup restored. The application is restarting…</value></data>
+  <data name="Admin.Backups.RestoreFailed" xml:space="preserve"><value>Restore failed: {0}</value></data>
+  <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Delete All Invalid</value></data>
+  <data name="Admin.Backups.DeletedInvalid" xml:space="preserve"><value>{0} invalid backup(s) deleted.</value></data>
+  <data name="Admin.Backups.Unknown" xml:space="preserve"><value>Unknown</value></data>
 </root>

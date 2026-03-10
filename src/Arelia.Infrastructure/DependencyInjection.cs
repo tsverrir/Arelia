@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddSingleton<BackupService>();
+        services.AddSingleton<MaintenanceState>();
 
         return services;
     }

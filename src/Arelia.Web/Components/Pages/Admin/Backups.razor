@@ -1,21 +1,36 @@
 @page "/admin/backups"
+@using Arelia.Infrastructure.Persistence
 @using Arelia.Infrastructure.Services
 @using Microsoft.Data.Sqlite
 @inject BackupService BackupService
 @inject IConfiguration Configuration
 @inject ISnackbar Snackbar
 @inject ILocalizer L
+@inject AreliaDbContext DbContext
+@inject MaintenanceState Maintenance
+@inject IHostApplicationLifetime AppLifetime
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <PageTitle>@L["Admin.Backups.Title"]</PageTitle>
 
 <MudText Typo="Typo.h5" GutterBottom="true">@L.H("Admin.Backups.Title")</MudText>
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateBackup"
-           StartIcon="@Icons.Material.Filled.Backup" Class="mb-4"
-           Disabled="@_isCreating">
-    @(_isCreating ? L["Admin.Backups.Creating"] : L["Admin.Backups.Create"])
-</MudButton>
+<div class="d-flex gap-2 mb-4">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateBackup"
+               StartIcon="@Icons.Material.Filled.Backup"
+               Disabled="@(_isCreating || _isRestoring)">
+        @(_isCreating ? L["Admin.Backups.Creating"] : L["Admin.Backups.Create"])
+    </MudButton>
+
+    @if (_backups?.Any(b => !b.IsValid) == true)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteAllInvalid"
+                   StartIcon="@Icons.Material.Filled.DeleteSweep"
+                   Disabled="@(_isCreating || _isRestoring)">
+            @L["Admin.Backups.DeleteInvalid"]
+        </MudButton>
+    }
+</div>
 
 @if (_backups is not null && _backups.Count > 0)
 {
@@ -24,11 +39,33 @@
             <MudTh>@L["Common.File"]</MudTh>
             <MudTh>@L["Common.Size"]</MudTh>
             <MudTh>@L["Common.Created"]</MudTh>
+            <MudTh>@L["Common.Version"]</MudTh>
+            <MudTh>@L["Common.Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.FileName</MudTd>
             <MudTd>@FormatSize(context.SizeBytes)</MudTd>
             <MudTd>@context.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss UTC")</MudTd>
+            <MudTd>
+                @if (context.IsValid)
+                {
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small">@FormatVersion(context.DatabaseVersion)</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Error" Size="Size.Small">
+                        @(context.DatabaseVersion is not null ? FormatVersion(context.DatabaseVersion) : L["Admin.Backups.Unknown"])
+                    </MudChip>
+                }
+            </MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.RestorePage"
+                           OnClick="@(() => PromptRestore(context))"
+                           Disabled="@(!context.IsValid || _isRestoring)">
+                    @L["Admin.Backups.Restore"]
+                </MudButton>
+            </MudTd>
         </RowTemplate>
     </MudTable>
 }
@@ -37,9 +74,27 @@ else
     <MudAlert Severity="Severity.Info">@L["Admin.Backups.NoBackups"]</MudAlert>
 }
 
+<MudDialog @bind-Visible="_showRestoreConfirm">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("Admin.Backups.RestoreConfirmTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Warning" Class="mb-2">@L["Admin.Backups.RestoreWarning"]</MudAlert>
+        <MudText>@string.Format(L["Admin.Backups.RestoreConfirmMessage"], _restoreTarget?.FileName)</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showRestoreConfirm = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="RestoreBackup">@L.H("Admin.Backups.Restore")</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private List<BackupInfo>? _backups;
+    private string? _currentDbVersion;
     private bool _isCreating;
+    private bool _isRestoring;
+    private bool _showRestoreConfirm;
+    private BackupInfo? _restoreTarget;
 
     private string BackupDir => Configuration["Backup:Directory"] ?? "backups";
     private string DbPath
@@ -52,9 +107,10 @@ else
         }
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _backups = BackupService.GetBackups(BackupDir);
+        _currentDbVersion = await BackupService.GetCurrentDatabaseVersionAsync(DbContext);
+        _backups = BackupService.GetBackups(BackupDir, _currentDbVersion);
     }
 
     private async Task CreateBackup()
@@ -62,9 +118,9 @@ else
         _isCreating = true;
         try
         {
-            var path = await BackupService.CreateBackupAsync(DbPath, BackupDir);
+            var path = await BackupService.CreateBackupAsync(DbPath, BackupDir, _currentDbVersion);
             Snackbar.Add(string.Format(L["Admin.Backups.Created"], Path.GetFileName(path)), Severity.Success);
-            _backups = BackupService.GetBackups(BackupDir);
+            _backups = BackupService.GetBackups(BackupDir, _currentDbVersion);
         }
         catch (Exception ex)
         {
@@ -76,6 +132,45 @@ else
         }
     }
 
+    private void PromptRestore(BackupInfo backup)
+    {
+        _restoreTarget = backup;
+        _showRestoreConfirm = true;
+    }
+
+    private async Task RestoreBackup()
+    {
+        if (_restoreTarget is null)
+            return;
+
+        _showRestoreConfirm = false;
+        _isRestoring = true;
+
+        try
+        {
+            Maintenance.Enter();
+            await BackupService.RestoreBackupAsync(DbPath, BackupDir, _restoreTarget.FileName);
+            Snackbar.Add(L["Admin.Backups.RestoreSuccess"], Severity.Success);
+
+            // Give a moment for the snackbar to display, then restart
+            await Task.Delay(1500);
+            AppLifetime.StopApplication();
+        }
+        catch (Exception ex)
+        {
+            Maintenance.Exit();
+            _isRestoring = false;
+            Snackbar.Add(string.Format(L["Admin.Backups.RestoreFailed"], ex.Message), Severity.Error);
+        }
+    }
+
+    private void DeleteAllInvalid()
+    {
+        var deleted = BackupService.DeleteInvalidBackups(BackupDir, _currentDbVersion);
+        Snackbar.Add(string.Format(L["Admin.Backups.DeletedInvalid"], deleted), Severity.Info);
+        _backups = BackupService.GetBackups(BackupDir, _currentDbVersion);
+    }
+
     private static string FormatSize(long bytes)
     {
         if (bytes < 1024)
@@ -83,5 +178,14 @@ else
         if (bytes < 1024 * 1024)
             return $"{bytes / 1024.0:N1} KB";
         return $"{bytes / (1024.0 * 1024.0):N1} MB";
+    }
+
+    private static string FormatVersion(string? version)
+    {
+        if (version is null)
+            return "—";
+        // Show just the timestamp portion for readability (e.g. "20260310112654")
+        var underscoreIdx = version.IndexOf('_');
+        return underscoreIdx > 0 ? version[..underscoreIdx] : version;
     }
 }

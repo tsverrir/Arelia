@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Localization;
 using Arelia.Web.Components;
 using Arelia.Web.Components.Account;
 using Arelia.Web.Localization;
+using Arelia.Web.Middleware;
 using Arelia.Web.Services;
 using Arelia.Application;
 using Arelia.Infrastructure;
@@ -61,6 +62,8 @@ public class Program
 
         // Seed data
         await DataSeeder.SeedAsync(app.Services);
+
+        app.UseMiddleware<MaintenanceMiddleware>();
 
         if (app.Environment.IsDevelopment())
         {

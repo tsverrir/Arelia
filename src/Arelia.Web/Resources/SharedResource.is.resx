@@ -311,4 +311,15 @@
   <data name="Admin.Backups.Failed" xml:space="preserve"><value>Oryggisafrit mistokst: {0}</value></data>
   <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Veldu lokadagsetningu thessarar hlutverksuthlutanar.</value></data>
   <data name="Dialog.EndDate" xml:space="preserve"><value>Lokadagur</value></data>
+  <data name="Common.Version" xml:space="preserve"><value>Utg.</value></data>
+  <data name="Common.Actions" xml:space="preserve"><value>Adgerdir</value></data>
+  <data name="Admin.Backups.Restore" xml:space="preserve"><value>Endurheimta</value></data>
+  <data name="Admin.Backups.RestoreConfirmTitle" xml:space="preserve"><value>Endurheimta oryggisafrit</value></data>
+  <data name="Admin.Backups.RestoreWarning" xml:space="preserve"><value>Thetta mun skipta ut gagnagrunninum. Forritid endurraesist sjalfkrafa.</value></data>
+  <data name="Admin.Backups.RestoreConfirmMessage" xml:space="preserve"><value>Ertu viss um ad thu viljir endurheimta oryggisafritid "{0}"?</value></data>
+  <data name="Admin.Backups.RestoreSuccess" xml:space="preserve"><value>Oryggisafrit endurheimt. Forritid er ad endurraesast…</value></data>
+  <data name="Admin.Backups.RestoreFailed" xml:space="preserve"><value>Endurheimta mistokst: {0}</value></data>
+  <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Eyda ollum ogyldum</value></data>
+  <data name="Admin.Backups.DeletedInvalid" xml:space="preserve"><value>{0} ogild oryggisafrit eydd.</value></data>
+  <data name="Admin.Backups.Unknown" xml:space="preserve"><value>Oekkt</value></data>
 </root>

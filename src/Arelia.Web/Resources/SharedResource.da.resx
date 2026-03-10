@@ -311,4 +311,15 @@
   <data name="Admin.Backups.Failed" xml:space="preserve"><value>Sikkerhedskopi mislykkedes: {0}</value></data>
   <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Vaelg slutdatoen for denne rolletildeling.</value></data>
   <data name="Dialog.EndDate" xml:space="preserve"><value>Slutdato</value></data>
+  <data name="Common.Version" xml:space="preserve"><value>Version</value></data>
+  <data name="Common.Actions" xml:space="preserve"><value>Handlinger</value></data>
+  <data name="Admin.Backups.Restore" xml:space="preserve"><value>Gendan</value></data>
+  <data name="Admin.Backups.RestoreConfirmTitle" xml:space="preserve"><value>Gendan sikkerhedskopi</value></data>
+  <data name="Admin.Backups.RestoreWarning" xml:space="preserve"><value>Dette vil erstatte den nuværende database. Applikationen genstartes automatisk.</value></data>
+  <data name="Admin.Backups.RestoreConfirmMessage" xml:space="preserve"><value>Er du sikker på, at du vil gendanne sikkerhedskopien "{0}"?</value></data>
+  <data name="Admin.Backups.RestoreSuccess" xml:space="preserve"><value>Sikkerhedskopi gendannet. Applikationen genstarter…</value></data>
+  <data name="Admin.Backups.RestoreFailed" xml:space="preserve"><value>Gendannelse mislykkedes: {0}</value></data>
+  <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Slet alle ugyldige</value></data>
+  <data name="Admin.Backups.DeletedInvalid" xml:space="preserve"><value>{0} ugyldige sikkerhedskopier slettet.</value></data>
+  <data name="Admin.Backups.Unknown" xml:space="preserve"><value>Ukendt</value></data>
 </root>
