@@ -4,8 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.Finance.Queries;
 
-public record GetExpensesQuery(Guid OrganizationId, int? Year = null, string? Category = null)
-    : IRequest<List<ExpenseListDto>>;
+public record GetExpensesQuery(
+    Guid OrganizationId,
+    int? Year = null,
+    string? Category = null,
+    bool IncludeHistory = false) : IRequest<List<ExpenseListDto>>;
 
 public record ExpenseListDto(
     Guid Id,
@@ -13,8 +16,12 @@ public record ExpenseListDto(
     decimal Amount,
     DateTime ExpenseDate,
     string CategoryName,
+    Guid CategoryId,
     string? ReceivedBy,
-    string CurrencyCode);
+    string? Notes,
+    string CurrencyCode,
+    bool IsActive,
+    Guid? ReplacedById);
 
 public class GetExpensesHandler(IAreliaDbContext context)
     : IRequestHandler<GetExpensesQuery, List<ExpenseListDto>>
@@ -23,8 +30,12 @@ public class GetExpensesHandler(IAreliaDbContext context)
         GetExpensesQuery request, CancellationToken cancellationToken)
     {
         var query = context.Expenses
+            .IgnoreQueryFilters()
             .Include(e => e.Category)
-            .Where(e => e.OrganizationId == request.OrganizationId && e.IsActive);
+            .Where(e => e.OrganizationId == request.OrganizationId);
+
+        if (!request.IncludeHistory)
+            query = query.Where(e => e.IsActive);
 
         if (request.Year.HasValue)
             query = query.Where(e => e.ExpenseDate.Year == request.Year.Value);
@@ -37,10 +48,12 @@ public class GetExpensesHandler(IAreliaDbContext context)
 
         return await query
             .OrderByDescending(e => e.ExpenseDate)
+            .ThenByDescending(e => e.CreatedAt)
             .Select(e => new ExpenseListDto(
                 e.Id, e.Description, e.Amount,
-                e.ExpenseDate, e.Category.Name,
-                e.ReceivedBy, e.CurrencyCode))
+                e.ExpenseDate, e.Category.Name, e.CategoryId,
+                e.ReceivedBy, e.Notes, e.CurrencyCode,
+                e.IsActive, e.ReplacedById))
             .ToListAsync(cancellationToken);
     }
 }

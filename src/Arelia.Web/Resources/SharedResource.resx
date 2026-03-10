@@ -329,4 +329,35 @@
   <data name="VoiceGroups.Created" xml:space="preserve"><value>Voice group created.</value></data>
   <data name="VoiceGroups.Updated" xml:space="preserve"><value>Voice group updated.</value></data>
   <data name="VoiceGroups.Deleted" xml:space="preserve"><value>Voice group deleted.</value></data>
+  <data name="Nav.ExpenseCategories" xml:space="preserve"><value>Expense Categories</value></data>
+  <data name="ExpenseCategories.Title" xml:space="preserve"><value>Expense Categories</value></data>
+  <data name="ExpenseCategories.Create" xml:space="preserve"><value>Create Category</value></data>
+  <data name="ExpenseCategories.CreateTitle" xml:space="preserve"><value>Create Expense Category</value></data>
+  <data name="ExpenseCategories.EditTitle" xml:space="preserve"><value>Edit Expense Category</value></data>
+  <data name="ExpenseCategories.DeleteTitle" xml:space="preserve"><value>Delete Expense Category</value></data>
+  <data name="ExpenseCategories.DeleteConfirm" xml:space="preserve"><value>Delete expense category "{0}"?</value></data>
+  <data name="ExpenseCategories.DeleteHasExpenses" xml:space="preserve"><value>The category "{1}" has {0} expense(s) assigned. Select a category to move them to:</value></data>
+  <data name="ExpenseCategories.MoveTo" xml:space="preserve"><value>Move to category</value></data>
+  <data name="ExpenseCategories.SelectTarget" xml:space="preserve"><value>Please select a target category.</value></data>
+  <data name="ExpenseCategories.ExpenseCount" xml:space="preserve"><value>Expenses</value></data>
+  <data name="ExpenseCategories.NameRequired" xml:space="preserve"><value>Category name is required.</value></data>
+  <data name="ExpenseCategories.Created" xml:space="preserve"><value>Expense category created.</value></data>
+  <data name="ExpenseCategories.Updated" xml:space="preserve"><value>Expense category updated.</value></data>
+  <data name="ExpenseCategories.Deleted" xml:space="preserve"><value>Expense category deleted.</value></data>
+  <data name="Finance.ShowHistory" xml:space="preserve"><value>Show history</value></data>
+  <data name="Finance.Revised" xml:space="preserve"><value>Revised</value></data>
+  <data name="Finance.Deleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="Finance.EditExpenseTitle" xml:space="preserve"><value>Edit Expense</value></data>
+  <data name="Finance.ExpenseUpdated" xml:space="preserve"><value>Expense updated.</value></data>
+  <data name="Finance.DeleteExpenseTitle" xml:space="preserve"><value>Delete Expense</value></data>
+  <data name="Finance.DeleteExpenseConfirm" xml:space="preserve"><value>Delete expense "{0}"? The record will be kept in history.</value></data>
+  <data name="Finance.ExpenseDeleted" xml:space="preserve"><value>Expense deleted.</value></data>
+  <data name="Finance.EditChargeTitle" xml:space="preserve"><value>Edit Charge</value></data>
+  <data name="Finance.ChargeUpdated" xml:space="preserve"><value>Charge updated.</value></data>
+  <data name="Finance.DeleteChargeTitle" xml:space="preserve"><value>Delete Charge</value></data>
+  <data name="Finance.DeleteChargeConfirm" xml:space="preserve"><value>Delete charge "{0}"? The record will be kept in history.</value></data>
+  <data name="Finance.ChargeDeleted" xml:space="preserve"><value>Charge deleted.</value></data>
+  <data name="Admin.Users.DeleteTitle" xml:space="preserve"><value>Delete User Permanently</value></data>
+  <data name="Admin.Users.DeleteConfirm" xml:space="preserve"><value>Permanently delete {0}? This will remove the user from this organization and cannot be undone.</value></data>
+  <data name="Admin.Users.Deleted" xml:space="preserve"><value>User permanently deleted.</value></data>
 </root>

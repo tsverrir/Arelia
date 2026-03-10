@@ -46,8 +46,13 @@ else
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.PersonOff"
                                    Color="Color.Warning" Size="Size.Small"
+                                   Title="@L["Admin.Users.DeactivateTitle"]"
                                    OnClick="@(() => DeactivateUser(context))" />
                 }
+                <MudIconButton Icon="@Icons.Material.Filled.DeleteForever"
+                               Color="Color.Error" Size="Size.Small"
+                               Title="@L["Admin.Users.DeleteTitle"]"
+                               OnClick="@(() => DeleteUser(context))" />
             </RowActions>
         </ConfigurableTable>
     }
@@ -140,6 +145,29 @@ else
         if (result.IsSuccess)
         {
             Snackbar.Add(L["Admin.Users.Deactivated"], Severity.Success);
+            await LoadUsers();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task DeleteUser(OrganizationUserDto user)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(L["Admin.Users.DeleteConfirm"], user.PersonName ?? user.Email ?? L["Common.FormerMember"]) }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Admin.Users.DeleteTitle"], parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new DeleteOrganizationUserCommand(user.Id));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["Admin.Users.Deleted"], Severity.Success);
             await LoadUsers();
         }
         else

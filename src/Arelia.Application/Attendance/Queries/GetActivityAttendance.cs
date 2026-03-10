@@ -43,9 +43,15 @@ public class GetActivityAttendanceHandler(IAreliaDbContext context)
 
         if (activity.IsImplicitParticipation)
         {
-            // All active members in the organization
+            // Only persons with an active 'Member' role assignment
+            var now = DateTime.UtcNow;
             var persons = await context.Persons
-                .Where(p => p.OrganizationId == activity.OrganizationId && p.IsActive)
+                .Where(p => p.OrganizationId == activity.OrganizationId && p.IsActive
+                    && context.RoleAssignments.Any(ra =>
+                        ra.PersonId == p.Id && ra.IsActive
+                        && ra.Role.Name == "Member"
+                        && ra.FromDate <= now
+                        && (ra.ToDate == null || ra.ToDate >= now)))
                 .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
                 .Select(p => new { p.Id, p.FirstName, p.LastName, VoiceGroupName = p.VoiceGroup != null ? p.VoiceGroup.Name : (string?)null })
                 .ToListAsync(cancellationToken);

@@ -21,20 +21,10 @@
 }
 
 <MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
-    @if (_activity.ParentActivityId.HasValue)
-    {
-        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo($"/semesters/{_activity.ParentActivityId}"))"
-                   StartIcon="@Icons.Material.Filled.ArrowBack">
-            @L.H("ActivityDetail.BackToSemester")
-        </MudButton>
-    }
-    else
-    {
-        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
-                   StartIcon="@Icons.Material.Filled.ArrowBack">
-            @L.H("ActivityDetail.BackToActivities")
-        </MudButton>
-    }
+    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
+               StartIcon="@Icons.Material.Filled.ArrowBack">
+        @L.H("ActivityDetail.BackToActivities")
+    </MudButton>
     <MudSpacer />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="StartEdit"
                StartIcon="@Icons.Material.Filled.Edit">

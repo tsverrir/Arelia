@@ -65,9 +65,15 @@ public class GetSemesterDetailHandler(IAreliaDbContext context)
         if (semester is null)
             return null;
 
-        // Count active members once for implicit-participation activities
+        // Count active members with 'Member' role for implicit-participation activities
+        var now = DateTime.UtcNow;
         var activeMemberCount = await context.Persons
-            .Where(p => p.OrganizationId == semester.OrganizationId && p.IsActive)
+            .Where(p => p.OrganizationId == semester.OrganizationId && p.IsActive
+                && context.RoleAssignments.Any(ra =>
+                    ra.PersonId == p.Id && ra.IsActive
+                    && ra.Role.Name == "Member"
+                    && ra.FromDate <= now
+                    && (ra.ToDate == null || ra.ToDate >= now)))
             .CountAsync(cancellationToken);
 
         var childActivities = await context.Activities

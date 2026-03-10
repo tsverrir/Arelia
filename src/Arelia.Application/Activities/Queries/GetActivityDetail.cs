@@ -60,11 +60,17 @@ public class GetActivityDetailHandler(IAreliaDbContext context)
 
         var participantCount = activity.ExplicitParticipantCount;
 
-        // For implicit-participation activities, count all active members in the organization
+        // For implicit-participation activities, count persons with active 'Member' role
         if (activity.IsImplicitParticipation)
         {
+            var now = DateTime.UtcNow;
             participantCount = await context.Persons
-                .Where(p => p.OrganizationId == activity.OrganizationId && p.IsActive)
+                .Where(p => p.OrganizationId == activity.OrganizationId && p.IsActive
+                    && context.RoleAssignments.Any(ra =>
+                        ra.PersonId == p.Id && ra.IsActive
+                        && ra.Role.Name == "Member"
+                        && ra.FromDate <= now
+                        && (ra.ToDate == null || ra.ToDate >= now)))
                 .CountAsync(cancellationToken);
         }
 

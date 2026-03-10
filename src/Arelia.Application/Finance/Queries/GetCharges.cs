@@ -5,8 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.Finance.Queries;
 
-public record GetChargesQuery(Guid OrganizationId, Guid? SemesterId = null, Guid? PersonId = null)
-    : IRequest<List<ChargeListDto>>;
+public record GetChargesQuery(
+    Guid OrganizationId,
+    Guid? SemesterId = null,
+    Guid? PersonId = null,
+    bool IncludeHistory = false) : IRequest<List<ChargeListDto>>;
 
 public record ChargeListDto(
     Guid Id,
@@ -16,7 +19,9 @@ public record ChargeListDto(
     ChargeStatus Status,
     decimal TotalDue,
     decimal TotalPaid,
-    string CurrencyCode);
+    string CurrencyCode,
+    bool IsActive,
+    Guid? ReplacedById);
 
 public class GetChargesHandler(IAreliaDbContext context)
     : IRequestHandler<GetChargesQuery, List<ChargeListDto>>
@@ -25,10 +30,14 @@ public class GetChargesHandler(IAreliaDbContext context)
         GetChargesQuery request, CancellationToken cancellationToken)
     {
         var query = context.Charges
+            .IgnoreQueryFilters()
             .Include(c => c.ChargeLines)
             .Include(c => c.Payments)
             .Include(c => c.Person)
             .Where(c => c.OrganizationId == request.OrganizationId);
+
+        if (!request.IncludeHistory)
+            query = query.Where(c => c.IsActive);
 
         if (request.SemesterId.HasValue)
             query = query.Where(c => c.SemesterId == request.SemesterId);
@@ -38,6 +47,7 @@ public class GetChargesHandler(IAreliaDbContext context)
 
         var charges = await query
             .OrderBy(c => c.Person.LastName).ThenBy(c => c.DueDate)
+            .ThenByDescending(c => c.CreatedAt)
             .ToListAsync(cancellationToken);
 
         return charges.Select(c => new ChargeListDto(
@@ -48,6 +58,8 @@ public class GetChargesHandler(IAreliaDbContext context)
             c.Status,
             c.TotalDue,
             c.TotalPaid,
-            c.CurrencyCode)).ToList();
+            c.CurrencyCode,
+            c.IsActive,
+            c.ReplacedById)).ToList();
     }
 }

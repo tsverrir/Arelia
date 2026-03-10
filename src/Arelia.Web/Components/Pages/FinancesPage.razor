@@ -2,10 +2,12 @@
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Finance.Commands
 @using Arelia.Application.Finance.Queries
+@using Arelia.Application.ExpenseCategories.Queries
 @using Arelia.Web.Components.Shared
 @using MediatR
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
@@ -21,6 +23,10 @@
 
 <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
     <MudTabPanel Text="@L["Finance.Charges"]">
+        <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.Center">
+            <MudCheckBox T="bool" Value="_showChargeHistory" Label="@L["Finance.ShowHistory"]"
+                         ValueChanged="@(async (bool v) => { _showChargeHistory = v; await LoadFinances(); })" />
+        </MudStack>
         @if (_charges is not null)
         {
             <ConfigurableTable TItem="ChargeListDto" Items="_charges" Columns="_chargeColumns">
@@ -46,15 +52,35 @@
                             break;
                     }
                 </CellTemplate>
+                <RowActions>
+                    @if (context.IsActive)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                       OnClick="@(() => OpenEditCharge(context))" Title="@L["Common.Edit"]" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       OnClick="@(() => DeleteCharge(context))" Title="@L["Common.Delete"]" />
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default">
+                            @(context.ReplacedById.HasValue ? L["Finance.Revised"] : L["Finance.Deleted"])
+                        </MudChip>
+                    }
+                </RowActions>
             </ConfigurableTable>
         }
     </MudTabPanel>
 
     <MudTabPanel Text="@L["Finance.Expenses"]">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4"
-                   OnClick="@(() => _showExpense = true)" StartIcon="@Icons.Material.Filled.Add">
-            @L.H("Finance.RecordExpense")
-        </MudButton>
+        <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.Center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="@(() => OpenCreateExpense())" StartIcon="@Icons.Material.Filled.Add">
+                @L.H("Finance.RecordExpense")
+            </MudButton>
+            <MudSpacer />
+            <MudCheckBox T="bool" Value="_showExpenseHistory" Label="@L["Finance.ShowHistory"]"
+                         ValueChanged="@(async (bool v) => { _showExpenseHistory = v; await LoadFinances(); })" />
+        </MudStack>
         @if (_expenses is not null)
         {
             <ConfigurableTable TItem="ExpenseListDto" Items="_expenses" Columns="_expenseColumns">
@@ -72,37 +98,88 @@
                             break;
                     }
                 </CellTemplate>
+                <RowActions>
+                    @if (context.IsActive)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                       OnClick="@(() => OpenEditExpense(context))" Title="@L["Common.Edit"]" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       OnClick="@(() => DeleteExpense(context))" Title="@L["Common.Delete"]" />
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default">
+                            @(context.ReplacedById.HasValue ? L["Finance.Revised"] : L["Finance.Deleted"])
+                        </MudChip>
+                    }
+                </RowActions>
             </ConfigurableTable>
         }
     </MudTabPanel>
 </MudTabs>
 
+@* ---- Create / Edit Expense Dialog ---- *@
 <MudDialog @bind-Visible="_showExpense">
-    <TitleContent><MudText Typo="Typo.h6">@L.H("Finance.RecordExpenseTitle")</MudText></TitleContent>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_editExpenseId is null ? L.H("Finance.RecordExpenseTitle") : L.H("Finance.EditExpenseTitle"))</MudText>
+    </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="_expDesc" Label="@L["Common.Description"]" Required="true" />
         <MudNumericField T="decimal" @bind-Value="_expAmount" Label="@L["Common.Amount"]" Required="true" />
         <MudDatePicker @bind-Date="_expDate" Label="@L["Common.Date"]" Required="true" />
-        <MudTextField @bind-Value="_expCategory" Label="@L["Common.Category"]" Required="true" />
+        <MudSelect T="Guid?" @bind-Value="_expCategoryId" Label="@L["Common.Category"]" Required="true">
+            @if (_expenseCategories is not null)
+            {
+                @foreach (var c in _expenseCategories)
+                {
+                    <MudSelectItem T="Guid?" Value="@c.Id">@c.Name</MudSelectItem>
+                }
+            }
+        </MudSelect>
         <MudTextField @bind-Value="_expReceivedBy" Label="@L["Finance.ReceivedBy"]" />
         <MudTextField @bind-Value="_expNotes" Label="@L["Common.Notes"]" Lines="2" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@(() => _showExpense = false)">@L.H("Common.Cancel")</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RecordExpense">@L.H("Common.Save")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveExpense">@L.H("Common.Save")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---- Edit Charge Dialog ---- *@
+<MudDialog @bind-Visible="_showEditCharge">
+    <TitleContent><MudText Typo="Typo.h6">@L.H("Finance.EditChargeTitle")</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_editChargeDesc" Label="@L["Common.Description"]" Required="true" />
+        <MudDatePicker @bind-Date="_editChargeDueDate" Label="@L["Finance.DueDate"]" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showEditCharge = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveCharge">@L.H("Common.Save")</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     private List<ChargeListDto>? _charges;
     private List<ExpenseListDto>? _expenses;
+    private List<ExpenseCategoryDto>? _expenseCategories;
+    private bool _showExpenseHistory;
+    private bool _showChargeHistory;
+
+    // Expense dialog state
     private bool _showExpense;
+    private Guid? _editExpenseId;
     private string _expDesc = string.Empty;
     private decimal _expAmount;
     private DateTime? _expDate = DateTime.Today;
-    private string _expCategory = string.Empty;
+    private Guid? _expCategoryId;
     private string? _expReceivedBy;
     private string? _expNotes;
+
+    // Charge edit dialog state
+    private bool _showEditCharge;
+    private Guid? _editChargeId;
+    private string _editChargeDesc = string.Empty;
+    private DateTime? _editChargeDueDate;
 
     private List<ColumnDefinition<ChargeListDto>>? _chargeColumns;
     private List<ColumnDefinition<ExpenseListDto>>? _expenseColumns;
@@ -136,24 +213,149 @@
     {
         if (TenantService.CurrentOrganizationId is Guid orgId)
         {
-            _charges = await Mediator.Send(new GetChargesQuery(orgId));
-            _expenses = await Mediator.Send(new GetExpensesQuery(orgId));
+            _charges = await Mediator.Send(new GetChargesQuery(orgId, IncludeHistory: _showChargeHistory));
+            _expenses = await Mediator.Send(new GetExpensesQuery(orgId, IncludeHistory: _showExpenseHistory));
+            _expenseCategories = await Mediator.Send(new GetExpenseCategoriesQuery(orgId));
         }
     }
 
-    private async Task RecordExpense()
+    // ---- Expense CRUD ----
+
+    private void OpenCreateExpense()
     {
-        if (string.IsNullOrWhiteSpace(_expDesc) || _expDate is null || TenantService.CurrentOrganizationId is not Guid orgId)
+        _editExpenseId = null;
+        _expDesc = string.Empty;
+        _expAmount = 0;
+        _expDate = DateTime.Today;
+        _expCategoryId = null;
+        _expReceivedBy = null;
+        _expNotes = null;
+        _showExpense = true;
+    }
+
+    private void OpenEditExpense(ExpenseListDto expense)
+    {
+        _editExpenseId = expense.Id;
+        _expDesc = expense.Description;
+        _expAmount = expense.Amount;
+        _expDate = expense.ExpenseDate;
+        _expCategoryId = expense.CategoryId;
+        _expReceivedBy = expense.ReceivedBy;
+        _expNotes = expense.Notes;
+        _showExpense = true;
+    }
+
+    private async Task SaveExpense()
+    {
+        if (string.IsNullOrWhiteSpace(_expDesc) || _expDate is null || _expCategoryId is null
+            || TenantService.CurrentOrganizationId is not Guid orgId)
             return;
 
-        var result = await Mediator.Send(new RecordExpenseCommand(
-            _expDesc, _expAmount, _expDate.Value, _expCategory, _expReceivedBy, _expNotes, orgId));
+        if (_editExpenseId is Guid existingId)
+        {
+            var result = await Mediator.Send(new UpdateExpenseCommand(
+                existingId, _expDesc, _expAmount, _expDate.Value,
+                _expCategoryId.Value, _expReceivedBy, _expNotes));
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["Finance.ExpenseUpdated"], Severity.Success);
+                _showExpense = false;
+                await LoadFinances();
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+            }
+        }
+        else
+        {
+            var categoryName = _expenseCategories?.FirstOrDefault(c => c.Id == _expCategoryId)?.Name ?? string.Empty;
+            var result = await Mediator.Send(new RecordExpenseCommand(
+                _expDesc, _expAmount, _expDate.Value, categoryName, _expReceivedBy, _expNotes, orgId));
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["Finance.ExpenseRecorded"], Severity.Success);
+                _showExpense = false;
+                await LoadFinances();
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+            }
+        }
+    }
+
+    private async Task DeleteExpense(ExpenseListDto expense)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(L["Finance.DeleteExpenseConfirm"], expense.Description) }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Finance.DeleteExpenseTitle"], parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new SoftDeleteExpenseCommand(expense.Id));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["Finance.ExpenseDeleted"], Severity.Success);
+            await LoadFinances();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    // ---- Charge CRUD ----
+
+    private void OpenEditCharge(ChargeListDto charge)
+    {
+        _editChargeId = charge.Id;
+        _editChargeDesc = charge.Description;
+        _editChargeDueDate = charge.DueDate;
+        _showEditCharge = true;
+    }
+
+    private async Task SaveCharge()
+    {
+        if (string.IsNullOrWhiteSpace(_editChargeDesc) || _editChargeDueDate is null || _editChargeId is null)
+            return;
+
+        var result = await Mediator.Send(new UpdateChargeCommand(
+            _editChargeId.Value, _editChargeDesc, _editChargeDueDate.Value));
 
         if (result.IsSuccess)
         {
-            Snackbar.Add(L["Finance.ExpenseRecorded"], Severity.Success);
-            _showExpense = false;
-            _expenses = await Mediator.Send(new GetExpensesQuery(orgId));
+            Snackbar.Add(L["Finance.ChargeUpdated"], Severity.Success);
+            _showEditCharge = false;
+            await LoadFinances();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task DeleteCharge(ChargeListDto charge)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(L["Finance.DeleteChargeConfirm"], charge.Description) }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Finance.DeleteChargeTitle"], parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new SoftDeleteChargeCommand(charge.Id));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["Finance.ChargeDeleted"], Severity.Success);
+            await LoadFinances();
         }
         else
         {

@@ -196,6 +196,16 @@ public class ChargeConfiguration : IEntityTypeConfiguration<Charge>
             .WithMany()
             .HasForeignKey(c => c.SemesterId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(c => c.ReplacedBy)
+            .WithOne()
+            .HasForeignKey<Charge>(c => c.ReplacedById)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(c => c.Original)
+            .WithMany()
+            .HasForeignKey(c => c.OriginalId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
 
@@ -281,6 +291,16 @@ public class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
             .WithMany(c => c.Expenses)
             .HasForeignKey(e => e.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.ReplacedBy)
+            .WithOne()
+            .HasForeignKey<Expense>(e => e.ReplacedById)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(e => e.Original)
+            .WithMany()
+            .HasForeignKey(e => e.OriginalId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
 

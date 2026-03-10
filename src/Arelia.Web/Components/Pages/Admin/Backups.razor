@@ -1,5 +1,6 @@
 @page "/admin/backups"
 @using Arelia.Infrastructure.Services
+@using Microsoft.Data.Sqlite
 @inject BackupService BackupService
 @inject IConfiguration Configuration
 @inject ISnackbar Snackbar
@@ -41,8 +42,15 @@ else
     private bool _isCreating;
 
     private string BackupDir => Configuration["Backup:Directory"] ?? "backups";
-    private string DbPath => Configuration.GetConnectionString("DefaultConnection")
-        ?.Replace("Data Source=", "", StringComparison.OrdinalIgnoreCase) ?? "arelia.db";
+    private string DbPath
+    {
+        get
+        {
+            var connectionString = Configuration.GetConnectionString("DefaultConnection") ?? "DataSource=arelia.db";
+            var builder = new SqliteConnectionStringBuilder(connectionString);
+            return builder.DataSource;
+        }
+    }
 
     protected override void OnInitialized()
     {

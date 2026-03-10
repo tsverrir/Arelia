@@ -12,9 +12,17 @@ public class Charge : BaseEntity
     public ChargeStatus Status { get; set; } = ChargeStatus.Open;
     public string CurrencyCode { get; set; } = string.Empty;
 
+    /// <summary>Points to the new revision that replaced this one (null if current).</summary>
+    public Guid? ReplacedById { get; set; }
+
+    /// <summary>Points to the first version in this chain (null if this is the original).</summary>
+    public Guid? OriginalId { get; set; }
+
     // Navigation
     public Person Person { get; set; } = null!;
     public Activity? Semester { get; set; }
+    public Charge? ReplacedBy { get; set; }
+    public Charge? Original { get; set; }
     public ICollection<ChargeLine> ChargeLines { get; set; } = [];
     public ICollection<Payment> Payments { get; set; } = [];
 

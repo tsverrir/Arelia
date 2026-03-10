@@ -1,0 +1,208 @@
+@page "/expense-categories"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.ExpenseCategories.Commands
+@using Arelia.Application.ExpenseCategories.Queries
+@using Arelia.Web.Components.Shared
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@L["ExpenseCategories.Title"]</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("ExpenseCategories.Title")</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
+    return;
+}
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OpenCreate())"
+           StartIcon="@Icons.Material.Filled.Add" Class="mb-4">
+    @L.H("ExpenseCategories.Create")
+</MudButton>
+
+@if (_categories is not null)
+{
+    <MudTable Items="_categories" Dense="true" Hover="true">
+        <HeaderContent>
+            <MudTh>@L["Common.Name"]</MudTh>
+            <MudTh>@L["ExpenseCategories.ExpenseCount"]</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.ExpenseCount</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               OnClick="@(() => OpenEdit(context))" Title="@L["Common.Edit"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error"
+                               OnClick="@(() => DeleteCategory(context))" Title="@L["Common.Delete"]" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@* Create / Edit dialog *@
+<MudDialog @bind-Visible="_showForm">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_editId is null ? L.H("ExpenseCategories.CreateTitle") : L.H("ExpenseCategories.EditTitle"))</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_editName" Label="@L["Common.Name"]" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showForm = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveCategory">@L.H("Common.Save")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Delete dialog with options when expenses are assigned *@
+<MudDialog @bind-Visible="_showDelete">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("ExpenseCategories.DeleteTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_deleteTarget is not null && _deleteTarget.ExpenseCount > 0)
+        {
+            <MudText Class="mb-3">
+                @string.Format(L["ExpenseCategories.DeleteHasExpenses"], _deleteTarget.ExpenseCount, _deleteTarget.Name)
+            </MudText>
+            <MudSelect T="Guid?" @bind-Value="_moveToCategoryId" Label="@L["ExpenseCategories.MoveTo"]" Required="true">
+                @if (_categories is not null)
+                {
+                    @foreach (var c in _categories.Where(c => c.Id != _deleteTarget.Id))
+                    {
+                        <MudSelectItem T="Guid?" Value="@c.Id">@c.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        }
+        else
+        {
+            <MudText>@string.Format(L["ExpenseCategories.DeleteConfirm"], _deleteTarget?.Name)</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showDelete = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDelete">@L.H("Common.Delete")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<ExpenseCategoryDto>? _categories;
+
+    // Create/Edit form state
+    private bool _showForm;
+    private Guid? _editId;
+    private string _editName = string.Empty;
+
+    // Delete state
+    private bool _showDelete;
+    private ExpenseCategoryDto? _deleteTarget;
+    private Guid? _moveToCategoryId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadCategories();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadCategories();
+
+    private async Task LoadCategories()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+        _categories = await Mediator.Send(new GetExpenseCategoriesQuery(orgId));
+    }
+
+    private void OpenCreate()
+    {
+        _editId = null;
+        _editName = string.Empty;
+        _showForm = true;
+    }
+
+    private void OpenEdit(ExpenseCategoryDto category)
+    {
+        _editId = category.Id;
+        _editName = category.Name;
+        _showForm = true;
+    }
+
+    private async Task SaveCategory()
+    {
+        if (string.IsNullOrWhiteSpace(_editName))
+        {
+            Snackbar.Add(L["ExpenseCategories.NameRequired"], Severity.Warning);
+            return;
+        }
+
+        if (_editId is null)
+        {
+            if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+            var result = await Mediator.Send(new CreateExpenseCategoryCommand(_editName.Trim(), orgId));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["ExpenseCategories.Created"], Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+                return;
+            }
+        }
+        else
+        {
+            var result = await Mediator.Send(new UpdateExpenseCategoryCommand(_editId.Value, _editName.Trim()));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(L["ExpenseCategories.Updated"], Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.Error!, Severity.Error);
+                return;
+            }
+        }
+
+        _showForm = false;
+        await LoadCategories();
+    }
+
+    private void DeleteCategory(ExpenseCategoryDto category)
+    {
+        _deleteTarget = category;
+        _moveToCategoryId = null;
+        _showDelete = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_deleteTarget is null) return;
+
+        if (_deleteTarget.ExpenseCount > 0 && _moveToCategoryId is null)
+        {
+            Snackbar.Add(L["ExpenseCategories.SelectTarget"], Severity.Warning);
+            return;
+        }
+
+        var result = await Mediator.Send(new DeleteExpenseCategoryCommand(
+            _deleteTarget.Id, _moveToCategoryId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["ExpenseCategories.Deleted"], Severity.Success);
+            _showDelete = false;
+            await LoadCategories();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+}
