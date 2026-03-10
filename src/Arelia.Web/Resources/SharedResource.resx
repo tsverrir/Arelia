@@ -309,9 +309,30 @@
   <data name="Admin.Backups.NoBackups" xml:space="preserve"><value>No backups yet.</value></data>
   <data name="Admin.Backups.Created" xml:space="preserve"><value>Backup created: {0}</value></data>
   <data name="Admin.Backups.Failed" xml:space="preserve"><value>Backup failed: {0}</value></data>
+  <data name="Admin.Backups.BackupDirectory" xml:space="preserve"><value>Backup Directory</value></data>
+  <data name="Admin.Backups.DirectorySaved" xml:space="preserve"><value>Backup directory updated.</value></data>
+  <data name="Admin.Backups.DeleteTitle" xml:space="preserve"><value>Delete Backup</value></data>
+  <data name="Admin.Backups.DeleteConfirm" xml:space="preserve"><value>Delete backup file '{0}'? This cannot be undone.</value></data>
+  <data name="Admin.Backups.Deleted" xml:space="preserve"><value>Backup '{0}' deleted.</value></data>
+  <data name="Admin.Backups.DeleteFailed" xml:space="preserve"><value>Failed to delete backup: {0}</value></data>
+  <data name="Admin.Backups.Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="Admin.Backups.OpenFolder" xml:space="preserve"><value>Open Folder</value></data>
+  <data name="Admin.Backups.OpenFolderFailed" xml:space="preserve"><value>Cannot open folder — only supported when the server is running on Windows.</value></data>
+  <data name="Admin.Backups.SchemaVersion" xml:space="preserve"><value>DB Version</value></data>
+  <data name="Admin.Backups.SchemaUnknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="Admin.Backups.Invalid" xml:space="preserve"><value>Invalid</value></data>
+  <data name="Admin.Backups.RestoreTitle" xml:space="preserve"><value>Restore Backup</value></data>
+  <data name="Admin.Backups.RestoreConfirm" xml:space="preserve"><value>Restore from '{0}'? The current database will be completely overwritten. This cannot be undone.</value></data>
+  <data name="Admin.Backups.Restored" xml:space="preserve"><value>Database restored from '{0}'. Please restart the application for changes to take full effect.</value></data>
+  <data name="Admin.Backups.RestoreFailed" xml:space="preserve"><value>Restore failed: {0}</value></data>
+  <data name="Admin.Backups.RestoreNote" xml:space="preserve"><value>The database has been restored. Please restart the application for the changes to take full effect in all sessions.</value></data>
+  <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Delete All Invalid</value></data>
+  <data name="Admin.Backups.DeleteInvalidTitle" xml:space="preserve"><value>Delete Invalid Backups</value></data>
+  <data name="Admin.Backups.DeleteInvalidConfirm" xml:space="preserve"><value>Delete all {0} invalid backup(s) with outdated schema? This cannot be undone.</value></data>
+  <data name="Admin.Backups.DeleteInvalidDone" xml:space="preserve"><value>{0} invalid backup(s) deleted.</value></data>
   <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Choose the end date for this role assignment.</value></data>
   <data name="Dialog.EndDate" xml:space="preserve"><value>End Date</value></data>
-  <data name="Nav.VoiceGroups" xml:space="preserve"><value>Voice Groups</value></data>
+  <data name="Nav.VoiceGroups"
   <data name="VoiceGroups.Title" xml:space="preserve"><value>Voice Groups</value></data>
   <data name="VoiceGroups.Create" xml:space="preserve"><value>Create Voice Group</value></data>
   <data name="VoiceGroups.CreateTitle" xml:space="preserve"><value>Create Voice Group</value></data>

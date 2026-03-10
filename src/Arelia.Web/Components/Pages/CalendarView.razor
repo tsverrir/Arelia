@@ -3,8 +3,8 @@
 @using Arelia.Application.Activities.Queries
 @using Arelia.Domain.Enums
 @using MediatR
-@inject IMediator Mediator
 @using System.Globalization
+@inject IMediator Mediator
 @inject NavigationManager Navigation
 @inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
@@ -33,53 +33,97 @@ else
         <MudButton Variant="Variant.Outlined" OnClick="GoToToday">@L.H("Calendar.Today")</MudButton>
     </MudStack>
 
-    <MudSimpleTable Dense="true">
-        <thead>
-            <tr>
-                @foreach (var day in GetLocalizedDayNames())
-                {
-                    <th style="width:14.28%; text-align:center;">@day</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var week in GetWeeks())
+    <div class="cal-container">
+        <div class="cal-header">
+            <div></div>
+            @foreach (var name in GetLocalizedDayNames())
             {
-                <tr>
-                    @foreach (var day in week)
-                    {
-                        var isCurrentMonth = day.Month == _currentMonth.Month;
-                        var dayActivities = _activities
-                            .Where(a => a.StartDateTime.Date <= day.Date && a.EndDateTime.Date >= day.Date)
-                            .ToList();
-
-                        <td style="vertical-align:top; min-height:80px; @(isCurrentMonth ? "" : "opacity:0.4;")">
-                            <MudText Typo="Typo.caption" Style="@(day.Date == DateTime.Today ? "font-weight:bold; color:var(--mud-palette-primary);" : "")">
-                                @day.Day
-                            </MudText>
-                            @foreach (var act in dayActivities.Take(3))
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="@GetColor(act.ActivityType)"
-                                         Style="cursor:pointer; font-size:0.7rem; padding:0 4px; margin:1px 0;"
-                                         OnClick="@(() => Navigation.NavigateTo($"/activities/{act.Id}"))">
-                                    @act.Name
-                                </MudChip>
-                            }
-                            @if (dayActivities.Count > 3)
-                            {
-                                <MudText Typo="Typo.caption">@string.Format(L["Calendar.More"], dayActivities.Count - 3)</MudText>
-                            }
-                        </td>
-                    }
-                </tr>
+                <div class="cal-header-cell">@name</div>
             }
-        </tbody>
-    </MudSimpleTable>
+        </div>
+
+        @foreach (var weekData in GetWeeksData())
+        {
+            var numLanes = weekData.SpanningEvents.Count == 0 ? 0 : weekData.SpanningEvents.Max(e => e.Lane) + 1;
+            var dayCellRow = numLanes + 2;
+            var gridRows = numLanes == 0
+                ? "24px minmax(60px, auto)"
+                : $"24px {string.Join(" ", Enumerable.Repeat("22px", numLanes))} minmax(60px, auto)";
+
+            <div class="cal-week" style="grid-template-rows: @gridRows;">
+
+                <div class="cal-week-label" style="grid-column: 1; grid-row: 1;">
+                    CW @ISOWeek.GetWeekOfYear(weekData.Days[0])
+                </div>
+
+                @for (int d = 0; d < 7; d++)
+                {
+                    var hDay = weekData.Days[d];
+                    var hCol = d + 2;
+                    var hClass = "cal-day-header" + (hDay.Date == DateTime.Today ? " cal-today" : "") + (hDay.Month == _currentMonth.Month ? "" : " cal-other-month");
+                    <div class="@hClass" style="grid-column: @hCol; grid-row: 1;">@hDay.Day</div>
+                }
+
+                @* Background column cells for spanning rows — rendered before event bars so bars appear on top *@
+                @if (numLanes > 0)
+                {
+                    <div style="grid-column: 1; grid-row: 2 / @(numLanes + 2);"></div>
+                    @for (int d = 0; d < 7; d++)
+                    {
+                        var bgCol = d + 2;
+                        <div class="cal-span-bg" style="grid-column: @bgCol; grid-row: 2 / @(numLanes + 2);"></div>
+                    }
+                }
+
+                @* Spanning event bars *@
+                @foreach (var se in weekData.SpanningEvents)
+                {
+                    var barColStart = se.ColStart + 2;
+                    var barColEnd = se.ColEnd + 3;
+                    var barRow = se.Lane + 2;
+                    <div class="cal-event-bar"
+                         style="grid-column: @barColStart / @barColEnd; grid-row: @barRow; background-color: @GetCssColor(se.Activity.ActivityType);"
+                         @onclick="@(() => Navigation.NavigateTo($"/activities/{se.Activity.Id}"))">
+                        @se.Activity.Name
+                    </div>
+                }
+
+                <div class="cal-week-cell-col" style="grid-column: 1; grid-row: @dayCellRow;"></div>
+
+                @* Day cells with single-day events *@
+                @for (int d = 0; d < 7; d++)
+                {
+                    var cDay = weekData.Days[d];
+                    var cCol = d + 2;
+                    var cClass = "cal-day-cell" + (cDay.Month == _currentMonth.Month ? "" : " cal-other-month");
+                    var cEvents = weekData.DayEvents[d];
+                    <div class="@cClass" style="grid-column: @cCol; grid-row: @dayCellRow;">
+                        @foreach (var act in cEvents)
+                        {
+                            <div class="cal-event-chip"
+                                 style="background-color: @GetCssColor(act.ActivityType);"
+                                 @onclick="@(() => Navigation.NavigateTo($"/activities/{act.Id}"))">
+                                @if (act.StartDateTime.TimeOfDay != TimeSpan.Zero)
+                                {
+                                    <span>@act.StartDateTime.ToString("HH:mm") </span>
+                                }
+                                @act.Name
+                            </div>
+                        }
+                    </div>
+                }
+
+            </div>
+        }
+    </div>
 }
 
 @code {
     private List<ActivityListDto>? _activities;
     private DateTime _currentMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    private record SpanningEventBar(ActivityListDto Activity, int ColStart, int ColEnd, int Lane);
+    private record WeekData(List<DateTime> Days, List<SpanningEventBar> SpanningEvents, List<List<ActivityListDto>> DayEvents);
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,6 +179,75 @@ else
         return weeks;
     }
 
+    private List<WeekData> GetWeeksData()
+    {
+        var result = new List<WeekData>();
+        foreach (var week in GetWeeks())
+        {
+            var spanningActivities = new List<ActivityListDto>();
+            var dayCellEvents = Enumerable.Range(0, 7).Select(_ => new List<ActivityListDto>()).ToList();
+
+            foreach (var act in _activities!)
+            {
+                if (act.EndDateTime.Date > act.StartDateTime.Date)
+                {
+                    // Multi-day event: include if it overlaps this week
+                    if (act.EndDateTime.Date >= week[0] && act.StartDateTime.Date <= week[6])
+                        spanningActivities.Add(act);
+                }
+                else
+                {
+                    // Single-day event: place in its day cell
+                    var dayIdx = (act.StartDateTime.Date - week[0]).Days;
+                    if (dayIdx >= 0 && dayIdx < 7)
+                        dayCellEvents[dayIdx].Add(act);
+                }
+            }
+
+            // Sort by start date, then longest first for better packing
+            spanningActivities.Sort((a, b) =>
+            {
+                int cmp = a.StartDateTime.Date.CompareTo(b.StartDateTime.Date);
+                return cmp != 0 ? cmp : (b.EndDateTime - b.StartDateTime).CompareTo(a.EndDateTime - a.StartDateTime);
+            });
+
+            // Greedy lane-packing: assign each event to the first lane where it fits
+            var laneEndCols = new List<int>();
+            var eventBars = new List<SpanningEventBar>();
+
+            foreach (var act in spanningActivities)
+            {
+                int colStart = Math.Max(0, (act.StartDateTime.Date - week[0]).Days);
+                int colEnd = Math.Min(6, (act.EndDateTime.Date - week[0]).Days);
+
+                int lane = -1;
+                for (int i = 0; i < laneEndCols.Count; i++)
+                {
+                    if (laneEndCols[i] < colStart)
+                    {
+                        lane = i;
+                        break;
+                    }
+                }
+
+                if (lane == -1)
+                {
+                    lane = laneEndCols.Count;
+                    laneEndCols.Add(colEnd);
+                }
+                else
+                {
+                    laneEndCols[lane] = colEnd;
+                }
+
+                eventBars.Add(new SpanningEventBar(act, colStart, colEnd, lane));
+            }
+
+            result.Add(new WeekData(week, eventBars, dayCellEvents));
+        }
+        return result;
+    }
+
     private static string[] GetLocalizedDayNames()
     {
         var names = CultureInfo.CurrentUICulture.DateTimeFormat.AbbreviatedDayNames;
@@ -142,13 +255,13 @@ else
         return [names[1], names[2], names[3], names[4], names[5], names[6], names[0]];
     }
 
-    private static Color GetColor(ActivityType type) => type switch
+    private static string GetCssColor(ActivityType type) => type switch
     {
-        ActivityType.Semester => Color.Primary,
-        ActivityType.Rehearsal => Color.Info,
-        ActivityType.Concert => Color.Secondary,
-        ActivityType.Trip => Color.Tertiary,
-        ActivityType.Social => Color.Warning,
-        _ => Color.Default,
+        ActivityType.Semester => "var(--mud-palette-primary)",
+        ActivityType.Rehearsal => "var(--mud-palette-info)",
+        ActivityType.Concert => "var(--mud-palette-secondary)",
+        ActivityType.Trip => "var(--mud-palette-tertiary)",
+        ActivityType.Social => "var(--mud-palette-warning)",
+        _ => "#9e9e9e",
     };
 }

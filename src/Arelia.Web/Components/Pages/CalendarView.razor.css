@@ -1,0 +1,112 @@
+.cal-container {
+    width: 100%;
+    border: 1px solid var(--mud-palette-divider);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cal-header {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    background-color: var(--mud-palette-table-header);
+    border-bottom: 1px solid var(--mud-palette-divider);
+}
+
+.cal-header-cell {
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-left: 1px solid var(--mud-palette-divider);
+}
+
+.cal-week {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    border-top: 2px solid var(--mud-palette-divider);
+}
+
+.cal-week-label {
+    padding: 4px 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    background-color: var(--mud-palette-surface);
+    border-right: 1px solid var(--mud-palette-divider);
+    white-space: nowrap;
+}
+
+.cal-day-header {
+    padding: 4px 8px;
+    text-align: right;
+    font-size: 0.75rem;
+    border-left: 1px solid var(--mud-palette-divider);
+    background-color: var(--mud-palette-surface);
+}
+
+.cal-today {
+    font-weight: bold;
+    color: var(--mud-palette-primary);
+}
+
+.cal-other-month {
+    opacity: 0.4;
+}
+
+/* Background cells behind spanning event bars — provide column separators */
+.cal-span-bg {
+    border-left: 1px solid var(--mud-palette-divider);
+    background-color: var(--mud-palette-surface);
+}
+
+.cal-event-bar {
+    margin: 1px 0 1px 1px;
+    padding: 2px 6px;
+    color: white;
+    font-size: 0.72rem;
+    border-radius: 3px;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    align-self: center;
+    user-select: none;
+}
+
+    .cal-event-bar:hover {
+        filter: brightness(1.12);
+    }
+
+/* Left column placeholder aligned with day cells row */
+.cal-week-cell-col {
+    border-top: 1px solid var(--mud-palette-divider);
+    border-right: 1px solid var(--mud-palette-divider);
+    background-color: var(--mud-palette-surface);
+}
+
+.cal-day-cell {
+    padding: 2px 2px 4px;
+    border-left: 1px solid var(--mud-palette-divider);
+    border-top: 1px solid var(--mud-palette-divider);
+    background-color: var(--mud-palette-surface);
+    min-height: 60px;
+    vertical-align: top;
+}
+
+.cal-event-chip {
+    display: block;
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    margin: 1px 0;
+    border-radius: 3px;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: white;
+    user-select: none;
+}
+
+    .cal-event-chip:hover {
+        filter: brightness(1.12);
+    }

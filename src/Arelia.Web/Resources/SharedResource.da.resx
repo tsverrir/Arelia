@@ -309,6 +309,27 @@
   <data name="Admin.Backups.NoBackups" xml:space="preserve"><value>Ingen sikkerhedskopier endnu.</value></data>
   <data name="Admin.Backups.Created" xml:space="preserve"><value>Sikkerhedskopi oprettet: {0}</value></data>
   <data name="Admin.Backups.Failed" xml:space="preserve"><value>Sikkerhedskopi mislykkedes: {0}</value></data>
+  <data name="Admin.Backups.BackupDirectory" xml:space="preserve"><value>Sikkerhedskopimappee</value></data>
+  <data name="Admin.Backups.DirectorySaved" xml:space="preserve"><value>Sikkerhedskopimappen er opdateret.</value></data>
+  <data name="Admin.Backups.DeleteTitle" xml:space="preserve"><value>Slet sikkerhedskopi</value></data>
+  <data name="Admin.Backups.DeleteConfirm" xml:space="preserve"><value>Slet sikkerhedskopiefilen '{0}'? Dette kan ikke fortrydes.</value></data>
+  <data name="Admin.Backups.Deleted" xml:space="preserve"><value>Sikkerhedskopi '{0}' slettet.</value></data>
+  <data name="Admin.Backups.DeleteFailed" xml:space="preserve"><value>Kunne ikke slette sikkerhedskopi: {0}</value></data>
+  <data name="Admin.Backups.Missing" xml:space="preserve"><value>Mangler</value></data>
+  <data name="Admin.Backups.OpenFolder" xml:space="preserve"><value>Aabn mappe</value></data>
+  <data name="Admin.Backups.OpenFolderFailed" xml:space="preserve"><value>Kan ikke aabne mappen - kun understattet naar serveren koerer paa Windows.</value></data>
+  <data name="Admin.Backups.SchemaVersion" xml:space="preserve"><value>DB-version</value></data>
+  <data name="Admin.Backups.SchemaUnknown" xml:space="preserve"><value>Ukendt</value></data>
+  <data name="Admin.Backups.Invalid" xml:space="preserve"><value>Ugyldig</value></data>
+  <data name="Admin.Backups.RestoreTitle" xml:space="preserve"><value>Gendan sikkerhedskopi</value></data>
+  <data name="Admin.Backups.RestoreConfirm" xml:space="preserve"><value>Gendan fra '{0}'? Den nuvaerende database overskrives fuldstaendigt. Dette kan ikke fortrydes.</value></data>
+  <data name="Admin.Backups.Restored" xml:space="preserve"><value>Database gendannet fra '{0}'. Genstart venligst applikationen for at aendringerne traeder fuldt i kraft.</value></data>
+  <data name="Admin.Backups.RestoreFailed" xml:space="preserve"><value>Gendannelse mislykkedes: {0}</value></data>
+  <data name="Admin.Backups.RestoreNote" xml:space="preserve"><value>Databasen er blevet gendannet. Genstart venligst applikationen for at aendringerne traeder fuldt i kraft i alle sessioner.</value></data>
+  <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Slet alle ugyldige</value></data>
+  <data name="Admin.Backups.DeleteInvalidTitle" xml:space="preserve"><value>Slet ugyldige sikkerhedskopier</value></data>
+  <data name="Admin.Backups.DeleteInvalidConfirm" xml:space="preserve"><value>Slet alle {0} ugyldige sikkerhedskopier med forældet skema? Dette kan ikke fortrydes.</value></data>
+  <data name="Admin.Backups.DeleteInvalidDone" xml:space="preserve"><value>{0} ugyldige sikkerhedskopier slettet.</value></data>
   <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Vaelg slutdatoen for denne rolletildeling.</value></data>
   <data name="Dialog.EndDate" xml:space="preserve"><value>Slutdato</value></data>
   <data name="Common.Version" xml:space="preserve"><value>Version</value></data>

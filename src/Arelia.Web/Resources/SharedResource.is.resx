@@ -309,6 +309,27 @@
   <data name="Admin.Backups.NoBackups" xml:space="preserve"><value>Engin oryggisafrit enn.</value></data>
   <data name="Admin.Backups.Created" xml:space="preserve"><value>Oryggisafrit stofnad: {0}</value></data>
   <data name="Admin.Backups.Failed" xml:space="preserve"><value>Oryggisafrit mistokst: {0}</value></data>
+  <data name="Admin.Backups.BackupDirectory" xml:space="preserve"><value>Oryggisafritssmappa</value></data>
+  <data name="Admin.Backups.DirectorySaved" xml:space="preserve"><value>Oryggisafritssmappa uppfaerd.</value></data>
+  <data name="Admin.Backups.DeleteTitle" xml:space="preserve"><value>Eyda oryggisafriti</value></data>
+  <data name="Admin.Backups.DeleteConfirm" xml:space="preserve"><value>Eyda oryggisafritsskrannu '{0}'? Thetta er ekki haegt ad afturkalla.</value></data>
+  <data name="Admin.Backups.Deleted" xml:space="preserve"><value>Oryggisafrit '{0}' eytt.</value></data>
+  <data name="Admin.Backups.DeleteFailed" xml:space="preserve"><value>Tokst ekki ad eyda oryggisafriti: {0}</value></data>
+  <data name="Admin.Backups.Missing" xml:space="preserve"><value>Vantar</value></data>
+  <data name="Admin.Backups.OpenFolder" xml:space="preserve"><value>Opna moeppu</value></data>
+  <data name="Admin.Backups.OpenFolderFailed" xml:space="preserve"><value>Get ekki opnad moeppu - aetlad eingoengu thegar thjonnan keyrir aa Windows.</value></data>
+  <data name="Admin.Backups.SchemaVersion" xml:space="preserve"><value>Gagnagrunnur utgafa</value></data>
+  <data name="Admin.Backups.SchemaUnknown" xml:space="preserve"><value>Oekkt</value></data>
+  <data name="Admin.Backups.Invalid" xml:space="preserve"><value>Ogilt</value></data>
+  <data name="Admin.Backups.RestoreTitle" xml:space="preserve"><value>Endurheimta oryggisafrit</value></data>
+  <data name="Admin.Backups.RestoreConfirm" xml:space="preserve"><value>Endurheimta ur '{0}'? Nuverandi gagnagrunnur verdur yfirskrifadur. Thetta er ekki haegt ad afturkalla.</value></data>
+  <data name="Admin.Backups.Restored" xml:space="preserve"><value>Gagnagrunnur endurheimtur ur '{0}'. Vinsamlegast endurraesiduforritid til ad breytingar taki fullt gildi.</value></data>
+  <data name="Admin.Backups.RestoreFailed" xml:space="preserve"><value>Endurheimta mistokst: {0}</value></data>
+  <data name="Admin.Backups.RestoreNote" xml:space="preserve"><value>Gagnagrunnurinn hefur verid endurheimtur. Vinsamlegast endurraesiduforritid til ad breytingar taki gildi i ollum lotum.</value></data>
+  <data name="Admin.Backups.DeleteInvalid" xml:space="preserve"><value>Eyda ollum ogildum</value></data>
+  <data name="Admin.Backups.DeleteInvalidTitle" xml:space="preserve"><value>Eyda ogildum oryggisafritum</value></data>
+  <data name="Admin.Backups.DeleteInvalidConfirm" xml:space="preserve"><value>Eyda ollum {0} ogildum oryggisafritum med ureltri skemu? Thetta er ekki haegt ad afturkalla.</value></data>
+  <data name="Admin.Backups.DeleteInvalidDone" xml:space="preserve"><value>{0} ogild oryggisafrit eytt.</value></data>
   <data name="Dialog.ChooseEndDate" xml:space="preserve"><value>Veldu lokadagsetningu thessarar hlutverksuthlutanar.</value></data>
   <data name="Dialog.EndDate" xml:space="preserve"><value>Lokadagur</value></data>
   <data name="Common.Version" xml:space="preserve"><value>Utg.</value></data>
