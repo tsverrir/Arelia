@@ -9,7 +9,16 @@ public class DiskFileStorageService : IFileStorageService
 
     public DiskFileStorageService(IConfiguration configuration)
     {
-        _basePath = configuration["FileStorage:BasePath"] ?? "./uploads";
+        _basePath = Path.GetFullPath(configuration["FileStorage:BasePath"] ?? "./uploads");
+    }
+
+    /// <summary>Resolves and validates that the path stays within the base directory to prevent path traversal.</summary>
+    private string SafeResolvePath(string relativePath)
+    {
+        var fullPath = Path.GetFullPath(Path.Combine(_basePath, relativePath));
+        if (!fullPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException("Access to the specified path is denied.");
+        return fullPath;
     }
 
     public async Task<string> SaveAsync(Stream content, string fileName, string contentType,
@@ -17,33 +26,33 @@ public class DiskFileStorageService : IFileStorageService
     {
         var ext = Path.GetExtension(fileName);
         var storedName = $"{Guid.NewGuid()}{ext}";
-        var directory = Path.Combine(_basePath, subDirectory);
-        Directory.CreateDirectory(directory);
+        var relPath = Path.Combine(subDirectory, storedName);
+        var fullPath = SafeResolvePath(relPath);
 
-        var fullPath = Path.Combine(directory, storedName);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
         await using var file = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None);
         await content.CopyToAsync(file, ct);
 
-        return Path.Combine(subDirectory, storedName);
+        return relPath;
     }
 
     public Task<Stream> ReadAsync(string relativePath, CancellationToken ct = default)
     {
-        var fullPath = Path.Combine(_basePath, relativePath);
+        var fullPath = SafeResolvePath(relativePath);
         Stream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         return Task.FromResult(stream);
     }
 
     public Task DeleteAsync(string relativePath, CancellationToken ct = default)
     {
-        var fullPath = Path.Combine(_basePath, relativePath);
+        var fullPath = SafeResolvePath(relativePath);
         try { File.Delete(fullPath); } catch (FileNotFoundException) { }
         return Task.CompletedTask;
     }
 
     public Task<long?> GetFileSizeAsync(string relativePath, CancellationToken ct = default)
     {
-        var fullPath = Path.Combine(_basePath, relativePath);
+        var fullPath = SafeResolvePath(relativePath);
         var info = new FileInfo(fullPath);
         long? size = info.Exists ? info.Length : null;
         return Task.FromResult(size);

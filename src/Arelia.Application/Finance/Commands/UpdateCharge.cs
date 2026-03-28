@@ -58,6 +58,7 @@ public class UpdateChargeHandler(IAreliaDbContext context)
         foreach (var payment in existing.Payments.Where(p => p.IsActive))
         {
             payment.ChargeId = revision.Id;
+            revision.Payments.Add(payment);
         }
 
         revision.RecalculateStatus();

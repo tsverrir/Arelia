@@ -89,7 +89,18 @@ public partial class BackupService(ILogger<BackupService> logger)
         ArgumentNullException.ThrowIfNull(backupDirectory);
         ArgumentNullException.ThrowIfNull(backupFileName);
 
-        var backupPath = Path.Combine(backupDirectory, backupFileName);
+        // Prevent path traversal by ensuring the filename has no directory components
+        if (backupFileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+            backupFileName.Contains("..") ||
+            Path.GetFileName(backupFileName) != backupFileName)
+        {
+            throw new ArgumentException("Invalid backup filename.", nameof(backupFileName));
+        }
+
+        var backupPath = Path.GetFullPath(Path.Combine(backupDirectory, backupFileName));
+        if (!backupPath.StartsWith(Path.GetFullPath(backupDirectory), StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException("Access to the specified backup path is denied.");
+
         if (!File.Exists(backupPath))
             throw new FileNotFoundException("Backup file not found.", backupPath);
 

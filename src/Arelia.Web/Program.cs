@@ -110,6 +110,7 @@ public class Program
             Guid documentId,
             IMediator mediator,
             IPdfExportService pdfService,
+            ITenantContext tenantContext,
             HttpContext http) =>
         {
             if (http.User.Identity?.IsAuthenticated != true)
@@ -117,6 +118,11 @@ public class Program
 
             var document = await mediator.Send(new GetDocumentDetailQuery(documentId));
             if (document is null)
+                return Results.NotFound();
+
+            // Verify the document belongs to the current tenant
+            if (tenantContext.CurrentOrganizationId.HasValue &&
+                document.OrganizationId != tenantContext.CurrentOrganizationId.Value)
                 return Results.NotFound();
 
             var bytes = await pdfService.ExportDocumentAsync(document);
@@ -129,6 +135,7 @@ public class Program
             Guid attachmentId,
             IFileStorageService fileStorage,
             AreliaDbContext db,
+            ITenantContext tenantContext,
             HttpContext http) =>
         {
             if (http.User.Identity?.IsAuthenticated != true)
@@ -136,6 +143,11 @@ public class Program
 
             var attachment = await db.ActivityAttachments.FindAsync(attachmentId);
             if (attachment is null || !attachment.IsActive)
+                return Results.NotFound();
+
+            // Verify the attachment belongs to the current tenant
+            if (tenantContext.CurrentOrganizationId.HasValue &&
+                attachment.OrganizationId != tenantContext.CurrentOrganizationId.Value)
                 return Results.NotFound();
 
             var stream = await fileStorage.ReadAsync(attachment.FilePath);

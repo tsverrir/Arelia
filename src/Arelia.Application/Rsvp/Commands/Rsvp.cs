@@ -36,7 +36,12 @@ public class RsvpHandler(IAreliaDbContext context)
         if (isRehearsal)
         {
             // Absence model: only create record when No or Maybe
-            return HandleRehearsalRsvp(activity, participant, request, cancellationToken);
+            var result = HandleRehearsalRsvp(activity, participant, request, cancellationToken);
+            if (result.IsFailure)
+                return result;
+
+            await context.SaveChangesAsync(cancellationToken);
+            return result;
         }
 
         return await HandleOptInRsvp(activity, participant, request, cancellationToken);
@@ -129,6 +134,7 @@ public class RsvpHandler(IAreliaDbContext context)
             participant.WaitlistPosition = null;
         }
 
+        await context.SaveChangesAsync(cancellationToken);
         return Domain.Common.Result.Success();
     }
 }

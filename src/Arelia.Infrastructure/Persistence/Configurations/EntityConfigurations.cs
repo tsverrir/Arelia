@@ -77,7 +77,7 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
     }
 }
 
-public class RoleConfiguration
+public class RoleConfiguration : IEntityTypeConfiguration<Role>
 {
     public void Configure(EntityTypeBuilder<Role> builder)
     {
@@ -85,7 +85,7 @@ public class RoleConfiguration
     }
 }
 
-public class RoleAssignmentConfiguration
+public class RoleAssignmentConfiguration : IEntityTypeConfiguration<RoleAssignment>
 {
     public void Configure(EntityTypeBuilder<RoleAssignment> builder)
     {
@@ -101,7 +101,7 @@ public class RoleAssignmentConfiguration
     }
 }
 
-public class RolePermissionConfiguration
+public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermission>
 {
     public void Configure(EntityTypeBuilder<RolePermission> builder)
     {
@@ -114,7 +114,7 @@ public class RolePermissionConfiguration
     }
 }
 
-public class ActivityConfiguration
+public class ActivityConfiguration : IEntityTypeConfiguration<Activity>
 {
     public void Configure(EntityTypeBuilder<Activity> builder)
     {
@@ -147,7 +147,7 @@ public class ActivityParticipantConfiguration : IEntityTypeConfiguration<Activit
     }
 }
 
-public class AttendanceRecordConfiguration
+public class AttendanceRecordConfiguration : IEntityTypeConfiguration<AttendanceRecord>
 {
     public void Configure(EntityTypeBuilder<AttendanceRecord> builder)
     {
@@ -167,7 +167,7 @@ public class AttendanceRecordConfiguration
     }
 }
 
-public class RehearsalRecurrenceTemplateConfiguration
+public class RehearsalRecurrenceTemplateConfiguration : IEntityTypeConfiguration<RehearsalRecurrenceTemplate>
 {
     public void Configure(EntityTypeBuilder<RehearsalRecurrenceTemplate> builder)
     {

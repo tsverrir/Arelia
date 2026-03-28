@@ -62,8 +62,8 @@ public class CultureService(
         try
         {
             await jsRuntime.InvokeVoidAsync(
-                "eval",
-                $"document.cookie='{CultureCookieName}={cookieValue};path=/;samesite=lax'");
+                "document.cookie = arguments[0]",
+                $"{CultureCookieName}={cookieValue};path=/;samesite=lax");
         }
         catch
         {
