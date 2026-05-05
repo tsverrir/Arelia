@@ -17,49 +17,67 @@
     return;
 }
 
+<MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="2" Style="flex-wrap:wrap;">
+    <MudTextField T="string" @bind-Value="_filterAction" Label="@L["Admin.AuditLog.Action"]"
+                  Immediate="true" Clearable="true" Style="min-width:150px;" />
+    <MudTextField T="string" @bind-Value="_filterEntityType" Label="@L["Admin.AuditLog.Entity"]"
+                  Immediate="true" Clearable="true" Style="min-width:150px;" />
+    <MudTextField T="string" @bind-Value="_filterSearch" Label="@L["Common.Search"]"
+                  Immediate="true" Clearable="true" Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search" Style="min-width:200px;" />
+    <MudButton Variant="Variant.Outlined" OnClick="LoadEntries"
+               StartIcon="@Icons.Material.Filled.FilterList">
+        @L.H("Common.Filter")
+    </MudButton>
+</MudStack>
+
 @if (_entries is not null)
 {
-    <ConfigurableTable TItem="AuditLogEntryDto" Items="_entries" Columns="_columns">
-        <CellTemplate>
-            @switch (context.ColumnKey)
-            {
-                case "Timestamp":
-                    @(context.Value is DateTime dt ? dt.ToString("yyyy-MM-dd HH:mm:ss") : "—")
-                    break;
-                case "Action":
-                    <MudChip T="string" Size="Size.Small">@context.Value</MudChip>
-                    break;
-                case "Entity":
-                    @($"{context.Item.EntityType ?? "—"} {(context.Item.EntityId is not null ? $"({context.Item.EntityId[..Math.Min(8, context.Item.EntityId.Length)]})" : "")}")
-                    break;
-                case "Details":
-                    <span style="max-width:300px; overflow:hidden; text-overflow:ellipsis; display:inline-block;">
-                        @(context.Value?.ToString() ?? "—")
-                    </span>
-                    break;
-                default:
-                    @(context.Value?.ToString() ?? "—")
-                    break;
-            }
-        </CellTemplate>
-    </ConfigurableTable>
+    <MudTable T="AuditLogEntryDto" Items="_filteredEntries" Dense="true" Hover="true" Bordered="true"
+              RowsPerPage="25" Virtualize="true">
+        <HeaderContent>
+            <MudTh>@L["Admin.AuditLog.Timestamp"]</MudTh>
+            <MudTh>@L["Admin.AuditLog.Action"]</MudTh>
+            <MudTh>@L["Admin.AuditLog.Entity"]</MudTh>
+            <MudTh>@L["Admin.AuditLog.User"]</MudTh>
+            <MudTh>@L["Admin.AuditLog.Details"]</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+            <MudTd><MudChip T="string" Size="Size.Small">@context.Action</MudChip></MudTd>
+            <MudTd>@(context.EntityType ?? "—") @(context.EntityId is not null ? $"({context.EntityId[..Math.Min(8, context.EntityId.Length)]})" : "")</MudTd>
+            <MudTd>@(context.UserId ?? "—")</MudTd>
+            <MudTd>
+                <span style="max-width:300px; overflow:hidden; text-overflow:ellipsis; display:inline-block; white-space:nowrap;">
+                    @(context.Details ?? "—")
+                </span>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="@(new[] { 25, 50, 100 })" />
+        </PagerContent>
+    </MudTable>
+
+    <MudText Typo="Typo.caption" Class="mt-2" Color="Color.Tertiary">
+        @string.Format(L["Admin.AuditLog.ShowingCount"], _filteredEntries.Count, _entries.Count)
+    </MudText>
 }
 
 @code {
     private List<AuditLogEntryDto>? _entries;
+    private string? _filterAction;
+    private string? _filterEntityType;
+    private string? _filterSearch;
 
-    private List<ColumnDefinition<AuditLogEntryDto>>? _columns;
+    private List<AuditLogEntryDto> _filteredEntries => _entries?
+        .Where(e => string.IsNullOrWhiteSpace(_filterSearch) ||
+                    (e.Details?.Contains(_filterSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (e.UserId?.Contains(_filterSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (e.EntityId?.Contains(_filterSearch, StringComparison.OrdinalIgnoreCase) ?? false))
+        .ToList() ?? [];
 
     protected override async Task OnInitializedAsync()
     {
-        _columns =
-        [
-            new("Timestamp", L["Admin.AuditLog.Timestamp"], x => x.Timestamp),
-            new("Action", L["Admin.AuditLog.Action"], x => x.Action),
-            new("Entity", L["Admin.AuditLog.Entity"], x => x.EntityType),
-            new("User", L["Admin.AuditLog.User"], x => x.UserId),
-            new("Details", L["Admin.AuditLog.Details"], x => x.Details),
-        ];
         RegisterTenantChangeHandler();
         await LoadEntries();
     }
@@ -69,6 +87,12 @@
     private async Task LoadEntries()
     {
         if (TenantService.CurrentOrganizationId is Guid orgId)
-            _entries = await Mediator.Send(new GetAuditLogQuery(orgId));
+        {
+            _entries = await Mediator.Send(new GetAuditLogQuery(
+                orgId,
+                EntityType: string.IsNullOrWhiteSpace(_filterEntityType) ? null : _filterEntityType,
+                Action: string.IsNullOrWhiteSpace(_filterAction) ? null : _filterAction,
+                Take: 500));
+        }
     }
 }

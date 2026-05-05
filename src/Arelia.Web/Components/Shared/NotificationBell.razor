@@ -15,6 +15,16 @@
         }
         else
         {
+            @if (_unreadCount > 0)
+            {
+                <MudMenuItem OnClick="MarkAllRead">
+                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.DoneAll" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.body2" Color="Color.Primary">Mark all read</MudText>
+                    </MudStack>
+                </MudMenuItem>
+                <MudDivider />
+            }
             @foreach (var n in _notifications.Take(10))
             {
                 <MudMenuItem OnClick="@(() => OnNotificationClick(n))">
@@ -60,6 +70,19 @@
         if (!string.IsNullOrEmpty(notification.LinkUrl))
         {
             Navigation.NavigateTo(notification.LinkUrl);
+        }
+    }
+
+    private async Task MarkAllRead()
+    {
+        if (_userId is null) return;
+
+        await Mediator.Send(new MarkAllNotificationsReadCommand(_userId));
+        _unreadCount = 0;
+
+        if (_notifications is not null)
+        {
+            _notifications = await Mediator.Send(new GetNotificationsQuery(_userId));
         }
     }
 }
