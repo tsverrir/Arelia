@@ -1,21 +1,173 @@
 @page "/"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Activities.Queries
+@using Arelia.Application.Notifications.Queries
+@using Arelia.Application.Reports.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
 @inject ILocalizer L
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>@L["Layout.AppName"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">@L.H("Home.Title")</MudText>
-<MudText Typo="Typo.body1">@L.H("Home.Tagline")</MudText>
-
 <AuthorizeView>
     <Authorized>
-        <MudAlert Severity="Severity.Info" Class="mt-4">
-            @string.Format(L["Common.SignedInAs"], context.User.Identity?.Name)
-        </MudAlert>
+        @if (TenantService.CurrentOrganizationId is null)
+        {
+            <MudText Typo="Typo.h4" GutterBottom="true">@L.H("Home.Title")</MudText>
+            <MudText Typo="Typo.body1" Class="mb-4">@L.H("Home.Tagline")</MudText>
+            <MudAlert Severity="Severity.Info">@L["Common.SelectOrgFirst"]</MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.h4" GutterBottom="true">@L.H("Home.Dashboard")</MudText>
+
+            <MudGrid Class="mb-4">
+                @if (_membershipReport is not null)
+                {
+                    <MudItem xs="6" sm="3">
+                        <MudPaper Class="pa-4 cursor-pointer" Elevation="1" @onclick="@(() => Navigation.NavigateTo("/people"))">
+                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large" />
+                                <MudText Typo="Typo.h4">@_membershipReport.TotalActive</MudText>
+                                <MudText Typo="Typo.caption">@L["Home.ActiveMembers"]</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                }
+
+                @if (_upcomingActivities is not null)
+                {
+                    <MudItem xs="6" sm="3">
+                        <MudPaper Class="pa-4 cursor-pointer" Elevation="1" @onclick="@(() => Navigation.NavigateTo("/calendar"))">
+                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Event" Color="Color.Secondary" Size="Size.Large" />
+                                <MudText Typo="Typo.h4">@_upcomingActivities.Count</MudText>
+                                <MudText Typo="Typo.caption">@L["Home.UpcomingActivities"]</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                }
+
+                @if (_unreadNotifications > 0)
+                {
+                    <MudItem xs="6" sm="3">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" />
+                                <MudText Typo="Typo.h4">@_unreadNotifications</MudText>
+                                <MudText Typo="Typo.caption">@L["Home.UnreadNotifications"]</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+
+            @* ---- Upcoming Activities ---- *@
+            @if (_upcomingActivities is not null && _upcomingActivities.Count > 0)
+            {
+                <MudText Typo="Typo.h6" Class="mb-2">@L.H("Home.UpcomingTitle")</MudText>
+                <MudSimpleTable Dense="true" Hover="true" Class="mb-4">
+                    <thead>
+                        <tr>
+                            <th>@L["Common.Date"]</th>
+                            <th>@L["Common.Name"]</th>
+                            <th>@L["Common.Type"]</th>
+                            <th>@L["Common.Location"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in _upcomingActivities.Take(10))
+                        {
+                            <tr Style="cursor:pointer;" @onclick="@(() => Navigation.NavigateTo($"/activities/{a.Id}"))">
+                                <td>@a.StartDateTime.ToString("ddd dd MMM HH:mm")</td>
+                                <td>@a.Name</td>
+                                <td>
+                                    <MudChip T="string" Size="Size.Small" Color="@GetTypeColor(a.ActivityType)">@a.ActivityType</MudChip>
+                                </td>
+                                <td>@(a.Location ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+            else if (_upcomingActivities is not null)
+            {
+                <MudAlert Severity="Severity.Info" Class="mb-4">@L["Home.NoUpcoming"]</MudAlert>
+            }
+
+            @* ---- Quick Actions ---- *@
+            <MudText Typo="Typo.h6" Class="mb-2">@L.H("Home.QuickActions")</MudText>
+            <MudStack Row="true" Spacing="2" Style="flex-wrap:wrap;">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.CalendarMonth"
+                           OnClick="@(() => Navigation.NavigateTo("/calendar"))">@L.H("Nav.Calendar")</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.People"
+                           OnClick="@(() => Navigation.NavigateTo("/people"))">@L.H("Nav.People")</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DateRange"
+                           OnClick="@(() => Navigation.NavigateTo("/semesters"))">@L.H("Nav.Semesters")</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Payments"
+                           OnClick="@(() => Navigation.NavigateTo("/finances"))">@L.H("Nav.Finances")</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Assessment"
+                           OnClick="@(() => Navigation.NavigateTo("/reports"))">@L.H("Nav.Reports")</MudButton>
+            </MudStack>
+        }
     </Authorized>
     <NotAuthorized>
+        <MudText Typo="Typo.h4" GutterBottom="true">@L.H("Home.Title")</MudText>
+        <MudText Typo="Typo.body1">@L.H("Home.Tagline")</MudText>
         <MudAlert Severity="Severity.Normal" Class="mt-4">
             @L.H("Home.PleaseText") <MudLink Href="Account/Login">@L.H("Common.SignIn")</MudLink> @L.H("Home.ToContinue")
         </MudAlert>
     </NotAuthorized>
 </AuthorizeView>
 
+@code {
+    private List<ActivityListDto>? _upcomingActivities;
+    private MembershipReportDto? _membershipReport;
+    private int _unreadNotifications;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadDashboard();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadDashboard();
+
+    private async Task LoadDashboard()
+    {
+        _upcomingActivities = null;
+        _membershipReport = null;
+
+        if (TenantService.CurrentOrganizationId is Guid orgId)
+        {
+            var allActivities = await Mediator.Send(new GetActivitiesQuery(orgId));
+            _upcomingActivities = allActivities
+                .Where(a => a.StartDateTime >= DateTime.Today && a.ActivityType != ActivityType.Semester)
+                .OrderBy(a => a.StartDateTime)
+                .Take(10)
+                .ToList();
+
+            _membershipReport = await Mediator.Send(new GetMembershipReportQuery(orgId));
+        }
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId is not null)
+        {
+            _unreadNotifications = await Mediator.Send(new GetUnreadCountQuery(userId));
+        }
+    }
+
+    private static Color GetTypeColor(ActivityType type) => type switch
+    {
+        ActivityType.Rehearsal => Color.Info,
+        ActivityType.Concert => Color.Secondary,
+        ActivityType.Trip => Color.Tertiary,
+        ActivityType.Social => Color.Warning,
+        _ => Color.Default,
+    };
+}

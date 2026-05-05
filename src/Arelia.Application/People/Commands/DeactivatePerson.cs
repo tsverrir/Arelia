@@ -15,6 +15,18 @@ public class DeactivatePersonHandler(IAreliaDbContext context) : IRequestHandler
             return Domain.Common.Result.Failure("Person not found.");
 
         person.IsActive = false;
+        var today = DateTime.UtcNow;
+
+        var activeRoleAssignments = await context.RoleAssignments
+            .IgnoreQueryFilters()
+            .Where(ra =>
+                ra.PersonId == request.PersonId &&
+                ra.IsActive &&
+                ra.ToDate == null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var assignment in activeRoleAssignments)
+            assignment.ToDate = today;
 
         // Also deactivate linked OrganizationUser if any
         var orgUser = await context.OrganizationUsers

@@ -114,7 +114,13 @@ else
 
     private async Task InviteUser()
     {
-        if (string.IsNullOrWhiteSpace(_inviteEmail) || TenantService.CurrentOrganizationId is not Guid orgId)
+        if (string.IsNullOrWhiteSpace(_inviteEmail))
+        {
+            Snackbar.Add("Email address is required.", Severity.Warning);
+            return;
+        }
+
+        if (TenantService.CurrentOrganizationId is not Guid orgId)
             return;
 
         var result = await Mediator.Send(new InviteUserCommand(_inviteEmail, orgId, _inviteFirstName, _inviteLastName));

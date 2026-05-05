@@ -14,8 +14,11 @@ public class Activity : BaseEntity
     public Guid? ParentActivityId { get; set; }
     public int WorkYear { get; set; }
     public bool IsPublicVisible { get; set; }
+    public ActivityStatus Status { get; set; } = ActivityStatus.Draft;
+    public bool RsvpEnabled { get; set; }
     public int? MaxCapacity { get; set; }
     public DateTime? SignupDeadline { get; set; }
+    public bool WaitingListEnabled { get; set; } = true;
 
     /// <summary>
     /// When true, all active members are assumed to be participants (e.g. rehearsals).

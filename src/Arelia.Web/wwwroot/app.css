@@ -86,3 +86,12 @@ h1:focus {
 .mud-button-text {
     border: 1px solid var(--mud-palette-lines-default) !important;
 }
+
+/* Keep MudBlazor tab headers clickable when tab panels visually overlap the tab bar. */
+.mud-tabs .mud-tabs-tabbar-wrapper {
+    z-index: 2;
+}
+
+.mud-tabs .mud-tabs-panels {
+    z-index: 1;
+}

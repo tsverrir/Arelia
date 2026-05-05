@@ -442,4 +442,66 @@
   <data name="ActivityDetail.AttachmentUploaded" xml:space="preserve"><value>File uploaded.</value></data>
   <data name="ActivityDetail.AttachmentTooLarge" xml:space="preserve"><value>File exceeds the 20 MB limit.</value></data>
   <data name="ActivityDetail.AttachmentTypeNotAllowed" xml:space="preserve"><value>File type is not allowed.</value></data>
+  <!-- Semester edit/delete (F5.1/F5.2) -->
+  <data name="Semester.YearBoundaryError" xml:space="preserve"><value>Semesters cannot cross calendar year boundaries.</value></data>
+  <data name="SemesterDetail.EditSemesterTitle" xml:space="preserve"><value>Edit Semester</value></data>
+  <data name="SemesterDetail.SemesterUpdated" xml:space="preserve"><value>Semester updated.</value></data>
+  <data name="SemesterDetail.DeleteSemesterTitle" xml:space="preserve"><value>Delete Semester</value></data>
+  <data name="SemesterDetail.DeleteSemesterConfirm" xml:space="preserve"><value>Delete semester "{0}" and all its child activities? This cannot be undone.</value></data>
+  <data name="SemesterDetail.SemesterDeleted" xml:space="preserve"><value>Semester deleted.</value></data>
+  <!-- Attendance mark all (F6.1) -->
+  <data name="ActivityDetail.MarkAllPresent" xml:space="preserve"><value>Mark All Present</value></data>
+  <data name="ActivityDetail.MarkedAllPresent" xml:space="preserve"><value>{0} participant(s) marked as present.</value></data>
+  <!-- Finance: payment, fees, summary (F8.1/F8.2/F8.4) -->
+  <data name="Finance.Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="Finance.TotalCharged" xml:space="preserve"><value>Total Charged</value></data>
+  <data name="Finance.TotalCollected" xml:space="preserve"><value>Total Collected</value></data>
+  <data name="Finance.TotalExpenses" xml:space="preserve"><value>Total Expenses</value></data>
+  <data name="Finance.NetBalance" xml:space="preserve"><value>Net Balance</value></data>
+  <data name="Finance.ChargeStatus" xml:space="preserve"><value>Charge Status</value></data>
+  <data name="Finance.OpenCharges" xml:space="preserve"><value>Open charges: {0}</value></data>
+  <data name="Finance.OverdueCharges" xml:space="preserve"><value>Overdue charges: {0}</value></data>
+  <data name="Finance.ExpensesByCategory" xml:space="preserve"><value>Expenses by Category</value></data>
+  <data name="Finance.RecordPayment" xml:space="preserve"><value>Record Payment</value></data>
+  <data name="Finance.RecordPaymentTitle" xml:space="preserve"><value>Record Payment</value></data>
+  <data name="Finance.LinkedCharge" xml:space="preserve"><value>Linked Charge (optional)</value></data>
+  <data name="Finance.PaymentMethod" xml:space="preserve"><value>Payment Method</value></data>
+  <data name="Finance.Reference" xml:space="preserve"><value>Reference</value></data>
+  <data name="Finance.PaymentRecorded" xml:space="preserve"><value>Payment recorded.</value></data>
+  <data name="Finance.GenerateFees" xml:space="preserve"><value>Generate Fees</value></data>
+  <data name="Finance.GenerateFeesTitle" xml:space="preserve"><value>Generate Membership Fees</value></data>
+  <data name="Finance.Semester" xml:space="preserve"><value>Semester</value></data>
+  <data name="Finance.BaseFee" xml:space="preserve"><value>Base Fee Amount</value></data>
+  <data name="Finance.TopUpOptional" xml:space="preserve"><value>Top-Up Amount (optional)</value></data>
+  <data name="Finance.GenerateFeesInfo" xml:space="preserve"><value>This will create a charge for every active member in the organisation.</value></data>
+  <data name="Finance.Generate" xml:space="preserve"><value>Generate</value></data>
+  <data name="Finance.FeesGenerated" xml:space="preserve"><value>{0} membership fee charge(s) generated.</value></data>
+  <!-- Reports (F6.3/F17.1) -->
+  <data name="Nav.Reports" xml:space="preserve"><value>Reports</value></data>
+  <data name="Reports.Title" xml:space="preserve"><value>Reports</value></data>
+  <data name="Reports.Attendance" xml:space="preserve"><value>Attendance</value></data>
+  <data name="Reports.Membership" xml:space="preserve"><value>Membership</value></data>
+  <data name="Reports.FilterBySemester" xml:space="preserve"><value>Filter by Semester</value></data>
+  <data name="Reports.NoRehearsalsFound" xml:space="preserve"><value>No rehearsals found for the selected criteria.</value></data>
+  <data name="Reports.AttendanceSummary" xml:space="preserve"><value>Across {0} rehearsals for {1} members</value></data>
+  <data name="Reports.Present" xml:space="preserve"><value>Present</value></data>
+  <data name="Reports.Late" xml:space="preserve"><value>Late</value></data>
+  <data name="Reports.Absent" xml:space="preserve"><value>Absent</value></data>
+  <data name="Reports.Rate" xml:space="preserve"><value>Rate</value></data>
+  <data name="Reports.ActiveMembers" xml:space="preserve"><value>Active Members</value></data>
+  <data name="Reports.InactiveMembers" xml:space="preserve"><value>Inactive Members</value></data>
+  <data name="Reports.ByVoiceGroup" xml:space="preserve"><value>By Voice Group</value></data>
+  <data name="Reports.ByRole" xml:space="preserve"><value>By Role</value></data>
+  <!-- Dashboard/Home (F17.2) -->
+  <data name="Home.Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Home.ActiveMembers" xml:space="preserve"><value>Active Members</value></data>
+  <data name="Home.UpcomingActivities" xml:space="preserve"><value>Upcoming Activities</value></data>
+  <data name="Home.UnreadNotifications" xml:space="preserve"><value>Unread Notifications</value></data>
+  <data name="Home.UpcomingTitle" xml:space="preserve"><value>Upcoming Activities</value></data>
+  <data name="Home.NoUpcoming" xml:space="preserve"><value>No upcoming activities scheduled.</value></data>
+  <data name="Home.QuickActions" xml:space="preserve"><value>Quick Actions</value></data>
+  <!-- Audit log (F15.1/F15.2) -->
+  <data name="Admin.AuditLog.ShowingCount" xml:space="preserve"><value>Showing {0} of {1} entries</value></data>
+  <data name="Common.NoResults" xml:space="preserve"><value>No results.</value></data>
+  <data name="Common.Download" xml:space="preserve"><value>Download</value></data>
 </root>

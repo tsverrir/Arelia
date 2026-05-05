@@ -86,7 +86,8 @@
     <TitleContent><MudText Typo="Typo.h6">@L.H("Activity.CreateTitle")</MudText></TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="_newName" Label="@L["Common.Name"]" Required="true" />
-        <MudSelect T="ActivityType" @bind-Value="_newType" Label="@L["Common.Type"]">
+        <MudSelect T="ActivityType" Value="_newType" Label="@L["Common.Type"]"
+                   ValueChanged="@(v => { _newType = v; _newPublicVisible = v is ActivityType.Concert or ActivityType.Social; })">
             @foreach (var t in _activityTypes)
             {
                 <MudSelectItem T="ActivityType" Value="@t">@t</MudSelectItem>
@@ -192,11 +193,19 @@
     private async Task CreateActivity()
     {
         if (string.IsNullOrWhiteSpace(_newName) || _newStartDate is null || _newEndDate is null)
+        {
+            Snackbar.Add("Name, start date, and end date are required.", Severity.Warning);
             return;
+        }
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
 
         var start = _newStartDate.Value + (_newStartTime ?? TimeSpan.Zero);
         var end = _newEndDate.Value + (_newEndTime ?? TimeSpan.Zero);
+        if (end < start)
+        {
+            Snackbar.Add("End date/time must be after start date/time.", Severity.Warning);
+            return;
+        }
 
         var result = await Mediator.Send(new CreateActivityCommand(
             _newName, _newDescription, _newType, start, end,

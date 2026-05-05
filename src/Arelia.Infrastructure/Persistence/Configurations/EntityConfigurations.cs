@@ -144,6 +144,7 @@ public class ActivityParticipantConfiguration : IEntityTypeConfiguration<Activit
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(ap => new { ap.ActivityId, ap.PersonId }).IsUnique();
+        builder.Property(ap => ap.Note).HasMaxLength(500);
     }
 }
 

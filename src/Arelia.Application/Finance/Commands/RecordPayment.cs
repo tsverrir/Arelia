@@ -24,14 +24,47 @@ public class RecordPaymentHandler(IAreliaDbContext context)
     public async Task<Domain.Common.Result<Guid>> Handle(
         RecordPaymentCommand request, CancellationToken cancellationToken)
     {
-        if (request.PayerPersonId is null && string.IsNullOrWhiteSpace(request.PayerDescription))
+        if (request.Amount <= 0)
+            return Domain.Common.Result.Failure<Guid>("Amount must be greater than zero.");
+
+        Charge? charge = null;
+        Guid? payerPersonId = request.PayerPersonId;
+        var payerDescription = request.PayerDescription?.Trim() ?? string.Empty;
+        decimal overpaymentAmount = 0;
+
+        if (request.ChargeId.HasValue)
+        {
+            charge = await context.Charges
+                .Include(c => c.ChargeLines)
+                .Include(c => c.Payments)
+                .Include(c => c.Person)
+                .FirstOrDefaultAsync(c =>
+                    c.Id == request.ChargeId &&
+                    c.OrganizationId == request.OrganizationId,
+                    cancellationToken);
+
+            if (charge is null)
+                return Domain.Common.Result.Failure<Guid>("Charge not found.");
+
+            if (!string.Equals(charge.CurrencyCode, request.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+                return Domain.Common.Result.Failure<Guid>("Payment currency must match charge currency.");
+
+            payerPersonId ??= charge.PersonId;
+            if (string.IsNullOrWhiteSpace(payerDescription))
+                payerDescription = charge.Person.FullName;
+
+            var outstanding = Math.Max(0, charge.TotalDue - charge.TotalPaid);
+            overpaymentAmount = Math.Max(0, request.Amount - outstanding);
+        }
+
+        if (payerPersonId is null && string.IsNullOrWhiteSpace(payerDescription))
             return Domain.Common.Result.Failure<Guid>("Either PayerPersonId or PayerDescription is required.");
 
         var payment = new Payment
         {
             ChargeId = request.ChargeId,
-            PayerPersonId = request.PayerPersonId,
-            PayerDescription = request.PayerDescription,
+            PayerPersonId = payerPersonId,
+            PayerDescription = payerDescription,
             Amount = request.Amount,
             PaymentDate = request.PaymentDate,
             PaymentMethod = request.PaymentMethod,
@@ -44,21 +77,46 @@ public class RecordPaymentHandler(IAreliaDbContext context)
 
         context.Payments.Add(payment);
 
-        // Update charge status if linked
-        if (request.ChargeId.HasValue)
+        if (charge is not null)
         {
-            var charge = await context.Charges
-                .Include(c => c.ChargeLines)
-                .Include(c => c.Payments)
-                .FirstOrDefaultAsync(c => c.Id == request.ChargeId, cancellationToken);
+            if (!charge.Payments.Any(p => p.Id == payment.Id))
+                charge.Payments.Add(payment);
 
-            if (charge is not null)
+            charge.RecalculateStatus();
+
+            if (overpaymentAmount > 0 && payerPersonId is Guid personId)
             {
-                // Ensure the new payment is in the collection for recalculation
-                if (!charge.Payments.Any(p => p.Id == payment.Id))
-                    charge.Payments.Add(payment);
+                context.CreditTransactions.Add(new CreditTransaction
+                {
+                    PersonId = personId,
+                    Amount = overpaymentAmount,
+                    Reason = $"Overpayment on {charge.Description}",
+                    PaymentId = payment.Id,
+                    ChargeId = charge.Id,
+                    Timestamp = DateTime.UtcNow,
+                    OrganizationId = request.OrganizationId,
+                });
 
-                charge.RecalculateStatus();
+                var balance = await context.CreditBalances
+                    .FirstOrDefaultAsync(b =>
+                        b.PersonId == personId &&
+                        b.OrganizationId == request.OrganizationId,
+                        cancellationToken);
+
+                if (balance is null)
+                {
+                    context.CreditBalances.Add(new CreditBalance
+                    {
+                        PersonId = personId,
+                        BalanceAmount = overpaymentAmount,
+                        CurrencyCode = request.CurrencyCode,
+                        OrganizationId = request.OrganizationId,
+                    });
+                }
+                else
+                {
+                    balance.BalanceAmount += overpaymentAmount;
+                }
             }
         }
 

@@ -13,6 +13,7 @@ public record GetChargesQuery(
 
 public record ChargeListDto(
     Guid Id,
+    Guid PersonId,
     string PersonName,
     string Description,
     DateTime DueDate,
@@ -52,6 +53,7 @@ public class GetChargesHandler(IAreliaDbContext context)
 
         return charges.Select(c => new ChargeListDto(
             c.Id,
+            c.PersonId,
             c.Person.FullName,
             c.Description,
             c.DueDate,

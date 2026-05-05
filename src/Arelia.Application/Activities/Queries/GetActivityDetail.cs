@@ -17,13 +17,21 @@ public record ActivityDetailDto(
     string? Location,
     int WorkYear,
     bool IsPublicVisible,
+    ActivityStatus Status,
+    bool RsvpEnabled,
     int? MaxCapacity,
     DateTime? SignupDeadline,
+    bool WaitingListEnabled,
     Guid? ParentActivityId,
     string? ParentName,
     int ParticipantCount,
     int ChildActivityCount,
-    bool IsImplicitParticipation);
+    bool IsImplicitParticipation,
+    int ConfirmedCount,
+    int RsvpYesCount,
+    int RsvpNoCount,
+    int RsvpMaybeCount,
+    int WaitlistCount);
 
 public class GetActivityDetailHandler(IAreliaDbContext context)
     : IRequestHandler<GetActivityDetailQuery, ActivityDetailDto?>
@@ -44,13 +52,21 @@ public class GetActivityDetailHandler(IAreliaDbContext context)
                 a.Location,
                 a.WorkYear,
                 a.IsPublicVisible,
+                a.Status,
+                a.RsvpEnabled,
                 a.MaxCapacity,
                 a.SignupDeadline,
+                a.WaitingListEnabled,
                 a.ParentActivityId,
                 ParentName = a.ParentActivity != null ? a.ParentActivity.Name : null,
                 ExplicitParticipantCount = a.Participants.Count(p => p.IsActive),
                 ChildActivityCount = a.ChildActivities.Count(c => c.IsActive),
                 a.IsImplicitParticipation,
+                RsvpYesCount = a.Participants.Count(p => p.IsActive && p.RsvpStatus == RsvpStatus.Yes),
+                RsvpNoCount = a.Participants.Count(p => p.IsActive && p.RsvpStatus == RsvpStatus.No),
+                RsvpMaybeCount = a.Participants.Count(p => p.IsActive && p.RsvpStatus == RsvpStatus.Maybe),
+                ConfirmedCount = a.Participants.Count(p => p.IsActive && p.SignupStatus == SignupStatus.Confirmed),
+                WaitlistCount = a.Participants.Count(p => p.IsActive && p.SignupStatus == SignupStatus.Waitlisted),
                 a.OrganizationId,
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -63,14 +79,13 @@ public class GetActivityDetailHandler(IAreliaDbContext context)
         // For implicit-participation activities, count persons with active 'Member' role
         if (activity.IsImplicitParticipation)
         {
-            var now = DateTime.UtcNow;
             participantCount = await context.Persons
                 .Where(p => p.OrganizationId == activity.OrganizationId && p.IsActive
                     && context.RoleAssignments.Any(ra =>
                         ra.PersonId == p.Id && ra.IsActive
                         && ra.Role.Name == "Member"
-                        && ra.FromDate <= now
-                        && (ra.ToDate == null || ra.ToDate >= now)))
+                        && ra.FromDate <= activity.StartDateTime
+                        && (ra.ToDate == null || ra.ToDate >= activity.StartDateTime)))
                 .CountAsync(cancellationToken);
         }
 
@@ -78,9 +93,12 @@ public class GetActivityDetailHandler(IAreliaDbContext context)
             activity.Id, activity.Name, activity.Description,
             activity.ActivityType, activity.StartDateTime, activity.EndDateTime,
             activity.Location, activity.WorkYear, activity.IsPublicVisible,
-            activity.MaxCapacity, activity.SignupDeadline,
+            activity.Status, activity.RsvpEnabled,
+            activity.MaxCapacity, activity.SignupDeadline, activity.WaitingListEnabled,
             activity.ParentActivityId, activity.ParentName,
             participantCount, activity.ChildActivityCount,
-            activity.IsImplicitParticipation);
+            activity.IsImplicitParticipation,
+            activity.ConfirmedCount,
+            activity.RsvpYesCount, activity.RsvpNoCount, activity.RsvpMaybeCount, activity.WaitlistCount);
     }
 }

@@ -1,4 +1,5 @@
 using Arelia.Application.Interfaces;
+using Arelia.Application.Common.Validation;
 using Arelia.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,14 @@ public class InviteUserHandler(
 {
     public async Task<Domain.Common.Result> Handle(InviteUserCommand request, CancellationToken cancellationToken)
     {
-        var userId = await userService.FindUserIdByEmailAsync(request.Email);
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return Domain.Common.Result.Failure("Email address is required.");
+
+        var normalizedEmail = request.Email.Trim();
+        if (!InputValidation.IsValidEmail(normalizedEmail))
+            return Domain.Common.Result.Failure("Email address is invalid.");
+
+        var userId = await userService.FindUserIdByEmailAsync(normalizedEmail);
 
         if (userId is not null)
         {
@@ -32,7 +40,7 @@ public class InviteUserHandler(
         }
         else
         {
-            var createResult = await userService.CreateUserAsync(request.Email);
+            var createResult = await userService.CreateUserAsync(normalizedEmail);
             if (createResult.IsFailure)
                 return Domain.Common.Result.Failure(createResult.Error!);
             userId = createResult.Value!;
@@ -40,9 +48,9 @@ public class InviteUserHandler(
 
         var person = new Person
         {
-            FirstName = request.FirstName ?? "New",
-            LastName = request.LastName ?? "Member",
-            Email = request.Email,
+            FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? "New" : request.FirstName.Trim(),
+            LastName = string.IsNullOrWhiteSpace(request.LastName) ? "Member" : request.LastName.Trim(),
+            Email = normalizedEmail,
             OrganizationId = request.OrganizationId,
         };
         context.Persons.Add(person);

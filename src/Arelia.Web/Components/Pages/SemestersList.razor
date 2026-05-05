@@ -138,15 +138,24 @@
     private async Task CreateSemester()
     {
         if (string.IsNullOrWhiteSpace(_newName) || _newStartDate is null || _newEndDate is null)
+        {
+            Snackbar.Add("Name, start date, and end date are required.", Severity.Warning);
             return;
+        }
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
 
         var start = _newStartDate.Value;
         var end = _newEndDate.Value;
 
+        if (end < start)
+        {
+            Snackbar.Add("End date must be after start date.", Severity.Warning);
+            return;
+        }
+
         if (start.Year != end.Year)
         {
-            Snackbar.Add("Semesters cannot cross calendar year boundaries.", Severity.Error);
+            Snackbar.Add(L["Semester.YearBoundaryError"], Severity.Error);
             return;
         }
 

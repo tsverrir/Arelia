@@ -1,3 +1,5 @@
+using Arelia.Application.Common.Validation;
+
 namespace Arelia.Application.People;
 
 /// <summary>
@@ -163,5 +165,7 @@ public class PersonImportRow
 
     /// <summary>True when the row is missing a required field and cannot be committed as-is.</summary>
     public bool HasError =>
-        string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName);
+        string.IsNullOrWhiteSpace(FirstName) ||
+        string.IsNullOrWhiteSpace(LastName) ||
+        !InputValidation.IsValidEmail(Email);
 }

@@ -1,8 +1,12 @@
 ﻿@page "/finances"
 @inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Activities.Queries
 @using Arelia.Application.Finance.Commands
 @using Arelia.Application.Finance.Queries
+@using Arelia.Application.People.Queries
+@using Arelia.Application.Reports.Queries
 @using Arelia.Application.ExpenseCategories.Queries
+@using Arelia.Domain.Enums
 @using Arelia.Web.Components.Shared
 @using MediatR
 @inject IMediator Mediator
@@ -21,9 +25,101 @@
     return;
 }
 
-<MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+<MudTabs Elevation="0" Rounded="true" PanelClass="pa-6">
+    <MudTabPanel Text="@L["Finance.Summary"]" Icon="@Icons.Material.Filled.Dashboard">
+        @if (_summary is not null)
+        {
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Finance.TotalCharged"]</MudText>
+                        <MudText Typo="Typo.h5">@_summary.TotalChargesDue.ToString("N2")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Finance.TotalCollected"]</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">@_summary.TotalChargesPaid.ToString("N2")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Finance.TotalExpenses"]</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Error">@_summary.TotalExpenses.ToString("N2")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Finance.NetBalance"]</MudText>
+                        <MudText Typo="Typo.h5" Color="@(_summary.NetBalance >= 0 ? Color.Success : Color.Error)">@_summary.NetBalance.ToString("N2")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Finance.ChargeStatus"]</MudText>
+                        <MudStack Spacing="1">
+                            <MudText>@string.Format(L["Finance.OpenCharges"], _summary.OpenChargeCount)</MudText>
+                            <MudText Color="Color.Warning">@string.Format(L["Finance.OverdueCharges"], _summary.OverdueChargeCount)</MudText>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+                @if (_summary.ExpensesByCategory.Count > 0)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Finance.ExpensesByCategory"]</MudText>
+                            <MudSimpleTable Dense="true">
+                                <tbody>
+                                    @foreach (var cat in _summary.ExpensesByCategory)
+                                    {
+                                        <tr>
+                                            <td>@cat.Category</td>
+                                            <td style="text-align:right;">@cat.Amount.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                    </MudItem>
+                }
+                @if (_summary.CreditBalances.Count > 0)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">Credit balances</MudText>
+                            <MudSimpleTable Dense="true">
+                                <tbody>
+                                    @foreach (var credit in _summary.CreditBalances)
+                                    {
+                                        <tr>
+                                            <td>@credit.PersonName</td>
+                                            <td style="text-align:right;">@credit.BalanceAmount.ToString("N2") @credit.CurrencyCode</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+        else
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+    </MudTabPanel>
+
     <MudTabPanel Text="@L["Finance.Charges"]">
-        <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.Center">
+        <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.Center" Spacing="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="OpenRecordPayment" StartIcon="@Icons.Material.Filled.Payment">
+                @L.H("Finance.RecordPayment")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+                       OnClick="OpenGenerateFees" StartIcon="@Icons.Material.Filled.AutoMode">
+                @L.H("Finance.GenerateFees")
+            </MudButton>
+            <MudSpacer />
             <MudCheckBox T="bool" Value="_showChargeHistory" Label="@L["Finance.ShowHistory"]"
                          ValueChanged="@(async (bool v) => { _showChargeHistory = v; await LoadFinances(); })" />
         </MudStack>
@@ -55,6 +151,8 @@
                 <RowActions>
                     @if (context.IsActive)
                     {
+                        <MudIconButton Icon="@Icons.Material.Filled.Payment" Size="Size.Small" Color="Color.Success"
+                                       OnClick="@(() => OpenRecordPaymentForCharge(context))" Title="@L["Finance.RecordPayment"]" />
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                        OnClick="@(() => OpenEditCharge(context))" Title="@L["Common.Edit"]" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
@@ -158,10 +256,69 @@
     </DialogActions>
 </MudDialog>
 
+@* ---- Record Payment Dialog ---- *@
+<MudDialog @bind-Visible="_showPayment">
+    <TitleContent><MudText Typo="Typo.h6">@L.H("Finance.RecordPaymentTitle")</MudText></TitleContent>
+    <DialogContent>
+        @if (_payChargeId is null)
+        {
+            <MudSelect T="Guid?" @bind-Value="_payChargeId" Label="@L["Finance.LinkedCharge"]" Clearable="true">
+                @if (_charges is not null)
+                {
+                    @foreach (var c in _charges.Where(c => c.IsActive && c.Status != ChargeStatus.Paid))
+                    {
+                        <MudSelectItem T="Guid?" Value="@c.Id">@c.PersonName — @c.Description (@((c.TotalDue - c.TotalPaid).ToString("N2")))</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">@_payChargeLabel</MudAlert>
+        }
+        <MudNumericField T="decimal" @bind-Value="_payAmount" Label="@L["Common.Amount"]" Required="true" Min="0.01m" />
+        <MudDatePicker @bind-Date="_payDate" Label="@L["Common.Date"]" Required="true" />
+        <MudTextField @bind-Value="_payMethod" Label="@L["Finance.PaymentMethod"]" />
+        <MudTextField @bind-Value="_payReference" Label="@L["Finance.Reference"]" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showPayment = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePayment">@L.H("Common.Save")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---- Generate Membership Fees Dialog ---- *@
+<MudDialog @bind-Visible="_showGenerateFees">
+    <TitleContent><MudText Typo="Typo.h6">@L.H("Finance.GenerateFeesTitle")</MudText></TitleContent>
+    <DialogContent>
+        <MudSelect T="Guid?" @bind-Value="_feeSemesterId" Label="@L["Finance.Semester"]" Required="true">
+            @if (_semesters is not null)
+            {
+                @foreach (var s in _semesters)
+                {
+                    <MudSelectItem T="Guid?" Value="@s.Id">@s.Name (@s.WorkYear)</MudSelectItem>
+                }
+            }
+        </MudSelect>
+        <MudNumericField T="decimal" @bind-Value="_feeBaseAmount" Label="@L["Finance.BaseFee"]" Required="true" Min="0" />
+        <MudNumericField T="decimal?" @bind-Value="_feeTopUpAmount" Label="@L["Finance.TopUpOptional"]" />
+        <MudDatePicker @bind-Date="_feeDueDate" Label="@L["Finance.DueDate"]" Required="true" />
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
+            @L["Finance.GenerateFeesInfo"]
+        </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showGenerateFees = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ExecuteGenerateFees">@L.H("Finance.Generate")</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private List<ChargeListDto>? _charges;
     private List<ExpenseListDto>? _expenses;
     private List<ExpenseCategoryDto>? _expenseCategories;
+    private FinanceSummaryDto? _summary;
+    private List<ActivityListDto>? _semesters;
     private bool _showExpenseHistory;
     private bool _showChargeHistory;
 
@@ -180,6 +337,23 @@
     private Guid? _editChargeId;
     private string _editChargeDesc = string.Empty;
     private DateTime? _editChargeDueDate;
+
+    // Payment dialog state
+    private bool _showPayment;
+    private Guid? _payChargeId;
+    private Guid? _payPayerPersonId;
+    private string? _payChargeLabel;
+    private decimal _payAmount;
+    private DateTime? _payDate = DateTime.Today;
+    private string? _payMethod;
+    private string? _payReference;
+
+    // Generate fees dialog state
+    private bool _showGenerateFees;
+    private Guid? _feeSemesterId;
+    private decimal _feeBaseAmount;
+    private decimal? _feeTopUpAmount;
+    private DateTime? _feeDueDate;
 
     private List<ColumnDefinition<ChargeListDto>>? _chargeColumns;
     private List<ColumnDefinition<ExpenseListDto>>? _expenseColumns;
@@ -216,6 +390,8 @@
             _charges = await Mediator.Send(new GetChargesQuery(orgId, IncludeHistory: _showChargeHistory));
             _expenses = await Mediator.Send(new GetExpensesQuery(orgId, IncludeHistory: _showExpenseHistory));
             _expenseCategories = await Mediator.Send(new GetExpenseCategoriesQuery(orgId));
+            _summary = await Mediator.Send(new GetFinanceSummaryQuery(orgId, DateTime.Now.Year));
+            _semesters ??= await Mediator.Send(new GetActivitiesQuery(orgId, TypeFilter: ActivityType.Semester));
         }
     }
 
@@ -249,7 +425,16 @@
     {
         if (string.IsNullOrWhiteSpace(_expDesc) || _expDate is null || _expCategoryId is null
             || TenantService.CurrentOrganizationId is not Guid orgId)
+        {
+            Snackbar.Add("Description, date, and category are required.", Severity.Warning);
             return;
+        }
+
+        if (_expAmount <= 0)
+        {
+            Snackbar.Add("Expense amount must be greater than zero.", Severity.Warning);
+            return;
+        }
 
         if (_editExpenseId is Guid existingId)
         {
@@ -323,7 +508,10 @@
     private async Task SaveCharge()
     {
         if (string.IsNullOrWhiteSpace(_editChargeDesc) || _editChargeDueDate is null || _editChargeId is null)
+        {
+            Snackbar.Add("Description and due date are required.", Severity.Warning);
             return;
+        }
 
         var result = await Mediator.Send(new UpdateChargeCommand(
             _editChargeId.Value, _editChargeDesc, _editChargeDueDate.Value));
@@ -370,4 +558,105 @@
         Arelia.Domain.Enums.ChargeStatus.Overpaid => Color.Info,
         _ => Color.Default,
     };
+
+    // ---- Payment recording ----
+
+    private void OpenRecordPayment()
+    {
+        _payChargeId = null;
+        _payPayerPersonId = null;
+        _payChargeLabel = null;
+        _payAmount = 0;
+        _payDate = DateTime.Today;
+        _payMethod = null;
+        _payReference = null;
+        _showPayment = true;
+    }
+
+    private void OpenRecordPaymentForCharge(ChargeListDto charge)
+    {
+        _payChargeId = charge.Id;
+        _payPayerPersonId = charge.PersonId;
+        _payChargeLabel = $"{charge.PersonName} — {charge.Description}";
+        _payAmount = charge.TotalDue - charge.TotalPaid;
+        _payDate = DateTime.Today;
+        _payMethod = null;
+        _payReference = null;
+        _showPayment = true;
+    }
+
+    private async Task SavePayment()
+    {
+        if (_payAmount <= 0 || _payDate is null || TenantService.CurrentOrganizationId is not Guid orgId)
+        {
+            Snackbar.Add("Payment amount and date are required.", Severity.Warning);
+            return;
+        }
+
+        // Determine payer from charge if linked
+        string payerDesc = "—";
+        Guid? payerPersonId = _payPayerPersonId;
+        if (_payChargeId.HasValue && _charges is not null)
+        {
+            var linkedCharge = _charges.FirstOrDefault(c => c.Id == _payChargeId);
+            if (linkedCharge is not null)
+                payerDesc = linkedCharge.PersonName;
+        }
+
+        var result = await Mediator.Send(new RecordPaymentCommand(
+            _payChargeId, payerPersonId, payerDesc, _payAmount, _payDate.Value,
+            _payMethod, _payReference, "DKK", null, null, orgId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["Finance.PaymentRecorded"], Severity.Success);
+            _showPayment = false;
+            await LoadFinances();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    // ---- Fee generation ----
+
+    private void OpenGenerateFees()
+    {
+        _feeSemesterId = null;
+        _feeBaseAmount = 0;
+        _feeTopUpAmount = null;
+        _feeDueDate = DateTime.Today.AddMonths(1);
+        _showGenerateFees = true;
+    }
+
+    private async Task ExecuteGenerateFees()
+    {
+        if (_feeSemesterId is null || _feeBaseAmount <= 0 || _feeDueDate is null
+            || TenantService.CurrentOrganizationId is not Guid orgId)
+        {
+            Snackbar.Add("Select a semester, enter a base fee greater than zero, and choose a due date.", Severity.Warning);
+            return;
+        }
+
+        if (_feeTopUpAmount is <= 0)
+        {
+            Snackbar.Add("Optional top-up must be greater than zero when provided.", Severity.Warning);
+            return;
+        }
+
+        var result = await Mediator.Send(new GenerateMembershipFeesCommand(
+            _feeSemesterId.Value, _feeBaseAmount, _feeTopUpAmount, _feeDueDate.Value, orgId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(string.Format(L["Finance.FeesGenerated"], result.Value), Severity.Success);
+            _showGenerateFees = false;
+            await LoadFinances();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
 }

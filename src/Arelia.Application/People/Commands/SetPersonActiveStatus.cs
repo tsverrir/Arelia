@@ -20,6 +20,29 @@ public class SetPersonActiveStatusHandler(IAreliaDbContext context)
 
         person.IsActive = request.IsActive;
 
+        if (!request.IsActive)
+        {
+            var now = DateTime.UtcNow;
+            var activeRoleAssignments = await context.RoleAssignments
+                .IgnoreQueryFilters()
+                .Where(ra =>
+                    ra.PersonId == request.PersonId &&
+                    ra.IsActive &&
+                    ra.ToDate == null)
+                .ToListAsync(cancellationToken);
+
+            foreach (var assignment in activeRoleAssignments)
+                assignment.ToDate = now;
+
+            var linkedUsers = await context.OrganizationUsers
+                .IgnoreQueryFilters()
+                .Where(ou => ou.PersonId == request.PersonId && ou.IsActive)
+                .ToListAsync(cancellationToken);
+
+            foreach (var linkedUser in linkedUsers)
+                linkedUser.IsActive = false;
+        }
+
         await context.SaveChangesAsync(cancellationToken);
         return Domain.Common.Result.Success();
     }

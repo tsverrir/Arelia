@@ -20,10 +20,21 @@
     return;
 }
 
-<MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/semesters?showList=true"))"
-           StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-2">
-    @L.H("SemesterDetail.BackToSemesters")
-</MudButton>
+<MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
+    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/semesters?showList=true"))"
+               StartIcon="@Icons.Material.Filled.ArrowBack">
+        @L.H("SemesterDetail.BackToSemesters")
+    </MudButton>
+    <MudSpacer />
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="StartEditSemester"
+               StartIcon="@Icons.Material.Filled.Edit">
+        @L.H("Common.Edit")
+    </MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteSemester"
+               StartIcon="@Icons.Material.Filled.Delete">
+        @L.H("Common.Delete")
+    </MudButton>
+</MudStack>
 
 <MudText Typo="Typo.h5" GutterBottom="true">@_semester.Name</MudText>
 
@@ -115,7 +126,7 @@
                                 <tr>
                                     <td>@t.DayOfWeek</td>
                                     <td>@t.StartTime.ToString("HH:mm")</td>
-                                    <td>@string.Format(L["SemesterDetail.DurationLabel"], t.DurationMinutes)</td>
+                                    <td>@t.DurationMinutes min</td>
                                     <td>@(t.Location ?? "—")</td>
                                     <td>@t.StartDate.ToString("dd MMM") – @t.EndDate.ToString("dd MMM")</td>
                                     <td>
@@ -273,10 +284,36 @@
     </DialogActions>
 </MudDialog>
 
+@* ---- Edit Semester Dialog ---- *@
+<MudDialog @bind-Visible="_showEditSemester">
+    <TitleContent><MudText Typo="Typo.h6">@L.H("SemesterDetail.EditSemesterTitle")</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_editSemName" Label="@L["Common.Name"]" Required="true" />
+        <MudDatePicker @bind-Date="_editSemStartDate" Label="@L["Common.StartDate"]" Required="true" />
+        <MudDatePicker @bind-Date="_editSemEndDate" Label="@L["Common.EndDate"]" Required="true" />
+        <MudTextField @bind-Value="_editSemLocation" Label="@L["Common.Location"]" />
+        <MudTextField @bind-Value="_editSemDescription" Label="@L["Common.Description"]" Lines="3" />
+        <MudCheckBox T="bool" @bind-Value="_editSemPublicVisible" Label="@L["Common.PublicVisible"]" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showEditSemester = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditSemester">@L.H("Common.Save")</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter] public Guid SemesterId { get; set; }
 
     private SemesterDetailDto? _semester;
+
+    // Edit semester fields
+    private bool _showEditSemester;
+    private string _editSemName = string.Empty;
+    private string? _editSemDescription;
+    private DateTime? _editSemStartDate;
+    private DateTime? _editSemEndDate;
+    private string? _editSemLocation;
+    private bool _editSemPublicVisible;
 
     // Template form fields
     private bool _showAddTemplate;
@@ -336,7 +373,15 @@
     private async Task AddTemplate()
     {
         if (_templateStartTime is null || _templateStartDate is null || _templateEndDate is null)
+        {
+            Snackbar.Add("Template start time and date range are required.", Severity.Warning);
             return;
+        }
+        if (_templateEndDate < _templateStartDate)
+        {
+            Snackbar.Add("Template end date must be after start date.", Severity.Warning);
+            return;
+        }
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
 
         var result = await Mediator.Send(new CreateRehearsalTemplateCommand(
@@ -375,7 +420,15 @@
     private async Task SaveEditTemplate()
     {
         if (_editTemplateStartTime is null || _editTemplateStartDate is null || _editTemplateEndDate is null)
+        {
+            Snackbar.Add("Template start time and date range are required.", Severity.Warning);
             return;
+        }
+        if (_editTemplateEndDate < _editTemplateStartDate)
+        {
+            Snackbar.Add("Template end date must be after start date.", Severity.Warning);
+            return;
+        }
 
         var result = await Mediator.Send(new UpdateRehearsalTemplateCommand(
             _editTemplateId,
@@ -446,11 +499,19 @@
     private async Task AddEvent()
     {
         if (string.IsNullOrWhiteSpace(_eventName) || _eventStartDate is null || _eventEndDate is null)
+        {
+            Snackbar.Add("Event name, start date, and end date are required.", Severity.Warning);
             return;
+        }
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
 
         var start = _eventStartDate.Value + (_eventStartTime ?? TimeSpan.Zero);
         var end = _eventEndDate.Value + (_eventEndTime ?? TimeSpan.Zero);
+        if (end < start)
+        {
+            Snackbar.Add("Event end date/time must be after start date/time.", Severity.Warning);
+            return;
+        }
 
         var result = await Mediator.Send(new CreateActivityCommand(
             _eventName, _eventDescription, _eventType, start, end,
@@ -479,4 +540,80 @@
         ActivityType.Social => Color.Warning,
         _ => Color.Default,
     };
+
+    private void StartEditSemester()
+    {
+        if (_semester is null) return;
+
+        _editSemName = _semester.Name;
+        _editSemDescription = _semester.Description;
+        _editSemStartDate = _semester.StartDateTime.Date;
+        _editSemEndDate = _semester.EndDateTime.Date;
+        _editSemLocation = _semester.Location;
+        _editSemPublicVisible = _semester.IsPublicVisible;
+        _showEditSemester = true;
+    }
+
+    private async Task SaveEditSemester()
+    {
+        if (string.IsNullOrWhiteSpace(_editSemName) || _editSemStartDate is null || _editSemEndDate is null)
+        {
+            Snackbar.Add("Semester name, start date, and end date are required.", Severity.Warning);
+            return;
+        }
+
+        var start = _editSemStartDate.Value;
+        var end = _editSemEndDate.Value;
+        if (end < start)
+        {
+            Snackbar.Add("Semester end date must be after start date.", Severity.Warning);
+            return;
+        }
+
+        if (start.Year != end.Year)
+        {
+            Snackbar.Add(L["Semester.YearBoundaryError"], Severity.Error);
+            return;
+        }
+
+        var result = await Mediator.Send(new UpdateActivityCommand(
+            SemesterId, _editSemName, _editSemDescription, start, end,
+            _editSemLocation, _editSemPublicVisible, null, null));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["SemesterDetail.SemesterUpdated"], Severity.Success);
+            _showEditSemester = false;
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task DeleteSemester()
+    {
+        if (_semester is null) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(L["SemesterDetail.DeleteSemesterConfirm"], _semester.Name) }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["SemesterDetail.DeleteSemesterTitle"], parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new DeleteActivityCommand(SemesterId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["SemesterDetail.SemesterDeleted"], Severity.Success);
+            Navigation.NavigateTo("/semesters?showList=true");
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
 }

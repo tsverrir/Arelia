@@ -1,4 +1,5 @@
 using Arelia.Application.Interfaces;
+using Arelia.Application.Common.Validation;
 using Arelia.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,20 +13,26 @@ public record CreatePersonCommand(
     string? Phone,
     Guid? VoiceGroupId,
     string? Notes,
-    Guid OrganizationId) : IRequest<Guid>;
+    Guid OrganizationId) : IRequest<Domain.Common.Result<Guid>>;
 
-public class CreatePersonHandler(IAreliaDbContext context) : IRequestHandler<CreatePersonCommand, Guid>
+public class CreatePersonHandler(IAreliaDbContext context) : IRequestHandler<CreatePersonCommand, Domain.Common.Result<Guid>>
 {
-    public async Task<Guid> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
+    public async Task<Domain.Common.Result<Guid>> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+            return Domain.Common.Result.Failure<Guid>("First name and last name are required.");
+
+        if (!InputValidation.IsValidEmail(request.Email))
+            return Domain.Common.Result.Failure<Guid>("Email address is invalid.");
+
         var person = new Person
         {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Email = request.Email,
-            Phone = request.Phone,
+            FirstName = request.FirstName.Trim(),
+            LastName = request.LastName.Trim(),
+            Email = InputValidation.NormalizeOptional(request.Email),
+            Phone = InputValidation.NormalizeOptional(request.Phone),
             VoiceGroupId = request.VoiceGroupId,
-            Notes = request.Notes,
+            Notes = InputValidation.NormalizeOptional(request.Notes),
             OrganizationId = request.OrganizationId,
         };
 
@@ -49,7 +56,7 @@ public class CreatePersonHandler(IAreliaDbContext context) : IRequestHandler<Cre
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return person.Id;
+        return Domain.Common.Result.Success(person.Id);
     }
 }
 

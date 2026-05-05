@@ -3,6 +3,7 @@
 @using Arelia.Application.Activities.Queries
 @using Arelia.Application.Attendance.Commands
 @using Arelia.Application.Attendance.Queries
+@using Arelia.Application.Rsvp.Commands
 @using Arelia.Domain.Enums
 @using MediatR
 @using Microsoft.AspNetCore.Components.Forms
@@ -14,7 +15,17 @@
 @inject Arelia.Web.Services.TenantService TenantService
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>@(_activity?.Name ?? L["ActivityDetail.BackToActivities"])</PageTitle>
+<PageTitle>@(_activity?.Name ?? (_notFound ? "Activity not found" : L["ActivityDetail.BackToActivities"]))</PageTitle>
+
+@if (_notFound)
+{
+    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
+               StartIcon="@Icons.Material.Filled.ArrowBack">
+        @L.H("ActivityDetail.BackToActivities")
+    </MudButton>
+    <MudAlert Severity="Severity.Warning" Class="mt-4">Activity not found.</MudAlert>
+    return;
+}
 
 @if (_activity is null)
 {
@@ -28,6 +39,20 @@
         @L.H("ActivityDetail.BackToActivities")
     </MudButton>
     <MudSpacer />
+    @if (_activity.Status != ActivityStatus.Published)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => SetStatus(ActivityStatus.Published))"
+                   StartIcon="@Icons.Material.Filled.Publish">
+            Publish
+        </MudButton>
+    }
+    @if (_activity.Status != ActivityStatus.Cancelled)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="@(() => SetStatus(ActivityStatus.Cancelled))"
+                   StartIcon="@Icons.Material.Filled.Cancel">
+            Cancel
+        </MudButton>
+    }
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="StartEdit"
                StartIcon="@Icons.Material.Filled.Edit">
         @L.H("Common.Edit")
@@ -47,6 +72,7 @@
                 <MudStack Spacing="2">
                     <MudStack Row="true" Spacing="2">
                         <MudChip T="string" Color="Color.Primary" Size="Size.Small">@_activity.ActivityType</MudChip>
+                        <MudChip T="string" Color="@GetActivityStatusColor(_activity.Status)" Size="Size.Small">@_activity.Status</MudChip>
                         <MudChip T="string" Size="Size.Small">@L["Common.WorkYear"] @_activity.WorkYear</MudChip>
                         @if (_activity.IsPublicVisible)
                         {
@@ -71,7 +97,7 @@
                     {
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                             <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" />
-                            <MudLink Href="@($"/activities/{_activity.ParentActivityId}")">@_activity.ParentName</MudLink>
+                            <MudLink Href="@($"/semesters/{_activity.ParentActivityId}")">@_activity.ParentName</MudLink>
                         </MudStack>
                     }
 
@@ -97,7 +123,7 @@
                 }
                 else if (_activity.MaxCapacity.HasValue)
                 {
-                    <MudText>@string.Format(L["ActivityDetail.Capacity"], _activity.ParticipantCount, _activity.MaxCapacity)</MudText>
+                    <MudText>@string.Format(L["ActivityDetail.Capacity"], _activity.ConfirmedCount, _activity.MaxCapacity)</MudText>
                 }
                 else
                 {
@@ -106,6 +132,13 @@
                 @if (_activity.ChildActivityCount > 0)
                 {
                     <MudText>@string.Format(L["ActivityDetail.ChildActivities"], _activity.ChildActivityCount)</MudText>
+                }
+                @if (_activity.RsvpEnabled || _activity.RsvpYesCount + _activity.RsvpNoCount + _activity.RsvpMaybeCount > 0)
+                {
+                    <MudDivider Class="my-2" />
+                    <MudText>RSVP: @_activity.RsvpYesCount yes / @_activity.RsvpNoCount no / @_activity.RsvpMaybeCount maybe</MudText>
+                    <MudText>Waiting list: @_activity.WaitlistCount</MudText>
+                    <MudText>Waiting list enabled: @(_activity.WaitingListEnabled ? "Yes" : "No")</MudText>
                 }
                 @if (_activity.SignupDeadline.HasValue)
                 {
@@ -116,6 +149,84 @@
     </MudItem>
 </MudGrid>
 
+@if (!_activity.IsImplicitParticipation)
+{
+    <MudCard Class="mt-4">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Participants and RSVP</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.GroupAdd"
+                           OnClick="InitializeParticipants">
+                    Initialize Participants
+                </MudButton>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (_participants is null)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+            }
+            else if (_participants.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info">No explicit participants yet. Initialize participants to add current members.</MudAlert>
+            }
+            else
+            {
+                <MudSimpleTable Dense="true" Hover="true">
+                    <thead>
+                        <tr>
+                            <th>@L["Common.Name"]</th>
+                            <th>@L["Common.VoiceGroup"]</th>
+                            <th>Expectation</th>
+                            <th>RSVP</th>
+                            <th>Signup</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var participant in _participants)
+                        {
+                            <tr>
+                                <td>@participant.PersonName</td>
+                                <td>@(participant.VoiceGroupName ?? "—")</td>
+                                <td>@participant.ExpectationStatus</td>
+                                <td>
+                                    <MudSelect T="RsvpStatus" Value="participant.RsvpStatus" Dense="true" Margin="Margin.Dense"
+                                               ValueChanged="@((RsvpStatus value) => SetParticipantRsvp(participant.PersonId, value))">
+                                        @foreach (var status in Enum.GetValues<RsvpStatus>())
+                                        {
+                                            <MudSelectItem T="RsvpStatus" Value="@status">@status</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </td>
+                                <td>
+                                    <MudChip T="string" Size="Size.Small" Color="@GetSignupStatusColor(participant.SignupStatus)">
+                                        @(participant.SignupStatus == SignupStatus.Waitlisted
+                                            ? $"Waitlisted #{participant.WaitlistPosition}"
+                                            : participant.SignupStatus.ToString())
+                                    </MudChip>
+                                </td>
+                                <td>
+                                    @if (participant.SignupStatus == SignupStatus.Waitlisted)
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success"
+                                                   OnClick="@(() => PromoteWaitlisted(participant.PersonId))">
+                                            Promote
+                                        </MudButton>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </MudCardContent>
+    </MudCard>
+}
+
 @* ---- Attendance ---- *@
 @if (_attendance is not null && _attendance.Participants.Count > 0)
 {
@@ -124,6 +235,14 @@
             <CardHeaderContent>
                 <MudText Typo="Typo.h6">@string.Format(L["ActivityDetail.AttendanceHeader"], _attendance.Participants.Count(p => p.Status is AttendanceStatus.Present or AttendanceStatus.Late), _attendance.Participants.Count)</MudText>
             </CardHeaderContent>
+            <CardHeaderActions>
+                <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.DoneAll"
+                           OnClick="MarkAllPresent"
+                           Disabled="_markingAll">
+                    @L.H("ActivityDetail.MarkAllPresent")
+                </MudButton>
+            </CardHeaderActions>
         </MudCardHeader>
         <MudCardContent>
             <MudSimpleTable Dense="true" Hover="true">
@@ -187,7 +306,7 @@
                 }
                 <MudSpacer />
                 <InputFile id="attachmentInput" OnChange="OnFileSelected"
-                           style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif" />
+                           style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.mp3,.wav,.m4a,.zip,.rar,.7z,.txt,.csv" />
                 <MudButton Variant="Variant.Outlined" Size="Size.Small"
                            StartIcon="@Icons.Material.Filled.Upload"
                            HtmlTag="label" for="attachmentInput"
@@ -249,14 +368,30 @@
     <TitleContent><MudText Typo="Typo.h6">@L.H("ActivityDetail.EditTitle")</MudText></TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="_editName" Label="@L["Common.Name"]" Required="true" />
+        <MudSelect T="ActivityType" @bind-Value="_editType" Label="@L["Common.Type"]">
+            @foreach (var t in Enum.GetValues<ActivityType>().Where(t => t != ActivityType.Semester))
+            {
+                <MudSelectItem T="ActivityType" Value="@t">@t</MudSelectItem>
+            }
+        </MudSelect>
         <MudDatePicker @bind-Date="_editStartDate" Label="@L["Common.StartDate"]" Required="true" />
         <MudTimePicker @bind-Time="_editStartTime" Label="@L["Common.StartTime"]" />
         <MudDatePicker @bind-Date="_editEndDate" Label="@L["Common.EndDate"]" Required="true" />
         <MudTimePicker @bind-Time="_editEndTime" Label="@L["Common.EndTime"]" />
         <MudTextField @bind-Value="_editLocation" Label="@L["Common.Location"]" />
         <MudTextField @bind-Value="_editDescription" Label="@L["Common.Description"]" Lines="3" />
+        <MudSelect T="ActivityStatus" @bind-Value="_editStatus" Label="Status">
+            @foreach (var status in Enum.GetValues<ActivityStatus>())
+            {
+                <MudSelectItem T="ActivityStatus" Value="@status">@status</MudSelectItem>
+            }
+        </MudSelect>
         <MudCheckBox T="bool" @bind-Value="_editPublicVisible" Label="@L["Common.PublicVisible"]" />
-        <MudNumericField T="int?" @bind-Value="_editMaxCapacity" Label="@L["ActivityDetail.MaxCapacity"]" />
+        <MudCheckBox T="bool" @bind-Value="_editRsvpEnabled" Label="RSVP enabled" />
+        <MudNumericField T="int?" @bind-Value="_editMaxCapacity" Label="@L["ActivityDetail.MaxCapacity"]" Min="1" />
+        <MudCheckBox T="bool" @bind-Value="_editWaitingListEnabled" Label="Waiting list enabled" />
+        <MudDatePicker @bind-Date="_editSignupDate" Label="Signup deadline date" Clearable="true" />
+        <MudTimePicker @bind-Time="_editSignupTime" Label="Signup deadline time" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@(() => _showEdit = false)">@L.H("Common.Cancel")</MudButton>
@@ -269,21 +404,29 @@
 
     private ActivityDetailDto? _activity;
     private ActivityAttendanceDto? _attendance;
+    private List<ActivityParticipantDto>? _participants;
     private List<ActivityAttachmentDto>? _attachments;
+    private bool _notFound;
     private bool _uploading;
+    private bool _markingAll;
 
     // Edit form fields
     private bool _showEdit;
     private string _editName = string.Empty;
+    private ActivityType _editType;
     private string? _editDescription;
     private DateTime? _editStartDate;
     private TimeSpan? _editStartTime;
     private DateTime? _editEndDate;
     private TimeSpan? _editEndTime;
     private string? _editLocation;
+    private ActivityStatus _editStatus;
     private bool _editPublicVisible;
+    private bool _editRsvpEnabled;
     private int? _editMaxCapacity;
-    private DateTime? _editSignupDeadline;
+    private bool _editWaitingListEnabled = true;
+    private DateTime? _editSignupDate;
+    private TimeSpan? _editSignupTime;
 
     protected override async Task OnInitializedAsync()
     {
@@ -293,7 +436,18 @@
     private async Task LoadActivity()
     {
         _activity = await Mediator.Send(new GetActivityDetailQuery(ActivityId));
+        if (_activity is null)
+        {
+            _notFound = true;
+            _attendance = null;
+            _participants = null;
+            _attachments = null;
+            return;
+        }
+
+        _notFound = false;
         _attendance = await Mediator.Send(new GetActivityAttendanceQuery(ActivityId));
+        _participants = await Mediator.Send(new ListActivityParticipantsQuery(ActivityId));
         _attachments = await Mediator.Send(new GetActivityAttachmentsQuery(ActivityId));
     }
 
@@ -302,29 +456,53 @@
         if (_activity is null) return;
 
         _editName = _activity.Name;
+        _editType = _activity.ActivityType;
         _editDescription = _activity.Description;
         _editStartDate = _activity.StartDateTime.Date;
         _editStartTime = _activity.StartDateTime.TimeOfDay;
         _editEndDate = _activity.EndDateTime.Date;
         _editEndTime = _activity.EndDateTime.TimeOfDay;
         _editLocation = _activity.Location;
+        _editStatus = _activity.Status;
         _editPublicVisible = _activity.IsPublicVisible;
+        _editRsvpEnabled = _activity.RsvpEnabled;
         _editMaxCapacity = _activity.MaxCapacity;
-        _editSignupDeadline = _activity.SignupDeadline;
+        _editWaitingListEnabled = _activity.WaitingListEnabled;
+        _editSignupDate = _activity.SignupDeadline?.Date;
+        _editSignupTime = _activity.SignupDeadline?.TimeOfDay;
         _showEdit = true;
     }
 
     private async Task SaveEdit()
     {
         if (string.IsNullOrWhiteSpace(_editName) || _editStartDate is null || _editEndDate is null)
+        {
+            Snackbar.Add("Name, start date, and end date are required.", Severity.Warning);
             return;
+        }
+
+        if (_editMaxCapacity is <= 0)
+        {
+            Snackbar.Add("Capacity must be a positive number.", Severity.Warning);
+            return;
+        }
 
         var start = _editStartDate.Value + (_editStartTime ?? TimeSpan.Zero);
         var end = _editEndDate.Value + (_editEndTime ?? TimeSpan.Zero);
+        if (end < start)
+        {
+            Snackbar.Add("End date/time must be after start date/time.", Severity.Warning);
+            return;
+        }
+
+        var signupDeadline = _editSignupDate.HasValue
+            ? _editSignupDate.Value + (_editSignupTime ?? TimeSpan.Zero)
+            : (DateTime?)null;
 
         var result = await Mediator.Send(new UpdateActivityCommand(
             ActivityId, _editName, _editDescription, start, end,
-            _editLocation, _editPublicVisible, _editMaxCapacity, _editSignupDeadline));
+            _editLocation, _editPublicVisible, _editMaxCapacity, signupDeadline, _editType,
+            _editStatus, _editRsvpEnabled, _editWaitingListEnabled));
 
         if (result.IsSuccess)
         {
@@ -366,8 +544,87 @@
         }
     }
 
+    private async Task SetStatus(ActivityStatus status)
+    {
+        if (_activity is null) return;
+
+        var result = await Mediator.Send(new UpdateActivityCommand(
+            ActivityId, _activity.Name, _activity.Description, _activity.StartDateTime, _activity.EndDateTime,
+            _activity.Location, _activity.IsPublicVisible, _activity.MaxCapacity, _activity.SignupDeadline,
+            _activity.ActivityType, status, _activity.RsvpEnabled, _activity.WaitingListEnabled));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add($"Activity status set to {status}.", Severity.Success);
+            await LoadActivity();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task InitializeParticipants()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var result = await Mediator.Send(new InitializeActivityParticipantsCommand(ActivityId, orgId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add($"Initialized {result.Value} participant(s).", Severity.Success);
+            await LoadActivity();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task SetParticipantRsvp(Guid personId, RsvpStatus status)
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        var result = await Mediator.Send(new RsvpCommand(ActivityId, personId, status, orgId));
+        if (result.IsSuccess)
+        {
+            await LoadActivity();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task PromoteWaitlisted(Guid personId)
+    {
+        var result = await Mediator.Send(new PromoteWaitlistedParticipantCommand(ActivityId, personId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Participant promoted from waiting list.", Severity.Success);
+            await LoadActivity();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
     private static bool IsOtherStatus(AttendanceStatus? status) =>
         status is AttendanceStatus.NoShow or AttendanceStatus.Sick or AttendanceStatus.ExplainedAbsence;
+
+    private static Color GetActivityStatusColor(ActivityStatus status) => status switch
+    {
+        ActivityStatus.Published => Color.Success,
+        ActivityStatus.Cancelled => Color.Error,
+        _ => Color.Default,
+    };
+
+    private static Color GetSignupStatusColor(SignupStatus status) => status switch
+    {
+        SignupStatus.Confirmed => Color.Success,
+        SignupStatus.Waitlisted => Color.Warning,
+        _ => Color.Default,
+    };
 
     private static string GetFileIcon(string contentType) => contentType switch
     {
@@ -467,6 +724,31 @@
         else
         {
             Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task MarkAllPresent()
+    {
+        if (_attendance is null) return;
+
+        _markingAll = true;
+        try
+        {
+            var unmarked = _attendance.Participants
+                .Where(p => p.Status is null or AttendanceStatus.NoShow)
+                .ToList();
+
+            foreach (var p in unmarked)
+            {
+                await Mediator.Send(new UpsertAttendanceCommand(ActivityId, p.PersonId, AttendanceStatus.Present, p.Comment));
+            }
+
+            _attendance = await Mediator.Send(new GetActivityAttendanceQuery(ActivityId));
+            Snackbar.Add(string.Format(L["ActivityDetail.MarkedAllPresent"], unmarked.Count), Severity.Success);
+        }
+        finally
+        {
+            _markingAll = false;
         }
     }
 }

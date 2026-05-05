@@ -157,7 +157,7 @@
     <DialogContent>
         <MudTextField @bind-Value="_firstName" Label="@L["Common.FirstName"]" Required="true" />
         <MudTextField @bind-Value="_lastName" Label="@L["Common.LastName"]" Required="true" />
-        <MudTextField @bind-Value="_email" Label="@L["Common.Email"]" />
+        <MudTextField @bind-Value="_email" Label="@L["Common.Email"]" InputType="InputType.Email" />
         <MudTextField @bind-Value="_phone" Label="@L["Common.Phone"]" />
         <MudSelect T="Guid?" @bind-Value="_voiceGroupId" Label="@L["Common.VoiceGroup"]" Clearable="true">
             @if (_voiceGroups is not null)
@@ -179,7 +179,7 @@
 <MudDialog @bind-Visible="_showAddByEmail">
     <TitleContent><MudText Typo="Typo.h6">@L.H("People.AddByEmailTitle")</MudText></TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_inviteEmail" Label="@L["Common.Email"]" Required="true" />
+        <MudTextField @bind-Value="_inviteEmail" Label="@L["Common.Email"]" Required="true" InputType="InputType.Email" />
         <MudTextField @bind-Value="_inviteFirstName" Label="@L["Common.FirstName"]" />
         <MudTextField @bind-Value="_inviteLastName" Label="@L["Common.LastName"]" />
     </DialogContent>
@@ -414,8 +414,14 @@ Jane;Smith;;;Soprano;Section leader</pre>
             }
         }
 
-        var id = await Mediator.Send(new CreatePersonCommand(
+        var result = await Mediator.Send(new CreatePersonCommand(
             _firstName, _lastName, _email, _phone, _voiceGroupId, _notes, orgId));
+
+        if (result.IsFailure)
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+            return;
+        }
 
         Snackbar.Add(L["People.Created"], Severity.Success);
         _showCreate = false;
@@ -470,9 +476,15 @@ Jane;Smith;;;Soprano;Section leader</pre>
     {
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
 
-        await Mediator.Send(new CreatePersonCommand(
+        var result = await Mediator.Send(new CreatePersonCommand(
             source.FirstName, source.LastName, source.Email, source.Phone,
             source.VoiceGroupId, null, orgId));
+
+        if (result.IsFailure)
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+            return;
+        }
 
         Snackbar.Add(string.Format(L["People.Imported"], source.FirstName, source.LastName), Severity.Success);
         CloseImportDialog();

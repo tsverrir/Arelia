@@ -1,0 +1,348 @@
+@page "/reports"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Activities.Queries
+@using Arelia.Application.Export
+@using Arelia.Application.Finance.Queries
+@using Arelia.Application.Reports.Queries
+@using Arelia.Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ILocalizer L
+@inject IJSRuntime JS
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@L["Reports.Title"]</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("Reports.Title")</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
+    return;
+}
+
+<MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    @* ---- Attendance Report ---- *@
+    <MudTabPanel Text="@L["Reports.Attendance"]" Icon="@Icons.Material.Filled.FactCheck">
+        <MudStack Row="true" Class="mb-4" AlignItems="AlignItems.End" Spacing="2">
+            <MudSelect T="Guid?" Value="_selectedSemesterId" Label="@L["Reports.FilterBySemester"]"
+                       ValueChanged="OnSemesterChanged" Clearable="true" Style="min-width:250px;">
+                @if (_semesters is not null)
+                {
+                    @foreach (var s in _semesters)
+                    {
+                        <MudSelectItem T="Guid?" Value="@s.Id">@s.Name (@s.WorkYear)</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudStack>
+
+        @if (_attendanceReport is null)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+        else if (_attendanceReport.TotalRehearsals == 0)
+        {
+            <MudAlert Severity="Severity.Info">@L["Reports.NoRehearsalsFound"]</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Normal" Dense="true" Class="mb-4">
+                @string.Format(L["Reports.AttendanceSummary"], _attendanceReport.TotalRehearsals, _attendanceReport.Rows.Count)
+            </MudAlert>
+
+            <MudSimpleTable Dense="true" Hover="true" Bordered="true">
+                <thead>
+                    <tr>
+                        <th>@L["Common.Name"]</th>
+                        <th>@L["Common.VoiceGroup"]</th>
+                        <th style="text-align:center;">@L["Reports.Present"]</th>
+                        <th style="text-align:center;">@L["Reports.Late"]</th>
+                        <th style="text-align:center;">@L["Reports.Absent"]</th>
+                        <th style="text-align:center;">@L["Reports.Rate"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in _attendanceReport.Rows)
+                    {
+                        <tr>
+                            <td>
+                                <MudLink Href="@($"/people/{row.PersonId}")">@row.PersonName</MudLink>
+                            </td>
+                            <td>@(row.VoiceGroupName ?? "—")</td>
+                            <td style="text-align:center;">@row.Present</td>
+                            <td style="text-align:center;">@row.Late</td>
+                            <td style="text-align:center;">@row.Absent</td>
+                            <td style="text-align:center;">
+                                <MudChip T="string" Size="Size.Small"
+                                         Color="@(row.AttendanceRate >= 80 ? Color.Success : row.AttendanceRate >= 50 ? Color.Warning : Color.Error)">
+                                    @row.AttendanceRate.ToString("0.0")%
+                                </MudChip>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudTabPanel>
+
+    @* ---- Membership Report ---- *@
+    <MudTabPanel Text="@L["Reports.Membership"]" Icon="@Icons.Material.Filled.People">
+        @if (_membershipReport is null)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Reports.ActiveMembers"]</MudText>
+                        <MudText Typo="Typo.h4" Color="Color.Success">@_membershipReport.TotalActive</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Reports.InactiveMembers"]</MudText>
+                        <MudText Typo="Typo.h4">@_membershipReport.TotalInactive</MudText>
+                    </MudPaper>
+                </MudItem>
+
+                @if (_membershipReport.ByVoiceGroup.Count > 0)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Reports.ByVoiceGroup"]</MudText>
+                            <MudSimpleTable Dense="true">
+                                <tbody>
+                                    @foreach (var vg in _membershipReport.ByVoiceGroup)
+                                    {
+                                        <tr>
+                                            <td>@vg.VoiceGroup</td>
+                                            <td style="text-align:right;font-weight:bold;">@vg.Count</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                    </MudItem>
+                }
+
+                @if (_membershipReport.ByRole.Count > 0)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Reports.ByRole"]</MudText>
+                            <MudSimpleTable Dense="true">
+                                <tbody>
+                                    @foreach (var r in _membershipReport.ByRole)
+                                    {
+                                        <tr>
+                                            <td>@r.RoleName</td>
+                                            <td style="text-align:right;font-weight:bold;">@r.Count</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </MudTabPanel>
+
+    @* ---- Finance Report ---- *@
+    <MudTabPanel Text="Finance" Icon="@Icons.Material.Filled.Payments">
+        @if (_financeSummary is null || _charges is null || _expenses is null)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+        else
+        {
+            <MudStack Row="true" Class="mb-4" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           OnClick="ExportFinanceCsv">
+                    Export finance CSV
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           OnClick="ExportAttendanceCsv">
+                    Export attendance CSV
+                </MudButton>
+            </MudStack>
+
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Finance.TotalCharged"]</MudText>
+                        <MudText Typo="Typo.h5">@_financeSummary.TotalChargesDue.ToString("N2")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Finance.TotalCollected"]</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">@_financeSummary.TotalChargesPaid.ToString("N2")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Finance.TotalExpenses"]</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Error">@_financeSummary.TotalExpenses.ToString("N2")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary">@L["Finance.NetBalance"]</MudText>
+                        <MudText Typo="Typo.h5" Color="@(_financeSummary.NetBalance >= 0 ? Color.Success : Color.Error)">@_financeSummary.NetBalance.ToString("N2")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Charges</MudText>
+                        <MudSimpleTable Dense="true">
+                            <thead>
+                                <tr><th>Member</th><th>Description</th><th>Status</th><th style="text-align:right;">Outstanding</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var charge in _charges)
+                                {
+                                    <tr>
+                                        <td>@charge.PersonName</td>
+                                        <td>@charge.Description</td>
+                                        <td>@charge.Status</td>
+                                        <td style="text-align:right;">@((charge.TotalDue - charge.TotalPaid).ToString("N2")) @charge.CurrencyCode</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Expenses</MudText>
+                        <MudSimpleTable Dense="true">
+                            <thead>
+                                <tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right;">Amount</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var expense in _expenses)
+                                {
+                                    <tr>
+                                        <td>@expense.ExpenseDate.ToString("yyyy-MM-dd")</td>
+                                        <td>@expense.Description</td>
+                                        <td>@expense.CategoryName</td>
+                                        <td style="text-align:right;">@expense.Amount.ToString("N2") @expense.CurrencyCode</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private List<ActivityListDto>? _semesters;
+    private Guid? _selectedSemesterId;
+    private AttendanceReportDto? _attendanceReport;
+    private MembershipReportDto? _membershipReport;
+    private FinanceSummaryDto? _financeSummary;
+    private List<ChargeListDto>? _charges;
+    private List<ExpenseListDto>? _expenses;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadData();
+    }
+
+    protected override Task OnTenantChangedAsync() => LoadData();
+
+    private async Task LoadData()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId) return;
+
+        _semesters = await Mediator.Send(new GetActivitiesQuery(orgId, TypeFilter: ActivityType.Semester));
+        _attendanceReport = await Mediator.Send(new GetAttendanceReportQuery(orgId, _selectedSemesterId));
+        _membershipReport = await Mediator.Send(new GetMembershipReportQuery(orgId));
+        _financeSummary = await Mediator.Send(new GetFinanceSummaryQuery(orgId, DateTime.Now.Year));
+        _charges = await Mediator.Send(new GetChargesQuery(orgId));
+        _expenses = await Mediator.Send(new GetExpensesQuery(orgId));
+    }
+
+    private async Task OnSemesterChanged(Guid? semesterId)
+    {
+        _selectedSemesterId = semesterId;
+        if (TenantService.CurrentOrganizationId is Guid orgId)
+            _attendanceReport = await Mediator.Send(new GetAttendanceReportQuery(orgId, _selectedSemesterId));
+    }
+
+    private async Task ExportFinanceCsv()
+    {
+        if (_charges is null || _expenses is null)
+            return;
+
+        var rows = _charges.Select(c => new
+            {
+                Type = "Charge",
+                Date = c.DueDate,
+                Name = c.PersonName,
+                Description = c.Description,
+                Category = c.Status.ToString(),
+                Amount = c.TotalDue,
+                Paid = c.TotalPaid,
+                Currency = c.CurrencyCode
+            })
+            .Concat(_expenses.Select(e => new
+            {
+                Type = "Expense",
+                Date = e.ExpenseDate,
+                Name = e.ReceivedBy ?? string.Empty,
+                Description = e.Description,
+                Category = e.CategoryName,
+                Amount = -e.Amount,
+                Paid = 0m,
+                Currency = e.CurrencyCode
+            }))
+            .ToList();
+
+        var bytes = CsvExporter.Export(rows,
+            ("Type", r => r.Type),
+            ("Date", r => r.Date),
+            ("Name", r => r.Name),
+            ("Description", r => r.Description),
+            ("Category", r => r.Category),
+            ("Amount", r => r.Amount),
+            ("Paid", r => r.Paid),
+            ("Currency", r => r.Currency));
+
+        await DownloadCsv("finance-report.csv", bytes);
+    }
+
+    private async Task ExportAttendanceCsv()
+    {
+        if (_attendanceReport is null)
+            return;
+
+        var bytes = CsvExporter.Export(_attendanceReport.Rows,
+            ("Name", r => r.PersonName),
+            ("VoiceGroup", r => r.VoiceGroupName),
+            ("Present", r => r.Present),
+            ("Late", r => r.Late),
+            ("Absent", r => r.Absent),
+            ("Rate", r => r.AttendanceRate));
+
+        await DownloadCsv("attendance-report.csv", bytes);
+    }
+
+    private async Task DownloadCsv(string fileName, byte[] bytes)
+    {
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval",
+            $"const a=document.createElement('a');a.href='data:text/csv;base64,{base64}';a.download='{fileName}';a.click();");
+    }
+}

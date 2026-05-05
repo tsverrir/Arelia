@@ -19,11 +19,21 @@ public class FinanceTests
         context.Persons.Add(new Person { FirstName = "A", LastName = "One", OrganizationId = orgId });
         context.Persons.Add(new Person { FirstName = "B", LastName = "Two", OrganizationId = orgId });
         context.Persons.Add(new Person { FirstName = "C", LastName = "Inactive", OrganizationId = orgId, IsActive = false });
+        var semesterId = Guid.NewGuid();
+        context.Activities.Add(new Activity
+        {
+            Id = semesterId,
+            Name = "Spring 2026",
+            ActivityType = ActivityType.Semester,
+            StartDateTime = new DateTime(2026, 1, 1),
+            EndDateTime = new DateTime(2026, 6, 30),
+            OrganizationId = orgId
+        });
         await context.SaveChangesAsync();
 
         var handler = new GenerateMembershipFeesHandler(context);
         var result = await handler.Handle(new GenerateMembershipFeesCommand(
-            Guid.NewGuid(), 500m, 100m, DateTime.UtcNow.AddDays(30), orgId),
+            semesterId, 500m, 100m, DateTime.UtcNow.AddDays(30), orgId),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();

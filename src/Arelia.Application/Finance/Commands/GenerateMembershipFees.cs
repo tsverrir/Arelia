@@ -19,11 +19,29 @@ public class GenerateMembershipFeesHandler(IAreliaDbContext context)
     public async Task<Domain.Common.Result<int>> Handle(
         GenerateMembershipFeesCommand request, CancellationToken cancellationToken)
     {
+        if (request.BaseFeeAmount <= 0)
+            return Domain.Common.Result.Failure<int>("Base fee must be greater than zero.");
+
+        if (request.TopUpAmount is <= 0)
+            return Domain.Common.Result.Failure<int>("Optional top-up must be greater than zero when provided.");
+
+        if (request.DueDate.Date < DateTime.UtcNow.Date)
+            return Domain.Common.Result.Failure<int>("Due date cannot be in the past.");
+
         var org = await context.Organizations
             .FirstOrDefaultAsync(o => o.Id == request.OrganizationId, cancellationToken);
 
         if (org is null)
             return Domain.Common.Result.Failure<int>("Organization not found.");
+
+        var semesterExists = await context.Activities.AnyAsync(a =>
+            a.Id == request.SemesterId &&
+            a.OrganizationId == request.OrganizationId &&
+            a.ActivityType == ActivityType.Semester,
+            cancellationToken);
+
+        if (!semesterExists)
+            return Domain.Common.Result.Failure<int>("Semester not found.");
 
         var activeMembers = await context.Persons
             .Where(p => p.OrganizationId == request.OrganizationId && p.IsActive)

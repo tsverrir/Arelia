@@ -136,7 +136,8 @@ else
     private async Task LoadActivities()
     {
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
-        _activities = await Mediator.Send(new GetActivitiesQuery(orgId, _currentMonth.Year));
+        // Load without year filter so cross-month navigation at year boundaries works
+        _activities = await Mediator.Send(new GetActivitiesQuery(orgId));
     }
 
     private async Task PreviousMonth()

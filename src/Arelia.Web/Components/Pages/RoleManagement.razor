@@ -122,7 +122,13 @@
 
     private async Task CreateRole()
     {
-        if (string.IsNullOrWhiteSpace(_newRoleName) || TenantService.CurrentOrganizationId is not Guid orgId)
+        if (string.IsNullOrWhiteSpace(_newRoleName))
+        {
+            Snackbar.Add("Role name is required.", Severity.Warning);
+            return;
+        }
+
+        if (TenantService.CurrentOrganizationId is not Guid orgId)
             return;
 
         var result = await Mediator.Send(new CreateRoleCommand(_newRoleName, orgId));

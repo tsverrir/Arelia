@@ -186,7 +186,7 @@
         if (result.IsSuccess)
         {
             Snackbar.Add(L["PersonDetail.Updated"], Severity.Success);
-            Navigation.NavigateTo("/people");
+            await LoadPerson();
         }
         else
         {

@@ -14,7 +14,11 @@ public record UpdateActivityCommand(
     string? Location,
     bool IsPublicVisible,
     int? MaxCapacity,
-    DateTime? SignupDeadline) : IRequest<Domain.Common.Result>;
+    DateTime? SignupDeadline,
+    ActivityType? ActivityType = null,
+    ActivityStatus? Status = null,
+    bool? RsvpEnabled = null,
+    bool? WaitingListEnabled = null) : IRequest<Domain.Common.Result>;
 
 public class UpdateActivityHandler(IAreliaDbContext context)
     : IRequestHandler<UpdateActivityCommand, Domain.Common.Result>
@@ -22,6 +26,18 @@ public class UpdateActivityHandler(IAreliaDbContext context)
     public async Task<Domain.Common.Result> Handle(
         UpdateActivityCommand request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return Domain.Common.Result.Failure("Activity name is required.");
+
+        if (request.EndDateTime < request.StartDateTime)
+            return Domain.Common.Result.Failure("End date/time must be after start date/time.");
+
+        if (request.MaxCapacity is <= 0)
+            return Domain.Common.Result.Failure("Capacity must be a positive number.");
+
+        if (request.SignupDeadline.HasValue && request.SignupDeadline.Value > request.EndDateTime)
+            return Domain.Common.Result.Failure("Signup deadline must be before the activity ends.");
+
         var activity = await context.Activities
             .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
@@ -29,13 +45,14 @@ public class UpdateActivityHandler(IAreliaDbContext context)
             return Domain.Common.Result.Failure("Activity not found.");
 
         // Validate semester date constraints
-        if (activity.ActivityType == ActivityType.Semester &&
+        var effectiveType = request.ActivityType ?? activity.ActivityType;
+        if (effectiveType == ActivityType.Semester &&
             request.StartDateTime.Year != request.EndDateTime.Year)
         {
             return Domain.Common.Result.Failure("Semesters cannot cross calendar year boundaries.");
         }
 
-        activity.Name = request.Name;
+        activity.Name = request.Name.Trim();
         activity.Description = request.Description;
         activity.StartDateTime = request.StartDateTime;
         activity.EndDateTime = request.EndDateTime;
@@ -44,6 +61,12 @@ public class UpdateActivityHandler(IAreliaDbContext context)
         activity.MaxCapacity = request.MaxCapacity;
         activity.SignupDeadline = request.SignupDeadline;
         activity.WorkYear = request.StartDateTime.Year;
+        activity.Status = request.Status ?? activity.Status;
+        activity.RsvpEnabled = request.RsvpEnabled ?? activity.RsvpEnabled;
+        activity.WaitingListEnabled = request.WaitingListEnabled ?? activity.WaitingListEnabled;
+
+        if (request.ActivityType.HasValue)
+            activity.ActivityType = request.ActivityType.Value;
 
         await context.SaveChangesAsync(cancellationToken);
         return Domain.Common.Result.Success();

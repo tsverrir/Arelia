@@ -3,6 +3,7 @@
 @inherits Arelia.Web.Components.TenantAwarePage
 @using Arelia.Application.Documents.Commands
 @using Arelia.Application.Documents.Queries
+@using Arelia.Application.Common.Validation
 @using Arelia.Application.Organizations.Queries
 @using MediatR
 @using Radzen.Blazor
@@ -144,7 +145,7 @@
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(_content))
+        if (!InputValidation.HasTextContent(_content))
         {
             Snackbar.Add(L["Documents.ContentRequired"], Severity.Warning);
             return;

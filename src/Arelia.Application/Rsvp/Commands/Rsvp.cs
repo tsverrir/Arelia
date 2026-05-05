@@ -19,7 +19,10 @@ public class RsvpHandler(IAreliaDbContext context)
     {
         var activity = await context.Activities
             .Include(a => a.Participants)
-            .FirstOrDefaultAsync(a => a.Id == request.ActivityId, cancellationToken);
+            .FirstOrDefaultAsync(a =>
+                a.Id == request.ActivityId &&
+                a.OrganizationId == request.OrganizationId,
+                cancellationToken);
 
         if (activity is null)
             return Domain.Common.Result.Failure("Activity not found.");
@@ -107,6 +110,9 @@ public class RsvpHandler(IAreliaDbContext context)
 
             if (confirmedCount >= activity.MaxCapacity.Value)
             {
+                if (!activity.WaitingListEnabled)
+                    return Domain.Common.Result.Failure("The activity is full and the waiting list is disabled.");
+
                 // Waitlist
                 var maxPos = activity.Participants
                     .Where(p => p.IsActive && p.SignupStatus == SignupStatus.Waitlisted)
@@ -127,7 +133,7 @@ public class RsvpHandler(IAreliaDbContext context)
         {
             participant.SignupStatus = SignupStatus.Confirmed;
         }
-        else if (request.Status == RsvpStatus.No)
+        else
         {
             // Release spot
             participant.SignupStatus = SignupStatus.None;

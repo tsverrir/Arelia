@@ -1,4 +1,5 @@
 using Arelia.Application.Interfaces;
+using Arelia.Application.Common.Validation;
 using Arelia.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -41,10 +42,10 @@ public class BulkCreatePeopleHandler(IAreliaDbContext context)
             {
                 FirstName      = row.FirstName.Trim(),
                 LastName       = row.LastName.Trim(),
-                Email          = row.Email,
-                Phone          = row.Phone,
+                Email          = InputValidation.NormalizeOptional(row.Email),
+                Phone          = InputValidation.NormalizeOptional(row.Phone),
                 VoiceGroupId   = voiceGroupId,
-                Notes          = row.Notes,
+                Notes          = InputValidation.NormalizeOptional(row.Notes),
                 OrganizationId = request.OrganizationId,
             };
             context.Persons.Add(person);
