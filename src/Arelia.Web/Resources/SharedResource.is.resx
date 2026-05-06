@@ -36,6 +36,7 @@
   <data name="Common.Edit" xml:space="preserve"><value>Breyta</value></data>
   <data name="Common.Confirm" xml:space="preserve"><value>Stadfesta</value></data>
   <data name="Common.Add" xml:space="preserve"><value>Baeta vid</value></data>
+  <data name="Common.Back" xml:space="preserve"><value>Til baka</value></data>
   <data name="Common.Filter" xml:space="preserve"><value>Sia</value></data>
   <data name="Common.Search" xml:space="preserve"><value>Leita</value></data>
   <data name="Common.Active" xml:space="preserve"><value>Virkt</value></data>
@@ -85,6 +86,8 @@
   <data name="Common.Amount" xml:space="preserve"><value>Upphaed</value></data>
   <data name="Common.Category" xml:space="preserve"><value>Flokkur</value></data>
   <data name="Common.EndDateOptional" xml:space="preserve"><value>Til (valkvatt)</value></data>
+  <data name="People.BackToPeople" xml:space="preserve"><value>Til baka i folk</value></data>
+  <data name="Roles.BackToRoles" xml:space="preserve"><value>Til baka i hlutverk</value></data>
   <data name="Layout.SelectOrganization" xml:space="preserve"><value>Veldu samtok</value></data>
   <data name="Layout.Profile" xml:space="preserve"><value>Notandaupplysingar</value></data>
   <data name="Layout.SignOut" xml:space="preserve"><value>Skra ut</value></data>

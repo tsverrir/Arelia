@@ -258,11 +258,11 @@ else
 
     private static string GetCssColor(ActivityType type) => type switch
     {
-        ActivityType.Semester => "var(--mud-palette-primary)",
-        ActivityType.Rehearsal => "var(--mud-palette-info)",
-        ActivityType.Concert => "var(--mud-palette-secondary)",
-        ActivityType.Trip => "var(--mud-palette-tertiary)",
-        ActivityType.Social => "var(--mud-palette-warning)",
-        _ => "#9e9e9e",
+        ActivityType.Semester => "var(--arelia-calendar-semester)",
+        ActivityType.Rehearsal => "var(--arelia-calendar-rehearsal)",
+        ActivityType.Concert => "var(--arelia-calendar-concert)",
+        ActivityType.Trip => "var(--arelia-calendar-trip)",
+        ActivityType.Social => "var(--arelia-calendar-social)",
+        _ => "var(--arelia-calendar-other)",
     };
 }

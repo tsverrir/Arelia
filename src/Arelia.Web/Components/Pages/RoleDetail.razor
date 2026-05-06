@@ -22,7 +22,7 @@
 }
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4" Spacing="2">
-    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Navigation.NavigateTo("/roles"))" />
+    <BackButton DefaultHref="/roles" Label="@L["Roles.BackToRoles"]" />
     <MudText Typo="Typo.h5">@_role.Name</MudText>
     @if (!_role.IsActive)
     {

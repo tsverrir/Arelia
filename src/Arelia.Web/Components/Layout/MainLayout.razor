@@ -3,11 +3,13 @@
 @inject Arelia.Web.Services.TenantService TenantService
 @inject Arelia.Web.Services.CultureService CultureService
 @inject Arelia.Web.Services.AdminHighlightService HighlightService
+@inject Arelia.Web.Services.UiSkinService SkinService
+@inject Arelia.Web.Services.NavigationHistoryService NavigationHistory
 @inject ILocalizer L
 @inject NavigationManager Navigation
 @inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@SkinService.CurrentTheme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -17,12 +19,14 @@
     <style>.missing-translation { outline: 2px solid red; outline-offset: 1px; }</style>
 }
 
-<MudLayout>
+<MudLayout Class="@ShellClass">
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
                        OnClick="@ToggleDrawer" />
+        <AppBackButton />
         <MudText Typo="Typo.h6" Class="ml-3">@L["Layout.AppName"]</MudText>
         <MudSpacer />
+        <SkinSwitcher />
         <AuthorizeView>
             <Authorized>
                 <MudButton Color="Color.Inherit"
@@ -82,6 +86,7 @@
 
 @code {
     private bool _drawerOpen = true;
+    private string ShellClass => $"arelia-shell {SkinService.CurrentSkin.CssClass}";
 
     private static readonly (string Code, string Label)[] _languages =
     [
@@ -94,6 +99,8 @@
     {
         TenantService.OnTenantChanged += OnTenantOrHighlightChanged;
         HighlightService.OnChanged += OnTenantOrHighlightChanged;
+        SkinService.OnSkinChanged += OnTenantOrHighlightChanged;
+        NavigationHistory.Initialize();
         await TenantService.InitializeAsync();
     }
 
@@ -101,6 +108,7 @@
     {
         if (!firstRender) return;
         await TenantService.TryRestoreFromStorageAsync();
+        await SkinService.TryInitializeAsync();
         await CultureService.TryInitializeAsync();
     }
 
@@ -121,6 +129,7 @@
     {
         TenantService.OnTenantChanged -= OnTenantOrHighlightChanged;
         HighlightService.OnChanged -= OnTenantOrHighlightChanged;
+        SkinService.OnSkinChanged -= OnTenantOrHighlightChanged;
     }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;

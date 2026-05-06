@@ -22,10 +22,7 @@
 }
 
 <MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
-    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo(CancelTarget))"
-               StartIcon="@Icons.Material.Filled.ArrowBack">
-        @L.H("Documents.BackToList")
-    </MudButton>
+    <BackButton DefaultHref="@CancelTarget" Label="@L["Common.Back"]" />
 </MudStack>
 
 <MudText Typo="Typo.h5" GutterBottom="true">

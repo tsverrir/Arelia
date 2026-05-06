@@ -21,10 +21,7 @@
 }
 
 <MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
-    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/semesters?showList=true"))"
-               StartIcon="@Icons.Material.Filled.ArrowBack">
-        @L.H("SemesterDetail.BackToSemesters")
-    </MudButton>
+    <BackButton DefaultHref="/semesters?showList=true" Label="@L["SemesterDetail.BackToSemesters"]" />
     <MudSpacer />
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="StartEditSemester"
                StartIcon="@Icons.Material.Filled.Edit">

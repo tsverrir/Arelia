@@ -1,0 +1,20 @@
+@inject Arelia.Web.Services.NavigationHistoryService NavigationHistory
+@inject ILocalizer L
+
+<MudButton Variant="@Variant"
+           Color="@Color"
+           Size="@Size"
+           StartIcon="@Icons.Material.Filled.ArrowBack"
+           OnClick="NavigateBack">
+    @(Label ?? L["Common.Back"])
+</MudButton>
+
+@code {
+    [Parameter] public string DefaultHref { get; set; } = "/";
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public Variant Variant { get; set; } = Variant.Text;
+    [Parameter] public Color Color { get; set; } = Color.Default;
+    [Parameter] public Size Size { get; set; } = Size.Medium;
+
+    private void NavigateBack() => NavigationHistory.NavigateBack(DefaultHref);
+}

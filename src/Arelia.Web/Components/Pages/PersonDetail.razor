@@ -23,28 +23,46 @@
     return;
 }
 
+<MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
+    <BackButton DefaultHref="/people" Label="@L["People.BackToPeople"]" />
+</MudStack>
+
 <MudText Typo="Typo.h5" GutterBottom="true">@_person.FirstName @_person.LastName</MudText>
 
 <MudGrid>
     <MudItem xs="12" md="6">
         <MudCard>
-            <MudCardContent>
-                <MudTextField @bind-Value="_editFirstName" Label="@L["Common.FirstName"]" />
-                <MudTextField @bind-Value="_editLastName" Label="@L["Common.LastName"]" />
-                <MudTextField @bind-Value="_editEmail" Label="@L["Common.Email"]" />
-                <MudTextField @bind-Value="_editPhone" Label="@L["Common.Phone"]" />
-                <MudSelect T="Guid?" @bind-Value="_editVoiceGroupId" Label="@L["Common.VoiceGroup"]" Clearable="true">
-                    @if (_voiceGroups is not null)
-                    {
-                        @foreach (var vg in _voiceGroups)
-                        {
-                            <MudSelectItem T="Guid?" Value="@vg.Id">@vg.Name</MudSelectItem>
-                        }
-                    }
-                </MudSelect>
-                <MudTextField @bind-Value="_editNotes" Label="@L["Common.Notes"]" Lines="3" />
+            <MudCardContent Class="arelia-person-form">
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" sm="6" md="12">
+                        <MudTextField @bind-Value="_editFirstName" Label="@L["Common.FirstName"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="12">
+                        <MudTextField @bind-Value="_editLastName" Label="@L["Common.LastName"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="12">
+                        <MudTextField @bind-Value="_editEmail" Label="@L["Common.Email"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="12">
+                        <MudTextField @bind-Value="_editPhone" Label="@L["Common.Phone"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudSelect T="Guid?" @bind-Value="_editVoiceGroupId" Label="@L["Common.VoiceGroup"]" Variant="Variant.Outlined" Clearable="true">
+                            @if (_voiceGroups is not null)
+                            {
+                                @foreach (var vg in _voiceGroups)
+                                {
+                                    <MudSelectItem T="Guid?" Value="@vg.Id">@vg.Name</MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_editNotes" Label="@L["Common.Notes"]" Variant="Variant.Outlined" Lines="3" />
+                    </MudItem>
+                </MudGrid>
             </MudCardContent>
-            <MudCardActions>
+            <MudCardActions Class="arelia-person-actions">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">@L.H("Common.Save")</MudButton>
                 <MudSpacer />
                 @if (_person.IsActive)
@@ -116,23 +134,31 @@
                 <MudDivider Class="my-3" />
 
                 <MudText Typo="Typo.subtitle1" GutterBottom="true">@L.H("PersonDetail.AssignRole")</MudText>
-                <MudStack Row="true" AlignItems="AlignItems.End" Spacing="2">
-                    <MudSelect T="Guid?" @bind-Value="_selectedRoleId" Label="@L["Common.Role"]" Clearable="true">
-                        @if (_roles is not null)
-                        {
-                            @foreach (var role in _roles.Where(r => r.IsActive))
+                <MudGrid Spacing="2" Class="arelia-role-assignment-form">
+                    <MudItem xs="12" lg="4">
+                        <MudSelect T="Guid?" @bind-Value="_selectedRoleId" Label="@L["Common.Role"]" Variant="Variant.Outlined" Clearable="true">
+                            @if (_roles is not null)
                             {
-                                <MudSelectItem T="Guid?" Value="@role.Id">@role.Name</MudSelectItem>
+                                @foreach (var role in _roles.Where(r => r.IsActive))
+                                {
+                                    <MudSelectItem T="Guid?" Value="@role.Id">@role.Name</MudSelectItem>
+                                }
                             }
-                        }
-                    </MudSelect>
-                    <MudDatePicker @bind-Date="_assignFromDate" Label="@L["Common.From"]" />
-                    <MudDatePicker @bind-Date="_assignToDate" Label="@L["Common.EndDateOptional"]" Clearable="true" />
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AssignRole"
-                               Disabled="@(_selectedRoleId is null)">
-                        @L.H("Common.Assign")
-                    </MudButton>
-                </MudStack>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" lg="3">
+                        <MudDatePicker @bind-Date="_assignFromDate" Label="@L["Common.From"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" lg="3">
+                        <MudDatePicker @bind-Date="_assignToDate" Label="@L["Common.EndDateOptional"]" Variant="Variant.Outlined" Clearable="true" />
+                    </MudItem>
+                    <MudItem xs="12" lg="2" Class="arelia-role-assignment-action">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AssignRole"
+                                   Disabled="@(_selectedRoleId is null)">
+                            @L.H("Common.Assign")
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
             </MudCardContent>
         </MudCard>
     </MudItem>

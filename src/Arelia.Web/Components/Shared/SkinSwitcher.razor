@@ -1,0 +1,33 @@
+@inject Arelia.Web.Services.UiSkinService SkinService
+
+<MudMenu Class="skin-switcher"
+         Icon="@Icons.Material.Filled.Palette"
+         AriaLabel="Change visual skin"
+         Color="Color.Inherit"
+         AnchorOrigin="Origin.BottomRight"
+         TransformOrigin="Origin.TopRight"
+         Dense="true">
+    <MudMenuItem Disabled="true">
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.subtitle2">Skin</MudText>
+            <MudText Typo="Typo.caption">@SkinService.CurrentSkin.Name</MudText>
+        </MudStack>
+    </MudMenuItem>
+    <MudDivider />
+    @foreach (var skin in SkinService.Skins)
+    {
+        var isCurrent = skin.Key == SkinService.CurrentSkin.Key;
+        <MudMenuItem OnClick="@(() => SelectSkinAsync(skin.Key))"
+                     Icon="@(isCurrent ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
+                     IconColor="@(isCurrent ? Color.Primary : Color.Default)">
+            <MudStack Spacing="0" Class="skin-switcher__item">
+                <MudText Typo="Typo.body2" Class="skin-switcher__name">@skin.Name</MudText>
+                <MudText Typo="Typo.caption">@skin.Description</MudText>
+            </MudStack>
+        </MudMenuItem>
+    }
+</MudMenu>
+
+@code {
+    private Task SelectSkinAsync(string key) => SkinService.SetSkinAsync(key);
+}

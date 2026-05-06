@@ -63,6 +63,8 @@ public class Program
         builder.Services.AddLocalization();
         builder.Services.AddScoped<CultureService>();
         builder.Services.AddScoped<AdminHighlightService>();
+        builder.Services.AddScoped<UiSkinService>();
+        builder.Services.AddScoped<NavigationHistoryService>();
         builder.Services.AddScoped<ILocalizer, Localizer>();
 
         var app = builder.Build();

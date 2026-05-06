@@ -1,0 +1,29 @@
+@implements IDisposable
+@inject Arelia.Web.Services.NavigationHistoryService NavigationHistory
+@inject ILocalizer L
+
+<MudTooltip Text="@L["Common.Back"]">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   aria-label="@L["Common.Back"]"
+                   Color="Color.Inherit"
+                   Edge="Edge.Start"
+                   Disabled="@(!NavigationHistory.CanGoBack)"
+                   OnClick="@(() => NavigationHistory.NavigateBack("/"))" />
+</MudTooltip>
+
+@code {
+    protected override void OnInitialized()
+    {
+        NavigationHistory.OnChanged += OnNavigationHistoryChanged;
+    }
+
+    private void OnNavigationHistoryChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NavigationHistory.OnChanged -= OnNavigationHistoryChanged;
+    }
+}

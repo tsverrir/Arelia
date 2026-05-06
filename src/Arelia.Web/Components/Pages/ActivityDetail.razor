@@ -19,10 +19,7 @@
 
 @if (_notFound)
 {
-    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
-               StartIcon="@Icons.Material.Filled.ArrowBack">
-        @L.H("ActivityDetail.BackToActivities")
-    </MudButton>
+    <BackButton DefaultHref="/activities" Label="@L["ActivityDetail.BackToActivities"]" />
     <MudAlert Severity="Severity.Warning" Class="mt-4">Activity not found.</MudAlert>
     return;
 }
@@ -34,10 +31,7 @@
 }
 
 <MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
-    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/activities"))"
-               StartIcon="@Icons.Material.Filled.ArrowBack">
-        @L.H("ActivityDetail.BackToActivities")
-    </MudButton>
+    <BackButton DefaultHref="@ActivityBackFallback" Label="@ActivityBackLabel" />
     <MudSpacer />
     @if (_activity.Status != ActivityStatus.Published)
     {
@@ -427,6 +421,14 @@
     private bool _editWaitingListEnabled = true;
     private DateTime? _editSignupDate;
     private TimeSpan? _editSignupTime;
+
+    private string ActivityBackFallback =>
+        _activity?.ParentActivityId is Guid semesterId ? $"/semesters/{semesterId}" : "/activities";
+
+    private string ActivityBackLabel =>
+        _activity?.ParentActivityId is Guid
+            ? L["ActivityDetail.BackToSemester"]
+            : L["ActivityDetail.BackToActivities"];
 
     protected override async Task OnInitializedAsync()
     {

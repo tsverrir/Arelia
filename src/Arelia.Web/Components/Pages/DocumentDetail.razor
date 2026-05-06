@@ -17,10 +17,7 @@
 }
 
 <MudStack Row="true" Class="mb-2" AlignItems="AlignItems.Center">
-    <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/documents"))"
-               StartIcon="@Icons.Material.Filled.ArrowBack">
-        @L.H("Documents.BackToList")
-    </MudButton>
+    <BackButton DefaultHref="/documents" Label="@L["Documents.BackToList"]" />
     <MudSpacer />
     <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
                StartIcon="@Icons.Material.Filled.PictureAsPdf"

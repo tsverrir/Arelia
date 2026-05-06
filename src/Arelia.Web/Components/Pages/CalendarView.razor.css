@@ -1,112 +1,146 @@
 .cal-container {
     width: 100%;
-    border: 1px solid var(--mud-palette-divider);
-    border-radius: 4px;
     overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--arelia-border) 88%, transparent);
+    border-radius: var(--arelia-radius-lg);
+    background: var(--arelia-panel);
+    box-shadow: var(--arelia-shadow-soft);
 }
 
 .cal-header {
     display: grid;
     grid-template-columns: 80px repeat(7, 1fr);
-    background-color: var(--mud-palette-table-header);
-    border-bottom: 1px solid var(--mud-palette-divider);
+    background: color-mix(in srgb, var(--arelia-surface-alt) 78%, var(--arelia-surface));
+    border-bottom: 1px solid color-mix(in srgb, var(--arelia-border) 82%, transparent);
 }
 
 .cal-header-cell {
-    padding: 6px 8px;
+    padding: 0.6rem 0.75rem;
     text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-left: 1px solid var(--mud-palette-divider);
+    font-size: 0.78rem;
+    font-weight: 750;
+    color: var(--arelia-text);
+    border-left: 1px solid color-mix(in srgb, var(--arelia-border) 75%, transparent);
 }
 
 .cal-week {
     display: grid;
     grid-template-columns: 80px repeat(7, 1fr);
-    border-top: 2px solid var(--mud-palette-divider);
+    border-top: 1px solid color-mix(in srgb, var(--arelia-border) 82%, transparent);
 }
 
 .cal-week-label {
-    padding: 4px 6px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--mud-palette-text-secondary);
-    background-color: var(--mud-palette-surface);
-    border-right: 1px solid var(--mud-palette-divider);
+    padding: 0.4rem 0.55rem;
+    font-size: 0.74rem;
+    font-weight: 750;
+    color: var(--arelia-text-muted);
+    background: color-mix(in srgb, var(--arelia-surface-alt) 54%, var(--arelia-surface));
+    border-right: 1px solid color-mix(in srgb, var(--arelia-border) 75%, transparent);
     white-space: nowrap;
 }
 
 .cal-day-header {
-    padding: 4px 8px;
+    padding: 0.4rem 0.6rem;
     text-align: right;
-    font-size: 0.75rem;
-    border-left: 1px solid var(--mud-palette-divider);
-    background-color: var(--mud-palette-surface);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--arelia-text);
+    border-left: 1px solid color-mix(in srgb, var(--arelia-border) 70%, transparent);
+    background: color-mix(in srgb, var(--arelia-surface) 86%, transparent);
 }
 
 .cal-today {
-    font-weight: bold;
-    color: var(--mud-palette-primary);
+    color: var(--arelia-primary);
+    font-weight: 800;
 }
 
 .cal-other-month {
-    opacity: 0.4;
+    opacity: 0.42;
 }
 
-/* Background cells behind spanning event bars — provide column separators */
 .cal-span-bg {
-    border-left: 1px solid var(--mud-palette-divider);
-    background-color: var(--mud-palette-surface);
+    border-left: 1px solid color-mix(in srgb, var(--arelia-border) 68%, transparent);
+    background: color-mix(in srgb, var(--arelia-surface) 88%, transparent);
 }
 
 .cal-event-bar {
-    margin: 1px 0 1px 1px;
-    padding: 2px 6px;
+    align-self: center;
+    margin: 0.12rem 0.2rem;
+    padding: 0.16rem 0.55rem;
     color: white;
-    font-size: 0.72rem;
-    border-radius: 3px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    border-radius: 999px;
     cursor: pointer;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    align-self: center;
     user-select: none;
+    box-shadow: 0 5px 14px rgba(31, 35, 40, 0.11);
+    transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
 }
 
-    .cal-event-bar:hover {
-        filter: brightness(1.12);
-    }
+.cal-event-bar:hover {
+    filter: brightness(1.05) saturate(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(31, 35, 40, 0.14);
+}
 
-/* Left column placeholder aligned with day cells row */
 .cal-week-cell-col {
-    border-top: 1px solid var(--mud-palette-divider);
-    border-right: 1px solid var(--mud-palette-divider);
-    background-color: var(--mud-palette-surface);
+    border-top: 1px solid color-mix(in srgb, var(--arelia-border) 70%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--arelia-border) 70%, transparent);
+    background: color-mix(in srgb, var(--arelia-surface-alt) 42%, var(--arelia-surface));
 }
 
 .cal-day-cell {
-    padding: 2px 2px 4px;
-    border-left: 1px solid var(--mud-palette-divider);
-    border-top: 1px solid var(--mud-palette-divider);
-    background-color: var(--mud-palette-surface);
-    min-height: 60px;
+    min-height: 70px;
+    padding: 0.28rem;
     vertical-align: top;
+    border-left: 1px solid color-mix(in srgb, var(--arelia-border) 68%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--arelia-border) 68%, transparent);
+    background: color-mix(in srgb, var(--arelia-surface) 88%, transparent);
+}
+
+.cal-day-cell:hover {
+    background: color-mix(in srgb, var(--arelia-hover-bg) 58%, var(--arelia-surface));
 }
 
 .cal-event-chip {
     display: block;
-    font-size: 0.7rem;
-    padding: 1px 5px;
-    margin: 1px 0;
-    border-radius: 3px;
+    margin: 0.12rem 0;
+    padding: 0.16rem 0.5rem;
+    border-radius: 999px;
+    color: white;
     cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.32;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: white;
     user-select: none;
+    box-shadow: 0 4px 10px rgba(31, 35, 40, 0.10);
+    transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
 }
 
-    .cal-event-chip:hover {
-        filter: brightness(1.12);
+.cal-event-chip span {
+    margin-right: 0.25rem;
+    opacity: 0.9;
+}
+
+.cal-event-chip:hover {
+    filter: brightness(1.05) saturate(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 7px 16px rgba(31, 35, 40, 0.14);
+}
+
+@media (max-width: 900px) {
+    .cal-container {
+        overflow-x: auto;
     }
+
+    .cal-header,
+    .cal-week {
+        min-width: 860px;
+    }
+}
