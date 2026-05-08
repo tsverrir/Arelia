@@ -15,7 +15,7 @@
 
 <MudText Typo="Typo.h5" GutterBottom="true">@L.H("Admin.Backups.Title")</MudText>
 
-<div class="d-flex gap-2 mb-4">
+<div class="d-flex flex-wrap gap-2 mb-4">
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateBackup"
                StartIcon="@Icons.Material.Filled.Backup"
                Disabled="@(_isCreating || _isRestoring)">
@@ -34,6 +34,7 @@
 
 @if (_backups is not null && _backups.Count > 0)
 {
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <MudTable Items="_backups" Hover="true" Dense="true">
         <HeaderContent>
             <MudTh>@L["Common.File"]</MudTh>
@@ -43,10 +44,10 @@
             <MudTh>@L["Common.Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd>@context.FileName</MudTd>
-            <MudTd>@FormatSize(context.SizeBytes)</MudTd>
-            <MudTd>@context.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss UTC")</MudTd>
-            <MudTd>
+            <MudTd DataLabel="@L["Common.File"]">@context.FileName</MudTd>
+            <MudTd DataLabel="@L["Common.Size"]">@FormatSize(context.SizeBytes)</MudTd>
+            <MudTd DataLabel="@L["Common.Created"]">@context.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss UTC")</MudTd>
+            <MudTd DataLabel="@L["Common.Version"]">
                 @if (context.IsValid)
                 {
                     <MudChip T="string" Color="Color.Success" Size="Size.Small">@FormatVersion(context.DatabaseVersion)</MudChip>
@@ -58,16 +59,16 @@
                     </MudChip>
                 }
             </MudTd>
-            <MudTd>
-                <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small"
-                           StartIcon="@Icons.Material.Filled.RestorePage"
-                           OnClick="@(() => PromptRestore(context))"
-                           Disabled="@(!context.IsValid || _isRestoring)">
-                    @L["Admin.Backups.Restore"]
-                </MudButton>
+            <MudTd DataLabel="@L["Common.Actions"]">
+                <MudIconButton Icon="@Icons.Material.Filled.RestorePage"
+                               Color="Color.Warning" Size="Size.Small"
+                               aria-label="@L["Admin.Backups.Restore"]"
+                               OnClick="@(() => PromptRestore(context))"
+                               Disabled="@(!context.IsValid || _isRestoring)" />
             </MudTd>
         </RowTemplate>
     </MudTable>
+    </div>
 }
 else
 {
@@ -183,7 +184,7 @@ else
     private static string FormatVersion(string? version)
     {
         if (version is null)
-            return "—";
+            return "ï¿½";
         // Show just the timestamp portion for readability (e.g. "20260310112654")
         var underscoreIdx = version.IndexOf('_');
         return underscoreIdx > 0 ? version[..underscoreIdx] : version;

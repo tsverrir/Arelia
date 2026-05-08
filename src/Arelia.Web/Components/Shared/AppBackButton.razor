@@ -6,7 +6,6 @@
     <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
                    aria-label="@L["Common.Back"]"
                    Color="Color.Inherit"
-                   Edge="Edge.Start"
                    Disabled="@(!NavigationHistory.CanGoBack)"
                    OnClick="@(() => NavigationHistory.NavigateBack("/"))" />
 </MudTooltip>

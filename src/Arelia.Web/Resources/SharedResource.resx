@@ -507,4 +507,18 @@
   <data name="Admin.AuditLog.ShowingCount" xml:space="preserve"><value>Showing {0} of {1} entries</value></data>
   <data name="Common.NoResults" xml:space="preserve"><value>No results.</value></data>
   <data name="Common.Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Common.Clear" xml:space="preserve"><value>Clear</value></data>
+  <!-- Semester detail: bulk actions -->
+  <data name="SemesterDetail.NSelected" xml:space="preserve"><value>{0} selected</value></data>
+  <data name="SemesterDetail.PublishSelected" xml:space="preserve"><value>Publish Selected</value></data>
+  <data name="SemesterDetail.CancelSelected" xml:space="preserve"><value>Cancel Selected</value></data>
+  <data name="SemesterDetail.DeleteSelected" xml:space="preserve"><value>Delete Selected</value></data>
+  <data name="SemesterDetail.ActivityPublished" xml:space="preserve"><value>Activity published.</value></data>
+  <data name="SemesterDetail.ActivitiesPublished" xml:space="preserve"><value>{0} activities published.</value></data>
+  <data name="SemesterDetail.BulkCancelTitle" xml:space="preserve"><value>Cancel Activities</value></data>
+  <data name="SemesterDetail.BulkCancelConfirm" xml:space="preserve"><value>Cancel {0} selected activities? This will mark them as cancelled.</value></data>
+  <data name="SemesterDetail.ActivitiesCancelled" xml:space="preserve"><value>{0} activities cancelled.</value></data>
+  <data name="SemesterDetail.BulkDeleteTitle" xml:space="preserve"><value>Delete Activities</value></data>
+  <data name="SemesterDetail.BulkDeleteConfirm" xml:space="preserve"><value>Delete {0} selected activities? This action cannot be undone.</value></data>
+  <data name="SemesterDetail.ActivitiesDeleted" xml:space="preserve"><value>{0} activities deleted.</value></data>
 </root>

@@ -195,12 +195,49 @@
             <MudCardContent>
                 @if (_semester.ChildActivities.Count > 0)
                 {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Spacing="2" Wrap="Wrap.Wrap">
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Publish"
+                                   Disabled="@(_selectedActivityIds.Count == 0)"
+                                   OnClick="PublishSelected">
+                            @L.H("SemesterDetail.PublishSelected")
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Cancel"
+                                   Disabled="@(_selectedActivityIds.Count == 0)"
+                                   OnClick="CancelSelected">
+                            @L.H("SemesterDetail.CancelSelected")
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Delete"
+                                   Disabled="@(_selectedActivityIds.Count == 0)"
+                                   OnClick="DeleteSelected">
+                            @L.H("SemesterDetail.DeleteSelected")
+                        </MudButton>
+                        @if (_selectedActivityIds.Count > 0)
+                        {
+                            <MudText Typo="Typo.body2" Class="ml-2">
+                                @string.Format(L["SemesterDetail.NSelected"], _selectedActivityIds.Count)
+                            </MudText>
+                            <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small"
+                                       OnClick="@(() => _selectedActivityIds.Clear())">
+                                @L.H("Common.Clear")
+                            </MudButton>
+                        }
+                    </MudStack>
                     <MudSimpleTable Dense="true" Hover="true">
                         <thead>
                             <tr>
+                                <th Style="width:40px;">
+                                    <MudCheckBox T="bool" Value="@_allDraftsSelected"
+                                                 ValueChanged="@(v => ToggleSelectAll(v))"
+                                                 Dense="true" Size="Size.Small" />
+                                </th>
                                 <th>@L["Common.Date"]</th>
                                 <th>@L["Common.Name"]</th>
                                 <th>@L["Common.Type"]</th>
+                                <th>@L["Common.Status"]</th>
+                                <th Style="width:48px;"></th>
                                 <th>@L["Common.Time"]</th>
                                 <th>@L["Common.Location"]</th>
                             </tr>
@@ -209,12 +246,30 @@
                             @foreach (var activity in _semester.ChildActivities)
                             {
                                 <tr Style="cursor:pointer;" @onclick="@(() => Navigation.NavigateTo($"/activities/{activity.Id}"))">
+                                    <td @onclick:stopPropagation="true">
+                                        <MudCheckBox T="bool" Dense="true" Size="Size.Small"
+                                                     Value="@(_selectedActivityIds.Contains(activity.Id))"
+                                                     ValueChanged="@(v => ToggleActivity(activity.Id, v))" />
+                                    </td>
                                     <td>@activity.StartDateTime.ToString("ddd dd MMM")</td>
                                     <td>@activity.Name</td>
                                     <td>
                                         <MudChip T="string" Size="Size.Small" Color="@GetColor(activity.ActivityType)">
                                             @activity.ActivityType
                                         </MudChip>
+                                    </td>
+                                    <td>
+                                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(activity.Status)">
+                                            @activity.Status
+                                        </MudChip>
+                                    </td>
+                                    <td @onclick:stopPropagation="true">
+                                        @if (activity.Status == ActivityStatus.Draft)
+                                        {
+                                            <MudIconButton Icon="@Icons.Material.Filled.Publish"
+                                                           Color="Color.Success" Size="Size.Small"
+                                                           OnClick="@(() => PublishSingle(activity.Id))" />
+                                        }
                                     </td>
                                     <td>@activity.StartDateTime.ToString("HH:mm") – @activity.EndDateTime.ToString("HH:mm")</td>
                                     <td>@(activity.Location ?? "—")</td>
@@ -345,6 +400,12 @@
 
     private static readonly ActivityType[] _eventTypes =
         [ActivityType.Rehearsal, ActivityType.Concert, ActivityType.Trip, ActivityType.Social, ActivityType.Other];
+
+    // Bulk action selection state
+    private HashSet<Guid> _selectedActivityIds = new();
+    private bool _allDraftsSelected => _semester?.ChildActivities
+        .All(a => _selectedActivityIds.Contains(a.Id)) == true
+        && _semester.ChildActivities.Count > 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -537,6 +598,121 @@
         ActivityType.Social => Color.Warning,
         _ => Color.Default,
     };
+
+    private static Color GetStatusColor(ActivityStatus status) => status switch
+    {
+        ActivityStatus.Draft => Color.Default,
+        ActivityStatus.Published => Color.Success,
+        ActivityStatus.Cancelled => Color.Error,
+        _ => Color.Default,
+    };
+
+    private void ToggleActivity(Guid id, bool selected)
+    {
+        if (selected)
+            _selectedActivityIds.Add(id);
+        else
+            _selectedActivityIds.Remove(id);
+    }
+
+    private void ToggleSelectAll(bool selectAll)
+    {
+        if (_semester is null) return;
+
+        if (selectAll)
+        {
+            foreach (var a in _semester.ChildActivities)
+                _selectedActivityIds.Add(a.Id);
+        }
+        else
+        {
+            _selectedActivityIds.Clear();
+        }
+    }
+
+    private async Task PublishSingle(Guid activityId)
+    {
+        var result = await Mediator.Send(new PublishActivitiesBatchCommand([activityId]));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["SemesterDetail.ActivityPublished"], Severity.Success);
+            _selectedActivityIds.Remove(activityId);
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task PublishSelected()
+    {
+        if (_selectedActivityIds.Count == 0) return;
+
+        var result = await Mediator.Send(new PublishActivitiesBatchCommand(_selectedActivityIds.ToList()));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(string.Format(L["SemesterDetail.ActivitiesPublished"], result.Value), Severity.Success);
+            _selectedActivityIds.Clear();
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task CancelSelected()
+    {
+        if (_selectedActivityIds.Count == 0) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(L["SemesterDetail.BulkCancelConfirm"], _selectedActivityIds.Count) }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["SemesterDetail.BulkCancelTitle"], parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new CancelActivitiesBatchCommand(_selectedActivityIds.ToList()));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(string.Format(L["SemesterDetail.ActivitiesCancelled"], result.Value), Severity.Success);
+            _selectedActivityIds.Clear();
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task DeleteSelected()
+    {
+        if (_selectedActivityIds.Count == 0) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(L["SemesterDetail.BulkDeleteConfirm"], _selectedActivityIds.Count) }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["SemesterDetail.BulkDeleteTitle"], parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new BulkDeleteActivitiesCommand(_selectedActivityIds.ToList()));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(string.Format(L["SemesterDetail.ActivitiesDeleted"], _selectedActivityIds.Count), Severity.Success);
+            _selectedActivityIds.Clear();
+            await LoadSemester();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
 
     private void StartEditSemester()
     {

@@ -396,4 +396,17 @@
   <data name="ActivityDetail.AttachmentUploaded" xml:space="preserve"><value>Fil uploadet.</value></data>
   <data name="ActivityDetail.AttachmentTooLarge" xml:space="preserve"><value>Filen overstiger grænsen på 20 MB.</value></data>
   <data name="ActivityDetail.AttachmentTypeNotAllowed" xml:space="preserve"><value>Filtypen er ikke tilladt.</value></data>
+  <data name="Common.Clear" xml:space="preserve"><value>Ryd</value></data>
+  <data name="SemesterDetail.NSelected" xml:space="preserve"><value>{0} valgt</value></data>
+  <data name="SemesterDetail.PublishSelected" xml:space="preserve"><value>Publicér valgte</value></data>
+  <data name="SemesterDetail.CancelSelected" xml:space="preserve"><value>Aflys valgte</value></data>
+  <data name="SemesterDetail.DeleteSelected" xml:space="preserve"><value>Slet valgte</value></data>
+  <data name="SemesterDetail.ActivityPublished" xml:space="preserve"><value>Aktivitet publiceret.</value></data>
+  <data name="SemesterDetail.ActivitiesPublished" xml:space="preserve"><value>{0} aktiviteter publiceret.</value></data>
+  <data name="SemesterDetail.BulkCancelTitle" xml:space="preserve"><value>Aflys aktiviteter</value></data>
+  <data name="SemesterDetail.BulkCancelConfirm" xml:space="preserve"><value>Aflys {0} valgte aktiviteter? De vil blive markeret som aflyst.</value></data>
+  <data name="SemesterDetail.ActivitiesCancelled" xml:space="preserve"><value>{0} aktiviteter aflyst.</value></data>
+  <data name="SemesterDetail.BulkDeleteTitle" xml:space="preserve"><value>Slet aktiviteter</value></data>
+  <data name="SemesterDetail.BulkDeleteConfirm" xml:space="preserve"><value>Slet {0} valgte aktiviteter? Denne handling kan ikke fortrydes.</value></data>
+  <data name="SemesterDetail.ActivitiesDeleted" xml:space="preserve"><value>{0} aktiviteter slettet.</value></data>
 </root>

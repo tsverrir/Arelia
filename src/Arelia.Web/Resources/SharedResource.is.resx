@@ -396,4 +396,17 @@
   <data name="ActivityDetail.AttachmentUploaded" xml:space="preserve"><value>Skrá hlaðin upp.</value></data>
   <data name="ActivityDetail.AttachmentTooLarge" xml:space="preserve"><value>Skráin er of stór (hámark 20 MB).</value></data>
   <data name="ActivityDetail.AttachmentTypeNotAllowed" xml:space="preserve"><value>Þessi skráargerð er ekki leyfð.</value></data>
+  <data name="Common.Clear" xml:space="preserve"><value>Hreinsa</value></data>
+  <data name="SemesterDetail.NSelected" xml:space="preserve"><value>{0} valið</value></data>
+  <data name="SemesterDetail.PublishSelected" xml:space="preserve"><value>Birta valin</value></data>
+  <data name="SemesterDetail.CancelSelected" xml:space="preserve"><value>Aflýsa völdum</value></data>
+  <data name="SemesterDetail.DeleteSelected" xml:space="preserve"><value>Eyða völdum</value></data>
+  <data name="SemesterDetail.ActivityPublished" xml:space="preserve"><value>Viðburður birtur.</value></data>
+  <data name="SemesterDetail.ActivitiesPublished" xml:space="preserve"><value>{0} viðburðir birtir.</value></data>
+  <data name="SemesterDetail.BulkCancelTitle" xml:space="preserve"><value>Aflýsa viðburðum</value></data>
+  <data name="SemesterDetail.BulkCancelConfirm" xml:space="preserve"><value>Aflýsa {0} völdum viðburðum? Þeir verða merktir sem aflýstir.</value></data>
+  <data name="SemesterDetail.ActivitiesCancelled" xml:space="preserve"><value>{0} viðburðir aflýstir.</value></data>
+  <data name="SemesterDetail.BulkDeleteTitle" xml:space="preserve"><value>Eyða viðburðum</value></data>
+  <data name="SemesterDetail.BulkDeleteConfirm" xml:space="preserve"><value>Eyða {0} völdum viðburðum? Þetta er óafturkræft.</value></data>
+  <data name="SemesterDetail.ActivitiesDeleted" xml:space="preserve"><value>{0} viðburðum eytt.</value></data>
 </root>
