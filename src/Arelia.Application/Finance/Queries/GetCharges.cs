@@ -1,7 +1,4 @@
-using Arelia.Application.Interfaces;
 using Arelia.Domain.Enums;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.Finance.Queries;
 

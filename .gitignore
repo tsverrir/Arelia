@@ -361,6 +361,17 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/src/Arelia.Web/arelia.db
-/src/Arelia.Web/arelia.db-shm
-/src/Arelia.Web/arelia.db-wal
+# SQLite databases (anywhere in repo)
+*.db
+*.db-shm
+*.db-wal
+
+# User-specific project settings
+*.csproj.user
+
+# Runtime directories
+**/backups/
+**/uploads/
+
+# Bootstrap (removed — MudBlazor provides the UI framework)
+src/Arelia.Web/wwwroot/lib/bootstrap/

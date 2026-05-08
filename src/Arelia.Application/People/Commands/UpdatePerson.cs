@@ -1,7 +1,4 @@
-using Arelia.Application.Interfaces;
 using Arelia.Application.Common.Validation;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.People.Commands;
 

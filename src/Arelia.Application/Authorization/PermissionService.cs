@@ -1,6 +1,4 @@
-using Arelia.Application.Interfaces;
 using Arelia.Domain.Enums;
-using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.Authorization;
 

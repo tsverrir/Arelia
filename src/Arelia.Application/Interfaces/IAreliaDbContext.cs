@@ -1,5 +1,4 @@
 using Arelia.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.Interfaces;
 

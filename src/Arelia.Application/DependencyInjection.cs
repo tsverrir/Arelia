@@ -1,6 +1,5 @@
 using Arelia.Application.Authorization;
 using FluentValidation;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Arelia.Application;

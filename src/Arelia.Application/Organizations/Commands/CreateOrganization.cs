@@ -1,7 +1,5 @@
-using Arelia.Application.Interfaces;
 using Arelia.Domain.Entities;
 using Arelia.Domain.Enums;
-using MediatR;
 
 namespace Arelia.Application.Organizations.Commands;
 

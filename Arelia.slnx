@@ -1,10 +1,4 @@
 <Solution>
-  <Folder Name="/AgentDocks/">
-    <File Path="AIDocks/Assumptions.md" />
-    <File Path="AIDocks/Plan.md" />
-    <File Path="AIDocks/smoketest.md" />
-    <File Path="AIDocks/SpecificationReview.md" />
-  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Arelia.Application/Arelia.Application.csproj" />
     <Project Path="src/Arelia.Domain/Arelia.Domain.csproj" />

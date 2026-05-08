@@ -1,4 +1,4 @@
-using Arelia.Application.Users.Queries;
+using Arelia.Application.Organizations.Users.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -51,7 +51,7 @@ public class CultureService(
     public async Task SetCultureAsync(string userId, string cultureName)
     {
         await mediator.Send(
-            new Application.Users.Commands.SetUserLanguagePreferenceCommand(userId, cultureName));
+            new Application.Organizations.Users.Commands.SetUserLanguagePreferenceCommand(userId, cultureName));
 
         await ApplyCultureAsync(cultureName);
     }

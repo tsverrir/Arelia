@@ -1,8 +1,5 @@
-using Arelia.Application.Interfaces;
 
-using MediatR;
 
-using Microsoft.EntityFrameworkCore;
 
 namespace Arelia.Application.People.Queries;
 
