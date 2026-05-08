@@ -104,4 +104,4 @@ See [AGENTS.md](AGENTS.md) for coding conventions and architecture guidance.
 
 ## License
 
-This project is not yet licensed. A license will be added before the first release.
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
