@@ -79,9 +79,18 @@
                         @(context.Value?.ToString() ?? "—")
                         break;
                     case "Status":
-                        <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
-                            @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
-                        </MudChip>
+                        @if (context.Item.IsSuspended)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">@L["Common.Suspended"]</MudChip>
+                        }
+                        else if ((bool)(context.Value ?? false))
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success">@L["Common.Active"]</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">@L["Common.Inactive"]</MudChip>
+                        }
                         break;
                     default:
                         @(context.Value?.ToString() ?? "—")
@@ -92,7 +101,8 @@
     }
     else
     {
-        var activePeople = _people.Where(p => p.IsActive).ToList();
+        var activePeople = _people.Where(p => p.IsActive && !p.IsSuspended).ToList();
+        var suspendedPeople = _people.Where(p => p.IsSuspended).ToList();
         var inactivePeople = _people.Where(p => !p.IsActive).ToList();
         <MudExpansionPanels MultiExpansion="true">
             <MudExpansionPanel Text="@ActiveGroupTitle(activePeople.Count)"
@@ -121,6 +131,28 @@
                     </MudTable>
                 }
             </MudExpansionPanel>
+            @if (suspendedPeople.Count > 0)
+            {
+                <MudExpansionPanel Text="@SuspendedGroupTitle(suspendedPeople.Count)"
+                                   IsInitiallyExpanded="false">
+                    <MudTable Items="suspendedPeople" Dense="true" Hover="true" OnRowClick="OnRowClick" T="PersonListDto">
+                        <HeaderContent>
+                            <MudTh>@L["Common.FirstName"]</MudTh>
+                            <MudTh>@L["Common.LastName"]</MudTh>
+                            <MudTh>@L["Common.Email"]</MudTh>
+                            <MudTh>@L["Common.Phone"]</MudTh>
+                            <MudTh>@L["Common.VoiceGroup"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.FirstName</MudTd>
+                            <MudTd>@context.LastName</MudTd>
+                            <MudTd>@(context.Email ?? "—")</MudTd>
+                            <MudTd>@(context.Phone ?? "—")</MudTd>
+                            <MudTd>@(context.VoiceGroupName ?? "—")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudExpansionPanel>
+            }
             <MudExpansionPanel Text="@InactiveGroupTitle(inactivePeople.Count)"
                                IsInitiallyExpanded="false">
                 @if (inactivePeople.Count == 0)
@@ -542,5 +574,6 @@ Jane;Smith;;;Soprano;Section leader</pre>
     }
 
     private string ActiveGroupTitle(int count) => L["Common.Active"] + $" ({count})";
+    private string SuspendedGroupTitle(int count) => L["Common.Suspended"] + $" ({count})";
     private string InactiveGroupTitle(int count) => L["Common.Inactive"] + $" ({count})";
 }

@@ -24,15 +24,20 @@ Two command files retained their old names while the class names inside had been
 ## ISSUE-002 — Suspended user still shows Active chip in People list
 
 **Severity:** Medium  
-**Status:** Open  
-**Area:** Web / PeopleList.razor
+**Status:** ✅ Fixed  
+**Area:** Web / PeopleList.razor, Application / GetPeople.cs
 
 **Description:**  
-After suspending a user (which ends all active role assignments), the People list at `/people` may still show the user with an "Active" status badge if the status chip is derived from `IsActive` on the Person rather than from active role assignments.
+After suspending a user (which ends all active role assignments), the People list showed the user with an "Active" status badge because the chip was derived from `Person.IsActive`, not from whether they had active role assignments.
 
-**Impact:** Misleading UX — a suspended person appears the same as an active member in the list.  
-**Workaround:** Open the person's detail page to see their true status.  
-**Fix:** The People list should show a "Suspended" or "No active roles" indicator for persons whose `OrganizationUser` exists but has no active `RoleAssignment` records.
+**Fix applied:**
+- Added `IsSuspended` field to `PersonListDto`
+- `GetPeopleHandler` now computes: `IsSuspended = IsActive && has OrganizationUser in org && no active RoleAssignments`
+- `PeopleList.razor` status chip now shows three states:
+  - 🟢 **Active** — `IsActive && !IsSuspended`
+  - 🟠 **Suspended** — `IsActive && IsSuspended` (has OrganizationUser but no active roles)
+  - ⚪ **Inactive** — `!IsActive`
+- Grouped view now has a separate **Suspended** expansion panel (only shown when there are suspended people)
 
 ---
 

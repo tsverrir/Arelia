@@ -15,7 +15,8 @@ public record PersonListDto(
     string? Phone,
     Guid? VoiceGroupId,
     string? VoiceGroupName,
-    bool IsActive);
+    bool IsActive,
+    bool IsSuspended);
 
 public class GetPeopleHandler(IAreliaDbContext context)
     : IRequestHandler<GetPeopleQuery, List<PersonListDto>>
@@ -46,7 +47,15 @@ public class GetPeopleHandler(IAreliaDbContext context)
                 p.Id, p.FirstName, p.LastName,
                 p.Email, p.Phone,
                 p.VoiceGroupId, p.VoiceGroup != null ? p.VoiceGroup.Name : null,
-                p.IsActive))
+                p.IsActive,
+                p.IsActive &&
+                    context.OrganizationUsers.IgnoreQueryFilters()
+                        .Any(ou => ou.PersonId == p.Id && ou.OrganizationId == request.OrganizationId) &&
+                    !context.RoleAssignments.IgnoreQueryFilters()
+                        .Any(ra => ra.PersonId == p.Id &&
+                                   ra.OrganizationId == request.OrganizationId &&
+                                   ra.IsActive &&
+                                   (ra.ToDate == null || ra.ToDate > DateTime.UtcNow))))
             .ToListAsync(cancellationToken);
     }
 }
