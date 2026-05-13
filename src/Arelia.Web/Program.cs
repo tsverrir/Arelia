@@ -58,7 +58,6 @@ public class Program
             .AddIdentityCookies();
 
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-        builder.Services.AddSingleton<IEmailSender<ApplicationUser>, DevEmailSender>();
 
         // Localization
         builder.Services.AddLocalization();

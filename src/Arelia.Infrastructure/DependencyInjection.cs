@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Resend;
 
 namespace Arelia.Infrastructure;
 
@@ -42,6 +43,24 @@ public static class DependencyInjection
         services.AddScoped<IPdfExportService, QuestPdfExportService>();
         services.AddSingleton<BackupService>();
         services.AddSingleton<MaintenanceState>();
+
+        services.AddOptions();
+        services.AddHttpClient<ResendClient>();
+        services.Configure<ResendClientOptions>(options =>
+        {
+            options.ApiToken = configuration["Resend:ApiToken"] ?? string.Empty;
+        });
+        services.AddTransient<IResend, ResendClient>();
+
+        var resendApiToken = configuration["Resend:ApiToken"];
+        if (!string.IsNullOrWhiteSpace(resendApiToken))
+        {
+            services.AddTransient<IEmailSender<ApplicationUser>, ResendEmailSender>();
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender<ApplicationUser>, DevEmailSender>();
+        }
 
         return services;
     }
