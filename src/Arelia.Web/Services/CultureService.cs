@@ -1,5 +1,5 @@
+using Arelia.Application.Mediator;
 using Arelia.Application.Organizations.Users.Queries;
-using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Localization;

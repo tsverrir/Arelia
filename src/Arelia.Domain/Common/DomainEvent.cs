@@ -1,8 +1,13 @@
-using MediatR;
-
 namespace Arelia.Domain.Common;
 
-public abstract class DomainEvent : INotification
+/// <summary>
+/// Base class for all domain events raised by domain entities.
+/// </summary>
+public abstract class DomainEvent
 {
-    public DateTime OccurredOn { get; } = DateTime.UtcNow;
+	//---------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Gets the UTC date and time at which the event occurred.
+	/// </summary>
+	public DateTime OccurredOn { get; } = DateTime.UtcNow;
 }

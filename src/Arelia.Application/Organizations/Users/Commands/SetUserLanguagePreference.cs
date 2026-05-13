@@ -1,11 +1,14 @@
 
 namespace Arelia.Application.Organizations.Users.Commands;
 
-public record SetUserLanguagePreferenceCommand(string UserId, string? Language) : IRequest;
+public record SetUserLanguagePreferenceCommand(string UserId, string? Language) : IRequest<Unit>;
 
 public class SetUserLanguagePreferenceHandler(IUserService userService)
-    : IRequestHandler<SetUserLanguagePreferenceCommand>
+    : IRequestHandler<SetUserLanguagePreferenceCommand, Unit>
 {
-    public Task Handle(SetUserLanguagePreferenceCommand request, CancellationToken cancellationToken) =>
-        userService.SetPreferredLanguageAsync(request.UserId, request.Language);
+    public async Task<Unit> Handle(SetUserLanguagePreferenceCommand request, CancellationToken cancellationToken)
+    {
+        await userService.SetPreferredLanguageAsync(request.UserId, request.Language);
+        return Unit.Value;
+    }
 }

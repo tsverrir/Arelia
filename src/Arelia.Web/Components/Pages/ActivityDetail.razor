@@ -1,11 +1,10 @@
-﻿@page "/activities/{ActivityId:guid}"
+@page "/activities/{ActivityId:guid}"
 @using Arelia.Application.Activities.Commands
 @using Arelia.Application.Activities.Queries
 @using Arelia.Application.Attendance.Commands
 @using Arelia.Application.Attendance.Queries
 @using Arelia.Application.Rsvp.Commands
 @using Arelia.Domain.Enums
-@using MediatR
 @using Microsoft.AspNetCore.Components.Forms
 @inject IMediator Mediator
 @inject NavigationManager Navigation
