@@ -7,17 +7,17 @@ This document records issues, bugs, edge cases, and developer gotchas discovered
 ## ISSUE-001 — File-naming mismatch in Application layer commands
 
 **Severity:** Low (cosmetic)  
-**Status:** Open  
+**Status:** ✅ Fixed  
 **Area:** Application / CQRS
 
 **Description:**  
-Two command files retain their old names while the class names inside have been updated:
-- `DeactivateOrganizationUser.cs` → contains `SuspendOrganizationUserCommand` + `SuspendOrganizationUserHandler`
-- `DeleteOrganizationUser.cs` → contains `RemoveOrganizationUserCommand` + `RemoveOrganizationUserHandler`
+Two command files retained their old names while the class names inside had been updated:
+- `DeactivateOrganizationUser.cs` → contained `SuspendOrganizationUserCommand` + `SuspendOrganizationUserHandler`
+- `DeleteOrganizationUser.cs` → contained `RemoveOrganizationUserCommand` + `RemoveOrganizationUserHandler`
 
-**Impact:** Confusing when searching for handler code by filename.  
-**Workaround:** Search by class name, not filename.  
-**Fix:** Rename the files to match the class names. Low priority; nothing is broken.
+**Fix applied:** Renamed files to match class names (`git mv`):
+- `DeactivateOrganizationUser.cs` → `SuspendOrganizationUser.cs`
+- `DeleteOrganizationUser.cs` → `RemoveOrganizationUser.cs`
 
 ---
 
