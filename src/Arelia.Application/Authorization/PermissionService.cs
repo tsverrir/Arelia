@@ -10,11 +10,27 @@ public interface IPermissionService
 
 public class PermissionService(IAreliaDbContext context) : IPermissionService
 {
+    /// <summary>
+    /// A member is active if they have an OrganizationUser record and at least one active role assignment.
+    /// </summary>
     public async Task<bool> IsActiveMemberAsync(string userId, Guid organizationId, CancellationToken cancellationToken)
     {
-        return await context.OrganizationUsers
+        var orgUser = await context.OrganizationUsers
             .IgnoreQueryFilters()
-            .AnyAsync(ou => ou.UserId == userId && ou.OrganizationId == organizationId && ou.IsActive,
+            .FirstOrDefaultAsync(ou => ou.UserId == userId && ou.OrganizationId == organizationId,
+                cancellationToken);
+
+        if (orgUser is null)
+            return false;
+
+        var now = DateTime.UtcNow;
+        return await context.RoleAssignments
+            .IgnoreQueryFilters()
+            .AnyAsync(ra => ra.PersonId == orgUser.PersonId
+                            && ra.OrganizationId == organizationId
+                            && ra.IsActive
+                            && ra.FromDate <= now
+                            && (ra.ToDate == null || ra.ToDate >= now),
                 cancellationToken);
     }
 
@@ -23,10 +39,10 @@ public class PermissionService(IAreliaDbContext context) : IPermissionService
     {
         var orgUser = await context.OrganizationUsers
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(ou => ou.UserId == userId && ou.OrganizationId == organizationId && ou.IsActive,
+            .FirstOrDefaultAsync(ou => ou.UserId == userId && ou.OrganizationId == organizationId,
                 cancellationToken);
 
-        if (orgUser?.PersonId is null)
+        if (orgUser is null)
             return [];
 
         var now = DateTime.UtcNow;

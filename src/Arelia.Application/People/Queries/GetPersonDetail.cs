@@ -16,7 +16,9 @@ public record PersonDetailDto(
 	string? Notes,
 	bool IsActive,
 	List<PersonRoleAssignmentDto> RoleAssignments,
-	bool HasLinkedUser);
+	bool HasLinkedUser,
+	string? LinkedUserId,
+	Guid? OrganizationUserId);
 
 public record PersonRoleAssignmentDto(
 	Guid Id,
@@ -54,7 +56,15 @@ public class GetPersonDetailHandler(IAreliaDbContext context)
 						ra.FromDate <= DateTime.UtcNow && (ra.ToDate == null || ra.ToDate >= DateTime.UtcNow)))
 					.ToList(),
 				context.OrganizationUsers.IgnoreQueryFilters()
-					.Any(ou => ou.PersonId == p.Id && ou.IsActive)))
+					.Any(ou => ou.PersonId == p.Id),
+				context.OrganizationUsers.IgnoreQueryFilters()
+					.Where(ou => ou.PersonId == p.Id)
+					.Select(ou => (string?)ou.UserId)
+					.FirstOrDefault(),
+				context.OrganizationUsers.IgnoreQueryFilters()
+					.Where(ou => ou.PersonId == p.Id)
+					.Select(ou => (Guid?)ou.Id)
+					.FirstOrDefault()))
 			.FirstOrDefaultAsync(cancellationToken);
 
 		return person;

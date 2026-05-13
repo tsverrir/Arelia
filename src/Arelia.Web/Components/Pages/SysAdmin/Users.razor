@@ -1,0 +1,88 @@
+@page "/system/users"
+@using Arelia.Application.Organizations.Commands
+@using Arelia.Application.Organizations.Queries
+@using Arelia.Infrastructure.Identity
+@using Microsoft.AspNetCore.Identity
+@inject IMediator Mediator
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
+
+<PageTitle>System — Users</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-4">Users</MudText>
+
+@if (_users is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_users.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">No users found.</MudAlert>
+}
+else
+{
+    <MudTable Items="_users" Hover="true" Dense="true" Filter="FilterUser">
+        <ToolBarContent>
+            <MudTextField @bind-Value="_searchText" Placeholder="Search users..."
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true" Class="mt-0" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Email</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>System Admin</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Email</MudTd>
+            <MudTd>
+                @if (_pendingUsers.Contains(context.Id))
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">Pending</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success">Active</MudChip>
+                }
+            </MudTd>
+            <MudTd>
+                @if (_systemAdmins.Contains(context.Id))
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<ApplicationUser>? _users;
+    private HashSet<string> _pendingUsers = [];
+    private HashSet<string> _systemAdmins = [];
+    private string _searchText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        _users = UserManager.Users.OrderBy(u => u.Email).ToList();
+
+        var systemAdmins = await UserManager.GetUsersInRoleAsync("SystemAdmin");
+        _systemAdmins = systemAdmins.Select(u => u.Id).ToHashSet();
+
+        _pendingUsers = _users
+            .Where(u => u.PasswordHash is null)
+            .Select(u => u.Id)
+            .ToHashSet();
+    }
+
+    private bool FilterUser(ApplicationUser user)
+    {
+        if (string.IsNullOrWhiteSpace(_searchText)) return true;
+        return user.Email?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) == true;
+    }
+}

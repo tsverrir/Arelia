@@ -46,7 +46,20 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-        if (userId is not null)
+        // System Admins with no org memberships go directly to the system panel
+        if (authState.User.IsInRole("SystemAdmin"))
+        {
+            _organizations = userId is not null
+                ? await Mediator.Send(new GetUserOrganizationsQuery(userId))
+                : [];
+
+            if (_organizations.Count == 0)
+            {
+                Navigation.NavigateTo("/system/organizations");
+                return;
+            }
+        }
+        else if (userId is not null)
         {
             _organizations = await Mediator.Send(new GetUserOrganizationsQuery(userId));
 

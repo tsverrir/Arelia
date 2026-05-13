@@ -65,6 +65,11 @@
   <data name="Common.SetInactive" xml:space="preserve"><value>Saet inaktiv</value></data>
   <data name="Common.SetActive" xml:space="preserve"><value>Saet aktiv</value></data>
   <data name="Common.FormerMember" xml:space="preserve"><value>Tidligere Medlem</value></data>
+  <data name="Common.Pending" xml:space="preserve"><value>Afventer</value></data>
+  <data name="Common.Suspended" xml:space="preserve"><value>Suspenderet</value></data>
+  <data name="Common.Roles" xml:space="preserve"><value>Roller</value></data>
+  <data name="Common.NoActiveRoles" xml:space="preserve"><value>Ingen aktive roller</value></data>
+  <data name="Common.EmailRequired" xml:space="preserve"><value>E-mailadresse er påkrævet.</value></data>
   <data name="Common.Today" xml:space="preserve"><value>I dag</value></data>
   <data name="Common.File" xml:space="preserve"><value>Fil</value></data>
   <data name="Common.Size" xml:space="preserve"><value>Stoerrelse</value></data>
@@ -292,7 +297,14 @@
   <data name="Admin.Users.InvitationSent" xml:space="preserve"><value>Invitation sendt til {0}.</value></data>
   <data name="Admin.Users.DeactivateTitle" xml:space="preserve"><value>Deaktiver bruger</value></data>
   <data name="Admin.Users.DeactivateConfirm" xml:space="preserve"><value>Degrader {0} til Tidligere Medlem?</value></data>
-  <data name="Admin.Users.Deactivated" xml:space="preserve"><value>Bruger deaktiveret.</value></data>
+  <data name="Admin.Users.SuspendTitle" xml:space="preserve"><value>Suspender bruger</value></data>
+  <data name="Admin.Users.SuspendConfirm" xml:space="preserve"><value>Suspender {0}? Dette vil afslutte alle aktive roller. De kan genetableres ved at tildele nye roller.</value></data>
+  <data name="Admin.Users.Suspended" xml:space="preserve"><value>Bruger suspenderet.</value></data>
+  <data name="Admin.Users.RemoveTitle" xml:space="preserve"><value>Fjern fra organisation</value></data>
+  <data name="Admin.Users.RemoveConfirm" xml:space="preserve"><value>Fjern {0} fra denne organisation? Personens record og historik bevares.</value></data>
+  <data name="Admin.Users.Removed" xml:space="preserve"><value>Bruger fjernet fra organisation.</value></data>
+  <data name="Admin.Users.ResendInvite" xml:space="preserve"><value>Gensend invitation</value></data>
+  <data name="Admin.Users.InviteResent" xml:space="preserve"><value>Invitation gensendt.</value></data>
   <data name="Admin.Org.Title" xml:space="preserve"><value>Organisationer</value></data>
   <data name="Admin.Org.Create" xml:space="preserve"><value>Opret organisation</value></data>
   <data name="Admin.Org.CreateTitle" xml:space="preserve"><value>Opret organisation</value></data>

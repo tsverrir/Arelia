@@ -28,6 +28,10 @@
 @if (_roles is not null)
 {
     <MudText Typo="Typo.h6" Class="mt-4 mb-2">@L.H("Roles.PermissionMatrix")</MudText>
+    <MudAlert Severity="Severity.Info" Class="mb-3" Dense="true">
+        The <strong>Admin</strong> role always has full access — its permissions cannot be edited.
+        <strong>Board</strong> and <strong>Member</strong> are system roles with editable permissions.
+    </MudAlert>
 
     <MudSimpleTable Dense="true" Hover="true" Style="overflow-x: auto;">
         <thead>
@@ -35,7 +39,16 @@
                 <th>@L["Common.Permission"]</th>
                 @foreach (var role in _roles.Where(r => r.IsActive))
                 {
-                    <th style="text-align:center;">@role.Name</th>
+                    <th style="text-align:center;">
+                        @role.Name
+                        @if (role.RoleType != RoleType.Custom)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="@RoleTypeColor(role.RoleType)"
+                                     Class="ml-1" Style="height:18px;font-size:10px;">
+                                @role.RoleType
+                            </MudChip>
+                        }
+                    </th>
                 }
             </tr>
         </thead>
@@ -46,10 +59,12 @@
                     <td>@permission</td>
                     @foreach (var role in _roles.Where(r => r.IsActive))
                     {
-                        var hasPermission = role.Permissions.Contains(permission);
+                        var hasPermission = role.RoleType == RoleType.Admin || role.Permissions.Contains(permission);
+                        var isEditable = role.RoleType != RoleType.Admin;
                         <td style="text-align:center;">
                             <MudCheckBox T="bool" Value="hasPermission"
-                                         ValueChanged="@(v => OnPermissionToggle(role.Id, permission, v))" />
+                                         ValueChanged="@(v => OnPermissionToggle(role.Id, permission, v))"
+                                         Disabled="@(!isEditable)" />
                         </td>
                     }
                 </tr>
@@ -58,7 +73,6 @@
     </MudSimpleTable>
 
     <MudText Typo="Typo.h6" Class="mt-6 mb-2">@L.H("Roles.AllRoles")</MudText>
-
     <ConfigurableTable TItem="RoleDto" Items="_roles" Columns="_roleColumns" OnRowClick="OnRoleRowClick">
         <CellTemplate>
             @switch (context.ColumnKey)
@@ -67,6 +81,10 @@
                     <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
                         @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
                     </MudChip>
+                    break;
+                case "Type":
+                    var roleType = (RoleType)(context.Value ?? RoleType.Custom);
+                    <MudChip T="string" Size="Size.Small" Color="@RoleTypeColor(roleType)">@roleType</MudChip>
                     break;
                 default:
                     @(context.Value?.ToString() ?? "—")
@@ -89,6 +107,7 @@
 
 @code {
     private List<RoleDto>? _roles;
+    private List<RoleDto>? _customRoles;
     private bool _showCreate;
     private string _newRoleName = string.Empty;
 
@@ -99,6 +118,7 @@
         _roleColumns =
         [
             new("Name", L["Common.Name"], x => x.Name),
+            new("Type", "Type", x => x.RoleType),
             new("Assignments", L["Roles.ActiveAssignments"], x => x.AssignmentCount),
             new("Status", L["Common.Status"], x => x.IsActive),
         ];
@@ -106,12 +126,23 @@
         await LoadRoles();
     }
 
+    private static Color RoleTypeColor(RoleType roleType) => roleType switch
+    {
+        RoleType.Admin => Color.Error,
+        RoleType.Board => Color.Warning,
+        RoleType.Member => Color.Primary,
+        _ => Color.Default,
+    };
+
     protected override Task OnTenantChangedAsync() => LoadRoles();
 
     private async Task LoadRoles()
     {
         if (TenantService.CurrentOrganizationId is Guid orgId)
+        {
             _roles = await Mediator.Send(new GetRolesQuery(orgId));
+            _customRoles = _roles.Where(r => r.RoleType == RoleType.Custom).ToList();
+        }
     }
 
     private void OnRoleRowClick(TableRowClickEventArgs<RoleDto> args)

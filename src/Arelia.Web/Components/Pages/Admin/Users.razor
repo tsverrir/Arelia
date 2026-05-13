@@ -7,6 +7,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject ILocalizer L
+@inject NavigationManager Navigation
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <PageTitle>@L["Admin.Users.Title"]</PageTitle>
@@ -26,34 +27,65 @@ else
 
     @if (_users is not null)
     {
-        <ConfigurableTable TItem="OrganizationUserDto" Items="_users" Columns="_columns">
-            <CellTemplate>
-                @switch (context.ColumnKey)
-                {
-                    case "Status":
-                        <MudChip T="string" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)" Size="Size.Small">
-                            @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.FormerMember"])
-                        </MudChip>
-                        break;
-                    default:
-                        @(context.Value?.ToString() ?? "—")
-                        break;
-                }
-            </CellTemplate>
-            <RowActions>
-                @if (context.IsActive)
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.PersonOff"
-                                   Color="Color.Warning" Size="Size.Small"
-                                   Title="@L["Admin.Users.DeactivateTitle"]"
-                                   OnClick="@(() => DeactivateUser(context))" />
-                }
-                <MudIconButton Icon="@Icons.Material.Filled.DeleteForever"
-                               Color="Color.Error" Size="Size.Small"
-                               Title="@L["Admin.Users.DeleteTitle"]"
-                               OnClick="@(() => DeleteUser(context))" />
-            </RowActions>
-        </ConfigurableTable>
+        <MudTable Items="_users" Hover="true" Striped="true" Dense="true">
+            <HeaderContent>
+                <MudTh>@L["Common.Name"]</MudTh>
+                <MudTh>@L["Common.Email"]</MudTh>
+                <MudTh>@L["Common.Roles"]</MudTh>
+                <MudTh>@L["Common.Status"]</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@L["Common.Name"]">@(context.PersonName ?? "—")</MudTd>
+                <MudTd DataLabel="@L["Common.Email"]">@(context.Email ?? "—")</MudTd>
+                <MudTd DataLabel="@L["Common.Roles"]">
+                    @if (context.ActiveRoles.Any())
+                    {
+                        @string.Join(", ", context.ActiveRoles)
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@L["Common.NoActiveRoles"]</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="@L["Common.Status"]">
+                    @if (context.IsPending)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small">@L["Common.Pending"]</MudChip>
+                    }
+                    else if (context.ActiveRoles.Any())
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small">@L["Common.Active"]</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small">@L["Common.Suspended"]</MudChip>
+                    }
+                </MudTd>
+                <MudTd>
+                    <MudStack Row="true">
+                        @if (context.IsPending)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ForwardToInbox"
+                                           Color="Color.Info" Size="Size.Small"
+                                           Title="@L["Admin.Users.ResendInvite"]"
+                                           OnClick="@(() => ResendInvite(context))" />
+                        }
+                        @if (context.ActiveRoles.Any())
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.PersonOff"
+                                           Color="Color.Warning" Size="Size.Small"
+                                           Title="@L["Admin.Users.SuspendTitle"]"
+                                           OnClick="@(() => SuspendUser(context))" />
+                        }
+                        <MudIconButton Icon="@Icons.Material.Filled.PersonRemove"
+                                       Color="Color.Error" Size="Size.Small"
+                                       Title="@L["Admin.Users.RemoveTitle"]"
+                                       OnClick="@(() => RemoveUser(context))" />
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
     }
 }
 
@@ -62,8 +94,8 @@ else
         <MudText Typo="Typo.h6">@L.H("Admin.Users.InviteTitle")</MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="_inviteEmail" Label="@L["Common.Email"]" Required="true" InputType="InputType.Email" />
-        <MudTextField @bind-Value="_inviteFirstName" Label="@L["Common.FirstName"]" />
+        <MudTextField @bind-Value="_inviteEmail" Label="@L["Common.Email"]" Required="true" InputType="InputType.Email" Class="mb-2" />
+        <MudTextField @bind-Value="_inviteFirstName" Label="@L["Common.FirstName"]" Class="mb-2" />
         <MudTextField @bind-Value="_inviteLastName" Label="@L["Common.LastName"]" />
     </DialogContent>
     <DialogActions>
@@ -79,16 +111,8 @@ else
     private string? _inviteFirstName;
     private string? _inviteLastName;
 
-    private List<ColumnDefinition<OrganizationUserDto>>? _columns;
-
     protected override async Task OnInitializedAsync()
     {
-        _columns =
-        [
-            new("Name", L["Common.Name"], x => x.PersonName),
-            new("Email", L["Common.Email"], x => x.Email),
-            new("Status", L["Common.Status"], x => x.IsActive),
-        ];
         RegisterTenantChangeHandler();
         await LoadUsers();
     }
@@ -98,9 +122,7 @@ else
     private async Task LoadUsers()
     {
         if (TenantService.CurrentOrganizationId is Guid orgId)
-        {
             _users = await Mediator.Send(new GetOrganizationUsersQuery(orgId));
-        }
     }
 
     private void ShowInviteDialog()
@@ -115,14 +137,17 @@ else
     {
         if (string.IsNullOrWhiteSpace(_inviteEmail))
         {
-            Snackbar.Add("Email address is required.", Severity.Warning);
+            Snackbar.Add(L["Common.EmailRequired"], Severity.Warning);
             return;
         }
 
         if (TenantService.CurrentOrganizationId is not Guid orgId)
             return;
 
-        var result = await Mediator.Send(new InviteUserCommand(_inviteEmail, orgId, _inviteFirstName, _inviteLastName));
+        var result = await Mediator.Send(new InviteUserCommand(
+            orgId, _inviteEmail, _inviteFirstName, _inviteLastName,
+            null, null, "Admin", Navigation.BaseUri.TrimEnd('/')));
+
         if (result.IsSuccess)
         {
             Snackbar.Add(string.Format(L["Admin.Users.InvitationSent"], _inviteEmail), Severity.Success);
@@ -135,21 +160,20 @@ else
         }
     }
 
-    private async Task DeactivateUser(OrganizationUserDto user)
+    private async Task SuspendUser(OrganizationUserDto user)
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, string.Format(L["Admin.Users.DeactivateConfirm"], user.PersonName ?? user.Email ?? L["Common.FormerMember"]) }
+            { x => x.ContentText, string.Format(L["Admin.Users.SuspendConfirm"], user.PersonName ?? user.Email ?? "—") }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Admin.Users.DeactivateTitle"], parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Admin.Users.SuspendTitle"], parameters);
         var dialogResult = await dialog.Result;
-
         if (dialogResult is null || dialogResult.Canceled) return;
 
-        var result = await Mediator.Send(new DeactivateOrganizationUserCommand(user.Id));
+        var result = await Mediator.Send(new SuspendOrganizationUserCommand(user.Id));
         if (result.IsSuccess)
         {
-            Snackbar.Add(L["Admin.Users.Deactivated"], Severity.Success);
+            Snackbar.Add(L["Admin.Users.Suspended"], Severity.Success);
             await LoadUsers();
         }
         else
@@ -158,26 +182,39 @@ else
         }
     }
 
-    private async Task DeleteUser(OrganizationUserDto user)
+    private async Task RemoveUser(OrganizationUserDto user)
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, string.Format(L["Admin.Users.DeleteConfirm"], user.PersonName ?? user.Email ?? L["Common.FormerMember"]) }
+            { x => x.ContentText, string.Format(L["Admin.Users.RemoveConfirm"], user.PersonName ?? user.Email ?? "—") }
         };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Admin.Users.DeleteTitle"], parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(L["Admin.Users.RemoveTitle"], parameters);
         var dialogResult = await dialog.Result;
-
         if (dialogResult is null || dialogResult.Canceled) return;
 
-        var result = await Mediator.Send(new DeleteOrganizationUserCommand(user.Id));
+        var result = await Mediator.Send(new RemoveOrganizationUserCommand(user.Id));
         if (result.IsSuccess)
         {
-            Snackbar.Add(L["Admin.Users.Deleted"], Severity.Success);
+            Snackbar.Add(L["Admin.Users.Removed"], Severity.Success);
             await LoadUsers();
         }
         else
         {
             Snackbar.Add(result.Error!, Severity.Error);
         }
+    }
+
+    private async Task ResendInvite(OrganizationUserDto user)
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId)
+            return;
+
+        var result = await Mediator.Send(new ResendInvitationCommand(
+            user.UserId, orgId, "Admin", Navigation.BaseUri.TrimEnd('/')));
+
+        if (result.IsSuccess)
+            Snackbar.Add(L["Admin.Users.InviteResent"], Severity.Success);
+        else
+            Snackbar.Add(result.Error!, Severity.Error);
     }
 }

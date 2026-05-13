@@ -65,6 +65,11 @@
   <data name="Common.SetInactive" xml:space="preserve"><value>Set Inactive</value></data>
   <data name="Common.SetActive" xml:space="preserve"><value>Set Active</value></data>
   <data name="Common.FormerMember" xml:space="preserve"><value>Former Member</value></data>
+  <data name="Common.Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Common.Suspended" xml:space="preserve"><value>Suspended</value></data>
+  <data name="Common.Roles" xml:space="preserve"><value>Roles</value></data>
+  <data name="Common.NoActiveRoles" xml:space="preserve"><value>No active roles</value></data>
+  <data name="Common.EmailRequired" xml:space="preserve"><value>Email address is required.</value></data>
   <data name="Common.Today" xml:space="preserve"><value>Today</value></data>
   <data name="Common.File" xml:space="preserve"><value>File</value></data>
   <data name="Common.Size" xml:space="preserve"><value>Size</value></data>
@@ -383,7 +388,14 @@
   <data name="Finance.ChargeDeleted" xml:space="preserve"><value>Charge deleted.</value></data>
   <data name="Admin.Users.DeleteTitle" xml:space="preserve"><value>Delete User Permanently</value></data>
   <data name="Admin.Users.DeleteConfirm" xml:space="preserve"><value>Permanently delete {0}? This will remove the user from this organization and cannot be undone.</value></data>
-  <data name="Admin.Users.Deleted" xml:space="preserve"><value>User permanently deleted.</value></data>
+  <data name="Admin.Users.SuspendTitle" xml:space="preserve"><value>Suspend User</value></data>
+  <data name="Admin.Users.SuspendConfirm" xml:space="preserve"><value>Suspend {0}? This will end all their active roles. They can be reinstated by assigning new roles.</value></data>
+  <data name="Admin.Users.Suspended" xml:space="preserve"><value>User suspended.</value></data>
+  <data name="Admin.Users.RemoveTitle" xml:space="preserve"><value>Remove from Organisation</value></data>
+  <data name="Admin.Users.RemoveConfirm" xml:space="preserve"><value>Remove {0} from this organisation? Their person record and history will be preserved.</value></data>
+  <data name="Admin.Users.Removed" xml:space="preserve"><value>User removed from organisation.</value></data>
+  <data name="Admin.Users.ResendInvite" xml:space="preserve"><value>Resend Invitation</value></data>
+  <data name="Admin.Users.InviteResent" xml:space="preserve"><value>Invitation resent.</value></data>
   <data name="Common.Version" xml:space="preserve"><value>Version</value></data>
   <data name="Common.Actions" xml:space="preserve"><value>Actions</value></data>
   <data name="Admin.Backups.Restore" xml:space="preserve"><value>Restore</value></data>

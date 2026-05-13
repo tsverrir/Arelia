@@ -14,7 +14,7 @@ public class CreateOrganizationTests
         var handler = new CreateOrganizationHandler(context);
 
         var orgId = await handler.Handle(
-            new CreateOrganizationCommand("Test Choir", "test@choir.dk", "+45 1234", "user-1"),
+            new CreateOrganizationCommand("Test Choir", "test@choir.dk", "+45 1234"),
             CancellationToken.None);
 
         var org = await context.Organizations.IgnoreQueryFilters().FirstOrDefaultAsync(o => o.Id == orgId);
@@ -31,7 +31,7 @@ public class CreateOrganizationTests
         var handler = new CreateOrganizationHandler(context);
 
         var orgId = await handler.Handle(
-            new CreateOrganizationCommand("Test Choir", null, null, "user-1"),
+            new CreateOrganizationCommand("Test Choir", null, null),
             CancellationToken.None);
 
         var roles = await context.Roles.IgnoreQueryFilters()
@@ -43,13 +43,34 @@ public class CreateOrganizationTests
     }
 
     [Fact]
+    public async Task WhenCreatingOrganizationThenSystemRolesHaveCorrectRoleTypes()
+    {
+        await using var context = TestDbContextFactory.Create();
+        var handler = new CreateOrganizationHandler(context);
+
+        var orgId = await handler.Handle(
+            new CreateOrganizationCommand("Test Choir", null, null),
+            CancellationToken.None);
+
+        var roles = await context.Roles.IgnoreQueryFilters()
+            .Where(r => r.OrganizationId == orgId)
+            .ToListAsync();
+
+        roles.First(r => r.Name == "Admin").RoleType.Should().Be(RoleType.Admin);
+        roles.First(r => r.Name == "Board").RoleType.Should().Be(RoleType.Board);
+        roles.First(r => r.Name == "Member").RoleType.Should().Be(RoleType.Member);
+        roles.First(r => r.Name == "Treasurer").RoleType.Should().Be(RoleType.Custom);
+        roles.First(r => r.Name == "Conductor").RoleType.Should().Be(RoleType.Custom);
+    }
+
+    [Fact]
     public async Task WhenCreatingOrganizationThenAdminRoleHasAllPermissions()
     {
         await using var context = TestDbContextFactory.Create();
         var handler = new CreateOrganizationHandler(context);
 
         var orgId = await handler.Handle(
-            new CreateOrganizationCommand("Test Choir", null, null, "user-1"),
+            new CreateOrganizationCommand("Test Choir", null, null),
             CancellationToken.None);
 
         var adminRole = await context.Roles.IgnoreQueryFilters()
@@ -64,29 +85,20 @@ public class CreateOrganizationTests
     }
 
     [Fact]
-    public async Task WhenCreatingOrganizationThenCreatorBecomesAdmin()
+    public async Task WhenCreatingOrganizationThenNoUsersAreAutoLinked()
     {
         await using var context = TestDbContextFactory.Create();
         var handler = new CreateOrganizationHandler(context);
 
         var orgId = await handler.Handle(
-            new CreateOrganizationCommand("Test Choir", null, null, "user-1"),
+            new CreateOrganizationCommand("Test Choir", null, null),
             CancellationToken.None);
 
-        var orgUser = await context.OrganizationUsers.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(ou => ou.OrganizationId == orgId && ou.UserId == "user-1");
+        var orgUsers = await context.OrganizationUsers.IgnoreQueryFilters()
+            .Where(ou => ou.OrganizationId == orgId)
+            .ToListAsync();
 
-        orgUser.Should().NotBeNull();
-        orgUser!.IsActive.Should().BeTrue();
-        orgUser.PersonId.Should().NotBeNull();
-
-        var adminRole = await context.Roles.IgnoreQueryFilters()
-            .FirstAsync(r => r.OrganizationId == orgId && r.Name == "Admin");
-
-        var assignment = await context.RoleAssignments.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(ra => ra.RoleId == adminRole.Id && ra.PersonId == orgUser.PersonId);
-
-        assignment.Should().NotBeNull();
+        orgUsers.Should().BeEmpty();
     }
 
     [Fact]
@@ -96,7 +108,7 @@ public class CreateOrganizationTests
         var handler = new CreateOrganizationHandler(context);
 
         var orgId = await handler.Handle(
-            new CreateOrganizationCommand("Test Choir", null, null, "user-1"),
+            new CreateOrganizationCommand("Test Choir", null, null),
             CancellationToken.None);
 
         var categories = await context.ExpenseCategories.IgnoreQueryFilters()

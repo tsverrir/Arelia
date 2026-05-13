@@ -11,7 +11,7 @@ namespace Arelia.Application.Tests.Organizations;
 public class InviteUserTests
 {
     [Fact]
-    public async Task WhenInvitingNewUserThenPersonAndOrgUserAreCreated()
+    public async Task WhenInvitingNewUserByEmailThenPersonAndOrgUserAreCreated()
     {
         var orgId = Guid.NewGuid();
         await using var context = TestDbContextFactory.Create(orgId, "admin-1");
@@ -19,11 +19,14 @@ public class InviteUserTests
         var userService = Substitute.For<IUserService>();
         userService.FindUserIdByEmailAsync("new@test.dk").Returns((string?)null);
         userService.CreateUserAsync("new@test.dk").Returns(Result.Success("new-user-id"));
+        userService.IsAccountPendingAsync("new-user-id").Returns(true);
+        userService.SendInvitationEmailAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>())
+            .Returns(Task.CompletedTask);
 
         var handler = new InviteUserHandler(context, userService);
 
         var result = await handler.Handle(
-            new InviteUserCommand("new@test.dk", orgId, "Alice", "Test"),
+            new InviteUserCommand(orgId, "new@test.dk", "Alice", "Test", null, null, "Admin", "https://test.arelia.dev"),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -47,11 +50,14 @@ public class InviteUserTests
 
         var userService = Substitute.For<IUserService>();
         userService.FindUserIdByEmailAsync("existing@test.dk").Returns("existing-user-id");
+        userService.IsAccountPendingAsync("existing-user-id").Returns(false);
+        userService.SendOrgAddedNotificationAsync(Arg.Any<string>(), Arg.Any<string>())
+            .Returns(Task.CompletedTask);
 
         var handler = new InviteUserHandler(context, userService);
 
         var result = await handler.Handle(
-            new InviteUserCommand("existing@test.dk", orgId, "Bob", "Existing"),
+            new InviteUserCommand(orgId, "existing@test.dk", "Bob", "Existing", null, null, "Admin", "https://test.arelia.dev"),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -64,12 +70,13 @@ public class InviteUserTests
         var orgId = Guid.NewGuid();
         await using var context = TestDbContextFactory.Create(orgId, "admin-1");
 
-        // Pre-link user
+        var person = new Person { FirstName = "Ex", LastName = "User", OrganizationId = orgId };
+        context.Persons.Add(person);
         context.OrganizationUsers.Add(new OrganizationUser
         {
             UserId = "existing-user-id",
             OrganizationId = orgId,
-            IsActive = true,
+            PersonId = person.Id,
         });
         await context.SaveChangesAsync();
 
@@ -79,7 +86,7 @@ public class InviteUserTests
         var handler = new InviteUserHandler(context, userService);
 
         var result = await handler.Handle(
-            new InviteUserCommand("existing@test.dk", orgId, null, null),
+            new InviteUserCommand(orgId, "existing@test.dk", null, null, null, null, "Admin", "https://test.arelia.dev"),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();

@@ -5,8 +5,9 @@ public class OrganizationUser
     public Guid Id { get; set; } = Guid.NewGuid();
     public string UserId { get; set; } = string.Empty;
     public Guid OrganizationId { get; set; }
-    public Guid? PersonId { get; set; }
-    public bool IsActive { get; set; } = true;
+
+    /// <summary>Every OrganizationUser must reference a Person in this org.</summary>
+    public Guid PersonId { get; set; }
 
     // Audit
     public DateTime CreatedAt { get; set; }
@@ -16,5 +17,5 @@ public class OrganizationUser
 
     // Navigation
     public Organization Organization { get; set; } = null!;
-    public Person? Person { get; set; }
+    public Person Person { get; set; } = null!;
 }

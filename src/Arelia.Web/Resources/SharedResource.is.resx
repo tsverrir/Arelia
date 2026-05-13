@@ -65,6 +65,11 @@
   <data name="Common.SetInactive" xml:space="preserve"><value>Gera ovirkan</value></data>
   <data name="Common.SetActive" xml:space="preserve"><value>Gera virkan</value></data>
   <data name="Common.FormerMember" xml:space="preserve"><value>Fyrrverandi medhlimaur</value></data>
+  <data name="Common.Pending" xml:space="preserve"><value>Í bið</value></data>
+  <data name="Common.Suspended" xml:space="preserve"><value>Stöðvað</value></data>
+  <data name="Common.Roles" xml:space="preserve"><value>Hlutverk</value></data>
+  <data name="Common.NoActiveRoles" xml:space="preserve"><value>Engin virk hlutverk</value></data>
+  <data name="Common.EmailRequired" xml:space="preserve"><value>Netfang er nauðsynlegt.</value></data>
   <data name="Common.Today" xml:space="preserve"><value>I dag</value></data>
   <data name="Common.File" xml:space="preserve"><value>Skra</value></data>
   <data name="Common.Size" xml:space="preserve"><value>Staerd</value></data>
@@ -292,7 +297,14 @@
   <data name="Admin.Users.InvitationSent" xml:space="preserve"><value>Bodin send til {0}.</value></data>
   <data name="Admin.Users.DeactivateTitle" xml:space="preserve"><value>Gera notanda óvirkan</value></data>
   <data name="Admin.Users.DeactivateConfirm" xml:space="preserve"><value>Lækka {0} í Fyrrverandi Meðlim?</value></data>
-  <data name="Admin.Users.Deactivated" xml:space="preserve"><value>Notandi gerður óvirkur.</value></data>
+  <data name="Admin.Users.SuspendTitle" xml:space="preserve"><value>Stöðva notanda</value></data>
+  <data name="Admin.Users.SuspendConfirm" xml:space="preserve"><value>Stöðva {0}? Þetta mun ljúka öllum virkum hlutverkum. Hægt er að endurreisa þá með því að úthluta nýjum hlutverkum.</value></data>
+  <data name="Admin.Users.Suspended" xml:space="preserve"><value>Notandi stöðvaður.</value></data>
+  <data name="Admin.Users.RemoveTitle" xml:space="preserve"><value>Fjarlægja úr samtök</value></data>
+  <data name="Admin.Users.RemoveConfirm" xml:space="preserve"><value>Fjarlægja {0} úr þessum samtökum? Persónuupplýsingar og saga varðveist.</value></data>
+  <data name="Admin.Users.Removed" xml:space="preserve"><value>Notandi fjarlægður úr samtökum.</value></data>
+  <data name="Admin.Users.ResendInvite" xml:space="preserve"><value>Endursenda boð</value></data>
+  <data name="Admin.Users.InviteResent" xml:space="preserve"><value>Boð endursent.</value></data>
   <data name="Admin.Org.Title" xml:space="preserve"><value>Samtok</value></data>
   <data name="Admin.Org.Create" xml:space="preserve"><value>Bua til samtok</value></data>
   <data name="Admin.Org.CreateTitle" xml:space="preserve"><value>Bua til samtok</value></data>

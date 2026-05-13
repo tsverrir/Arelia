@@ -31,5 +31,12 @@
             </MudNavGroup>
         </Authorized>
     </AuthorizeView>
+
+    <AuthorizeView Roles="SystemAdmin">
+        <MudNavGroup Title="System Admin" Icon="@Icons.Material.Filled.Security" Expanded="false">
+            <MudNavLink Href="/system/organizations" Icon="@Icons.Material.Filled.Business">All Organisations</MudNavLink>
+            <MudNavLink Href="/system/users" Icon="@Icons.Material.Filled.People">All Users</MudNavLink>
+        </MudNavGroup>
+    </AuthorizeView>
 </MudNavMenu>
 

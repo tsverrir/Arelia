@@ -17,14 +17,6 @@ public class DeletePersonHandler(IAreliaDbContext context) : IRequestHandler<Del
         person.IsDeleted = true;
         person.IsActive = false;
 
-        // Also deactivate linked OrganizationUser if any
-        var orgUser = await context.OrganizationUsers
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(ou => ou.PersonId == request.PersonId && ou.IsActive, cancellationToken);
-
-        if (orgUser is not null)
-            orgUser.IsActive = false;
-
         await context.SaveChangesAsync(cancellationToken);
         return Domain.Common.Result.Success();
     }

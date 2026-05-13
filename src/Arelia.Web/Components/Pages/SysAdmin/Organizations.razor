@@ -1,0 +1,96 @@
+@page "/system/organizations"
+@using Arelia.Application.Organizations.Commands
+@using Arelia.Application.Organizations.Queries
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILocalizer L
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
+
+<PageTitle>System — Organisations</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudText Typo="Typo.h5">Organisations</MudText>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => _showCreate = true)">
+        New Organisation
+    </MudButton>
+</MudStack>
+
+@if (_organizations is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_organizations.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">No organisations have been created yet.</MudAlert>
+}
+else
+{
+    <MudTable Items="_organizations" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Members</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Created</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.MemberCount</MudTd>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small"
+                          Color="@(context.IsActive ? Color.Success : Color.Default)">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+            <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+<MudDialog @bind-Visible="_showCreate">
+    <TitleContent><MudText Typo="Typo.h6">Create Organisation</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newOrgName" Label="Organisation Name" Required="true" />
+        <MudTextField @bind-Value="_newOrgEmail" Label="Contact Email" Class="mt-3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showCreate = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateOrganization">
+            @L.H("Common.Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<OrganizationSummaryDto>? _organizations;
+    private bool _showCreate;
+    private string _newOrgName = string.Empty;
+    private string _newOrgEmail = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganizations();
+    }
+
+    private async Task LoadOrganizations()
+    {
+        _organizations = await Mediator.Send(new GetAllOrganizationsQuery());
+    }
+
+    private async Task CreateOrganization()
+    {
+        if (string.IsNullOrWhiteSpace(_newOrgName))
+        {
+            Snackbar.Add("Organisation name is required.", Severity.Warning);
+            return;
+        }
+
+        await Mediator.Send(new CreateOrganizationCommand(_newOrgName, _newOrgEmail, null));
+        Snackbar.Add($"Organisation '{_newOrgName}' created.", Severity.Success);
+        _showCreate = false;
+        _newOrgName = string.Empty;
+        _newOrgEmail = string.Empty;
+        await LoadOrganizations();
+    }
+}

@@ -9,7 +9,8 @@ public record RoleDto(
     string Name,
     bool IsActive,
     List<Permission> Permissions,
-    int AssignmentCount);
+    int AssignmentCount,
+    RoleType RoleType = RoleType.Custom);
 
 public class GetRolesHandler(IAreliaDbContext context)
     : IRequestHandler<GetRolesQuery, List<RoleDto>>
@@ -24,7 +25,8 @@ public class GetRolesHandler(IAreliaDbContext context)
                 r.Name,
                 r.IsActive,
                 r.RolePermissions.Where(rp => rp.IsActive).Select(rp => rp.Permission).ToList(),
-                r.RoleAssignments.Count(ra => ra.IsActive && ra.FromDate <= DateTime.UtcNow && (ra.ToDate == null || ra.ToDate >= DateTime.UtcNow))))
+                r.RoleAssignments.Count(ra => ra.IsActive && ra.FromDate <= DateTime.UtcNow && (ra.ToDate == null || ra.ToDate >= DateTime.UtcNow)),
+                r.RoleType))
             .ToListAsync(cancellationToken);
     }
 }

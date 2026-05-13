@@ -443,7 +443,7 @@ Jane;Smith;;;Soprano;Section leader</pre>
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
 
         var result = await Mediator.Send(new InviteUserCommand(
-            _inviteEmail, orgId, _inviteFirstName, _inviteLastName));
+            orgId, _inviteEmail, _inviteFirstName, _inviteLastName, null, null, "Admin", Navigation.BaseUri.TrimEnd('/')));
 
         if (result.IsSuccess)
         {

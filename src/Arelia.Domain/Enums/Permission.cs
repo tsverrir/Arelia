@@ -13,6 +13,5 @@ public enum Permission
     ViewFinanceReports,
     ViewMembershipReports,
     OrgSettings,
-    UserManagement,
     Backups
 }

@@ -120,7 +120,7 @@
         if (userId is null)
             return;
 
-        var newOrgId = await Mediator.Send(new CreateOrganizationCommand(_newOrgName, _newOrgEmail, _newOrgPhone, userId));
+        var newOrgId = await Mediator.Send(new CreateOrganizationCommand(_newOrgName, _newOrgEmail, _newOrgPhone));
         Snackbar.Add(string.Format(L["Admin.Org.Created"], _newOrgName), Severity.Success);
 
         _showCreate = false;

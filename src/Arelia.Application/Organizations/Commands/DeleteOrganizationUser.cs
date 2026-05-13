@@ -2,16 +2,17 @@ using Arelia.Domain.Common;
 
 namespace Arelia.Application.Organizations.Commands;
 
-public record DeleteOrganizationUserCommand(Guid OrganizationUserId) : IRequest<Result>;
-
 /// <summary>
-/// Permanently removes an organization-user link and its associated person record.
+/// Removes a user from an organisation. The Person record and historical data are preserved.
+/// All active role assignments are ended. The OrganizationUser record is deleted.
 /// </summary>
-public class DeleteOrganizationUserHandler(IAreliaDbContext context)
-    : IRequestHandler<DeleteOrganizationUserCommand, Result>
+public record RemoveOrganizationUserCommand(Guid OrganizationUserId) : IRequest<Result>;
+
+public class RemoveOrganizationUserHandler(IAreliaDbContext context)
+    : IRequestHandler<RemoveOrganizationUserCommand, Result>
 {
     public async Task<Result> Handle(
-        DeleteOrganizationUserCommand request, CancellationToken cancellationToken)
+        RemoveOrganizationUserCommand request, CancellationToken cancellationToken)
     {
         var orgUser = await context.OrganizationUsers
             .IgnoreQueryFilters()
@@ -20,26 +21,15 @@ public class DeleteOrganizationUserHandler(IAreliaDbContext context)
         if (orgUser is null)
             return Result.Failure("Organization user not found.");
 
-        // Remove role assignments for the linked person
-        if (orgUser.PersonId.HasValue)
-        {
-            var roleAssignments = await context.RoleAssignments
-                .IgnoreQueryFilters()
-                .Where(ra => ra.PersonId == orgUser.PersonId.Value)
-                .ToListAsync(cancellationToken);
+        var activeAssignments = await context.RoleAssignments
+            .IgnoreQueryFilters()
+            .Where(ra => ra.PersonId == orgUser.PersonId
+                         && ra.OrganizationId == orgUser.OrganizationId
+                         && (ra.ToDate == null || ra.ToDate > DateTime.UtcNow))
+            .ToListAsync(cancellationToken);
 
-            context.RoleAssignments.RemoveRange(roleAssignments);
-
-            var person = await context.Persons
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(p => p.Id == orgUser.PersonId.Value, cancellationToken);
-
-            if (person is not null)
-            {
-                person.IsDeleted = true;
-                person.IsActive = false;
-            }
-        }
+        foreach (var assignment in activeAssignments)
+            assignment.ToDate = DateTime.UtcNow;
 
         context.OrganizationUsers.Remove(orgUser);
         await context.SaveChangesAsync(cancellationToken);
