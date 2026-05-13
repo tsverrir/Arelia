@@ -32,5 +32,28 @@ services:
       - DOCKER_CONFIG=/config.json
     command: --label-enable --cleanup --interval 300
 
+  # Cloudflare Tunnel — exposes arelia publicly over HTTPS without opening firewall ports.
+  #
+  # Setup (one-time):
+  #   1. Create a tunnel in the Cloudflare Zero Trust dashboard (Network → Tunnels → Create tunnel).
+  #   2. Set the tunnel's public hostname ingress rule to: http://arelia:8080
+  #   3. Copy the tunnel token and set it in a .env file:  CLOUDFLARE_TUNNEL_TOKEN=<token>
+  #
+  # Blazor Server / SignalR notes:
+  #   • Cloudflare Tunnels forward WebSocket connections natively; no special config needed.
+  #   • The app reads X-Forwarded-For / X-Forwarded-Proto set by Cloudflare so that HTTPS is
+  #     detected correctly, Secure cookie flags are applied, and redirect URIs are correct.
+  #   • WebSocket idle timeout on Cloudflare is 100 s; Blazor keep-alive pings (every 15 s)
+  #     keep the connection alive well within that window.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles: ["production"]
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - arelia
+
 volumes:
   arelia_data:
