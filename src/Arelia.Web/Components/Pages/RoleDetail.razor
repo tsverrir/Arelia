@@ -4,6 +4,7 @@
 @using Arelia.Application.Roles.Queries
 @using Arelia.Domain.Enums
 @using Arelia.Web.Components.Shared
+@using Arelia.Web.Extensions
 @inject IMediator Mediator
 @inject ITenantContext TenantContext
 @inject NavigationManager Navigation
@@ -20,6 +21,11 @@
     return;
 }
 
+@{
+    var isSystemRole = _role.RoleType != RoleType.Custom;
+    var isAdminRole = _role.RoleType == RoleType.Admin;
+}
+
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4" Spacing="2">
     <BackButton DefaultHref="/roles" Label="@L["Roles.BackToRoles"]" />
     <MudText Typo="Typo.h5">@_role.Name</MudText>
@@ -27,7 +33,25 @@
     {
         <MudChip T="string" Size="Size.Small" Color="Color.Default">@L["Common.Inactive"]</MudChip>
     }
+    @if (isSystemRole)
+    {
+        <MudChip T="string" Size="Size.Small" Color="Color.Info">System Role</MudChip>
+    }
 </MudStack>
+
+@if (isSystemRole)
+{
+    <MudAlert Severity="Severity.Info" Class="mb-4">
+        @if (isAdminRole)
+        {
+            <span>The <strong>Admin</strong> role is a built-in system role. Its name, permissions, and assignments cannot be modified.</span>
+        }
+        else
+        {
+            <span>The <strong>@_role.Name</strong> role is a built-in system role. It cannot be renamed or deleted. You may adjust its permissions.</span>
+        }
+    </MudAlert>
+}
 
 <MudGrid>
     <MudItem xs="12" md="6">
@@ -38,18 +62,22 @@
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
-                <MudTextField @bind-Value="_editName" Label="@L["Roles.RoleName"]" />
+                <MudTextField @bind-Value="_editName" Label="@L["Roles.RoleName"]"
+                              ReadOnly="@isSystemRole" />
             </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">
-                    @L.H("Common.Save")
-                </MudButton>
-                <MudSpacer />
-                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteDialog"
-                           StartIcon="@Icons.Material.Filled.Delete">
-                    @L.H("Common.Delete")
-                </MudButton>
-            </MudCardActions>
+            @if (!isSystemRole)
+            {
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">
+                        @L.H("Common.Save")
+                    </MudButton>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteDialog"
+                               StartIcon="@Icons.Material.Filled.Delete">
+                        @L.H("Common.Delete")
+                    </MudButton>
+                </MudCardActions>
+            }
         </MudCard>
 
         <MudCard Class="mt-4">
@@ -61,9 +89,10 @@
             <MudCardContent>
                 @foreach (var permission in Enum.GetValues<Permission>())
                 {
-                    var granted = _role.Permissions.Contains(permission);
-                    <MudCheckBox T="bool" Value="granted" Label="@permission.ToString()"
-                                 ValueChanged="@(v => OnPermissionToggle(permission, v))" />
+                    var granted = isAdminRole || _role.Permissions.Contains(permission);
+                    <MudCheckBox T="bool" Value="granted" Label="@permission.GetDisplayName()"
+                                 ValueChanged="@(v => OnPermissionToggle(permission, v))"
+                                 Disabled="@isAdminRole" />
                 }
             </MudCardContent>
         </MudCard>

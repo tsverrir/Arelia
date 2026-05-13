@@ -9,7 +9,7 @@
 @inject AreliaDbContext DbContext
 @inject MaintenanceState Maintenance
 @inject IHostApplicationLifetime AppLifetime
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
 
 <PageTitle>@L["Admin.Backups.Title"]</PageTitle>
 

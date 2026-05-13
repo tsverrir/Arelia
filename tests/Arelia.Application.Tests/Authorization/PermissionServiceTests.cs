@@ -11,16 +11,18 @@ namespace Arelia.Application.Tests.Authorization;
 public class PermissionServiceTests
 {
     [Fact]
-    public async Task WhenUserIsInactiveThenIsActiveMemberReturnsFalse()
+    public async Task WhenUserHasNoRoleAssignmentsThenIsActiveMemberReturnsFalse()
     {
         var orgId = Guid.NewGuid();
         await using var context = TestDbContextFactory.Create();
 
+        var person = new Person { FirstName = "Test", LastName = "User", OrganizationId = orgId };
+        context.Persons.Add(person);
         context.OrganizationUsers.Add(new OrganizationUser
         {
             UserId = "user-1",
             OrganizationId = orgId,
-            IsActive = false,
+            PersonId = person.Id,
         });
         await context.SaveChangesAsync();
 
@@ -31,16 +33,28 @@ public class PermissionServiceTests
     }
 
     [Fact]
-    public async Task WhenUserIsActiveThenIsActiveMemberReturnsTrue()
+    public async Task WhenUserHasActiveRoleAssignmentThenIsActiveMemberReturnsTrue()
     {
         var orgId = Guid.NewGuid();
         await using var context = TestDbContextFactory.Create();
 
+        var person = new Person { FirstName = "Test", LastName = "User", OrganizationId = orgId };
+        context.Persons.Add(person);
         context.OrganizationUsers.Add(new OrganizationUser
         {
             UserId = "user-1",
             OrganizationId = orgId,
-            IsActive = true,
+            PersonId = person.Id,
+        });
+
+        var role = new Role { Name = "Member", OrganizationId = orgId };
+        context.Roles.Add(role);
+        context.RoleAssignments.Add(new RoleAssignment
+        {
+            PersonId = person.Id,
+            RoleId = role.Id,
+            FromDate = DateTime.UtcNow.AddDays(-1),
+            OrganizationId = orgId,
         });
         await context.SaveChangesAsync();
 
@@ -51,25 +65,21 @@ public class PermissionServiceTests
     }
 
     [Fact]
-    public async Task WhenUserHasAdminRoleThenAllPermissionsReturned()
+    public async Task WhenOrganizationSeedsAdminRoleThenAllPermissionsExist()
     {
-        var orgId = Guid.NewGuid();
         await using var context = TestDbContextFactory.Create();
-
-        // Create org via handler (seeds roles)
         var createHandler = new CreateOrganizationHandler(context);
-        await createHandler.Handle(
-            new CreateOrganizationCommand("Test", null, null, "user-1"),
+        var orgId = await createHandler.Handle(
+            new CreateOrganizationCommand("Test", null, null),
             CancellationToken.None);
 
-        var service = new PermissionService(context);
-        var permissions = await service.GetEffectivePermissionsAsync("user-1", orgId, CancellationToken.None);
+        var adminRole = await context.Roles.IgnoreQueryFilters()
+            .FirstAsync(r => r.OrganizationId == orgId && r.Name == "Admin");
 
-        // user-1 should have all permissions because CreateOrganization assigns Admin
-        // but the org created by handler has its own orgId, not our variable
-        // Let's query the actual orgId
-        var actualOrg = await context.Organizations.IgnoreQueryFilters().FirstAsync();
-        permissions = await service.GetEffectivePermissionsAsync("user-1", actualOrg.Id, CancellationToken.None);
+        var permissions = await context.RolePermissions.IgnoreQueryFilters()
+            .Where(rp => rp.RoleId == adminRole.Id)
+            .Select(rp => rp.Permission)
+            .ToListAsync();
 
         permissions.Should().HaveCount(Enum.GetValues<Permission>().Length);
     }
@@ -93,7 +103,6 @@ public class PermissionServiceTests
             UserId = "user-1",
             OrganizationId = orgId,
             PersonId = person.Id,
-            IsActive = true,
         });
         await context.SaveChangesAsync();
 
@@ -122,7 +131,6 @@ public class PermissionServiceTests
             UserId = "user-1",
             OrganizationId = orgId,
             PersonId = person.Id,
-            IsActive = true,
         });
 
         var boardRole = new Role { Name = "Board", OrganizationId = orgId };
@@ -185,7 +193,6 @@ public class PermissionServiceTests
             UserId = "user-1",
             OrganizationId = orgId,
             PersonId = person.Id,
-            IsActive = true,
         });
 
         var role = new Role { Name = "Board", OrganizationId = orgId };

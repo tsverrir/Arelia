@@ -2,6 +2,7 @@ using Arelia.Application.Interfaces;
 using Arelia.Infrastructure.Identity;
 using Arelia.Infrastructure.Persistence;
 using Arelia.Infrastructure.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -31,9 +32,16 @@ public static class DependencyInjection
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequiredLength = 8;
             })
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<AreliaDbContext>()
             .AddSignInManager()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            // Replace the default DataProtector token provider with URL-safe Base64url variant
+            .AddTokenProvider<InvitationTokenProvider>(TokenOptions.DefaultProvider);
+
+        // Invitation links are valid for 7 days
+        services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromDays(7));
 
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IUserService, UserService>();
@@ -56,10 +64,12 @@ public static class DependencyInjection
         if (!string.IsNullOrWhiteSpace(resendApiToken))
         {
             services.AddTransient<IEmailSender<ApplicationUser>, ResendEmailSender>();
+            services.AddTransient<IAreliaEmailService, ResendEmailSender>();
         }
         else
         {
             services.AddSingleton<IEmailSender<ApplicationUser>, DevEmailSender>();
+            services.AddSingleton<IAreliaEmailService, DevEmailSender>();
         }
 
         return services;

@@ -6,12 +6,14 @@
 @using Arelia.Application.Roles.Commands
 @using Arelia.Application.Roles.Queries
 @using Arelia.Application.VoiceGroups.Queries
+@using Arelia.Application.Organizations.Commands
 @inject IMediator Mediator
 @inject ITenantContext TenantContext
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject ILocalizer L
+@inject IUserService UserService
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <PageTitle>@(_person is null ? L["People.Title"] : $"{_person.FirstName} {_person.LastName}")</PageTitle>
@@ -94,7 +96,45 @@
             <MudCardContent>
                 @if (_person.HasLinkedUser)
                 {
-                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mb-2">@L["PersonDetail.HasLinkedUser"]</MudChip>
+                    @if (_isPending)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Class="mb-2"
+                                 Icon="@Icons.Material.Filled.HourglassEmpty">
+                            Pending — invitation not yet accepted
+                        </MudChip>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Send" OnClick="ResendInvitation" Class="mb-2">
+                            Resend Invitation
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mb-2"
+                                 Icon="@Icons.Material.Filled.AccountCircle">
+                            @L["PersonDetail.HasLinkedUser"]
+                        </MudChip>
+                    }
+
+                    <div class="mt-2 mb-2">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.PauseCircle"
+                                   OnClick="SuspendUser" Class="mr-2">
+                            Suspend User
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.PersonRemove"
+                                   OnClick="RemoveUser">
+                            Remove from Org
+                        </MudButton>
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(_person.Email))
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Mail"
+                               OnClick="InviteUser" Class="mb-2">
+                        Invite to System
+                    </MudButton>
                 }
 
                 <MudTable Items="_person.RoleAssignments" Dense="true" Hover="true">
@@ -169,6 +209,7 @@
     private PersonDetailDto? _person;
     private List<RoleDto>? _roles;
     private List<VoiceGroupDto>? _voiceGroups;
+    private bool _isPending;
     private string _editFirstName = string.Empty;
     private string _editLastName = string.Empty;
     private string? _editEmail;
@@ -200,6 +241,9 @@
             _editPhone = _person.Phone;
             _editVoiceGroupId = _person.VoiceGroupId;
             _editNotes = _person.Notes;
+
+            if (_person.LinkedUserId is not null)
+                _isPending = await UserService.IsAccountPendingAsync(_person.LinkedUserId);
         }
     }
 
@@ -331,4 +375,85 @@
         }
     }
 
+    private async Task InviteUser()
+    {
+        if (TenantContext.CurrentOrganizationId is not Guid orgId || _person is null) return;
+
+        var result = await Mediator.Send(new InviteUserCommand(
+            orgId, _person.Email!, _person.FirstName, _person.LastName,
+            null, null, null,
+            _person.Id, null, null, Navigation.BaseUri.TrimEnd('/')));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Invitation sent.", Severity.Success);
+            await LoadPerson();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
     }
+
+    private async Task ResendInvitation()
+    {
+        if (TenantContext.CurrentOrganizationId is not Guid orgId || _person?.LinkedUserId is null) return;
+
+        var result = await Mediator.Send(new ResendInvitationCommand(
+            _person.LinkedUserId, orgId, "Admin", Navigation.BaseUri.TrimEnd('/')));
+
+        if (result.IsSuccess)
+            Snackbar.Add("Invitation resent.", Severity.Success);
+        else
+            Snackbar.Add(result.Error!, Severity.Error);
+    }
+
+    private async Task SuspendUser()
+    {
+        if (_person?.OrganizationUserId is not Guid orgUserId) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Suspend {_person.FirstName} {_person.LastName}? All active role assignments will be ended." }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Suspend User", parameters);
+        var dialogResult = await dialog.Result;
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new SuspendOrganizationUserCommand(orgUserId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("User suspended.", Severity.Success);
+            await LoadPerson();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task RemoveUser()
+    {
+        if (_person?.OrganizationUserId is not Guid orgUserId) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Remove {_person.FirstName} {_person.LastName} from the organisation? The person record and history will be preserved, but all roles will be ended." }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove from Organisation", parameters);
+        var dialogResult = await dialog.Result;
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var result = await Mediator.Send(new RemoveOrganizationUserCommand(orgUserId));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("User removed from organisation.", Severity.Success);
+            await LoadPerson();
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+}

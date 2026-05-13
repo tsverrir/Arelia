@@ -65,6 +65,11 @@
   <data name="Common.SetInactive" xml:space="preserve"><value>Saet inaktiv</value></data>
   <data name="Common.SetActive" xml:space="preserve"><value>Saet aktiv</value></data>
   <data name="Common.FormerMember" xml:space="preserve"><value>Tidligere Medlem</value></data>
+  <data name="Common.Pending" xml:space="preserve"><value>Afventer</value></data>
+  <data name="Common.Suspended" xml:space="preserve"><value>Suspenderet</value></data>
+  <data name="Common.Roles" xml:space="preserve"><value>Roller</value></data>
+  <data name="Common.NoActiveRoles" xml:space="preserve"><value>Ingen aktive roller</value></data>
+  <data name="Common.EmailRequired" xml:space="preserve"><value>E-mailadresse er påkrævet.</value></data>
   <data name="Common.Today" xml:space="preserve"><value>I dag</value></data>
   <data name="Common.File" xml:space="preserve"><value>Fil</value></data>
   <data name="Common.Size" xml:space="preserve"><value>Stoerrelse</value></data>
@@ -75,6 +80,7 @@
   <data name="Common.EndTime" xml:space="preserve"><value>Sluttid</value></data>
   <data name="Common.PublicVisible" xml:space="preserve"><value>Offentlig synlig</value></data>
   <data name="Common.SelectOrgFirst" xml:space="preserve"><value>Vaelg venligst en organisation forst.</value></data>
+  <data name="Common.AccessDenied" xml:space="preserve"><value>Du har ikke tilladelse til at tilgå denne side.</value></data>
   <data name="Common.SignIn" xml:space="preserve"><value>log ind</value></data>
   <data name="Common.SignedInAs" xml:space="preserve"><value>Logget ind som {0}</value></data>
   <data name="Common.Language" xml:space="preserve"><value>Sprog</value></data>
@@ -105,6 +111,7 @@
   <data name="Nav.Admin" xml:space="preserve"><value>Administration</value></data>
   <data name="Nav.Users" xml:space="preserve"><value>Brugere</value></data>
   <data name="Nav.Organizations" xml:space="preserve"><value>Organisationer</value></data>
+  <data name="Nav.Settings" xml:space="preserve"><value>Indstillinger</value></data>
   <data name="Nav.AuditLog" xml:space="preserve"><value>Revisionslog</value></data>
   <data name="Nav.Backups" xml:space="preserve"><value>Sikkerhedskopier</value></data>
   <data name="Home.Title" xml:space="preserve"><value>Velkommen til Arelia</value></data>
@@ -185,6 +192,8 @@
   <data name="ActivityDetail.StatusExplained" xml:space="preserve"><value>Forklaret</value></data>
   <data name="People.Title" xml:space="preserve"><value>Medlemmer</value></data>
   <data name="People.AddPerson" xml:space="preserve"><value>Tilfoej person</value></data>
+  <data name="People.AddOnly" xml:space="preserve"><value>Kun tilfoej</value></data>
+  <data name="People.AddAndInvite" xml:space="preserve"><value>Tilfoej og inviter</value></data>
   <data name="People.AddByEmail" xml:space="preserve"><value>Tilfoej via e-mail</value></data>
   <data name="People.ImportFromOrg" xml:space="preserve"><value>Importer fra org.</value></data>
   <data name="People.ShowInactive" xml:space="preserve"><value>Vis inaktive</value></data>
@@ -292,7 +301,14 @@
   <data name="Admin.Users.InvitationSent" xml:space="preserve"><value>Invitation sendt til {0}.</value></data>
   <data name="Admin.Users.DeactivateTitle" xml:space="preserve"><value>Deaktiver bruger</value></data>
   <data name="Admin.Users.DeactivateConfirm" xml:space="preserve"><value>Degrader {0} til Tidligere Medlem?</value></data>
-  <data name="Admin.Users.Deactivated" xml:space="preserve"><value>Bruger deaktiveret.</value></data>
+  <data name="Admin.Users.SuspendTitle" xml:space="preserve"><value>Suspender bruger</value></data>
+  <data name="Admin.Users.SuspendConfirm" xml:space="preserve"><value>Suspender {0}? Dette vil afslutte alle aktive roller. De kan genetableres ved at tildele nye roller.</value></data>
+  <data name="Admin.Users.Suspended" xml:space="preserve"><value>Bruger suspenderet.</value></data>
+  <data name="Admin.Users.RemoveTitle" xml:space="preserve"><value>Fjern fra organisation</value></data>
+  <data name="Admin.Users.RemoveConfirm" xml:space="preserve"><value>Fjern {0} fra denne organisation? Personens record og historik bevares.</value></data>
+  <data name="Admin.Users.Removed" xml:space="preserve"><value>Bruger fjernet fra organisation.</value></data>
+  <data name="Admin.Users.ResendInvite" xml:space="preserve"><value>Gensend invitation</value></data>
+  <data name="Admin.Users.InviteResent" xml:space="preserve"><value>Invitation gensendt.</value></data>
   <data name="Admin.Org.Title" xml:space="preserve"><value>Organisationer</value></data>
   <data name="Admin.Org.Create" xml:space="preserve"><value>Opret organisation</value></data>
   <data name="Admin.Org.CreateTitle" xml:space="preserve"><value>Opret organisation</value></data>
@@ -300,6 +316,41 @@
   <data name="Admin.Org.EditSettingsTitle" xml:space="preserve"><value>Organisationsindstillinger</value></data>
   <data name="Admin.Org.SettingsSaved" xml:space="preserve"><value>Organisationsindstillinger gemt.</value></data>
   <data name="Admin.Org.Created" xml:space="preserve"><value>Organisation '{0}' oprettet.</value></data>
+  <data name="OrgSettings.Title" xml:space="preserve"><value>Organisationsindstillinger</value></data>
+  <data name="OrgSettings.Saved" xml:space="preserve"><value>Organisationsindstillinger gemt.</value></data>
+  <data name="SysAdmin.OrgDetail.Title" xml:space="preserve"><value>Organisation</value></data>
+  <data name="SysAdmin.OrgDetail.AssignUser" xml:space="preserve"><value>Tildel bruger</value></data>
+  <data name="SysAdmin.OrgDetail.AssignSuccess" xml:space="preserve"><value>Bruger tildelt organisation.</value></data>
+  <data name="SysAdmin.OrgDetail.InviteUser" xml:space="preserve"><value>Inviter bruger</value></data>
+  <data name="SysAdmin.OrgDetail.InviteTitle" xml:space="preserve"><value>Inviter ny bruger</value></data>
+  <data name="SysAdmin.OrgDetail.InviteSent" xml:space="preserve"><value>Invitation sendt til {0}.</value></data>
+  <data name="SysAdmin.Users.InviteUser" xml:space="preserve"><value>Inviter bruger</value></data>
+  <data name="SysAdmin.Users.InviteTitle" xml:space="preserve"><value>Inviter ny bruger</value></data>
+  <data name="SysAdmin.Users.InviteSent" xml:space="preserve"><value>Invitation sendt til {0}.</value></data>
+  <data name="SysAdmin.Users.DeleteUser" xml:space="preserve"><value>Slet bruger</value></data>
+  <data name="SysAdmin.Users.DeleteTitle" xml:space="preserve"><value>Slet bruger</value></data>
+  <data name="SysAdmin.Users.DeleteConfirm" xml:space="preserve"><value>Er du sikker på, at du vil slette kontoen for {0}? Personens record og organisationsdata bevares.</value></data>
+  <data name="SysAdmin.Users.Deleted" xml:space="preserve"><value>Bruger {0} er blevet slettet.</value></data>
+  <data name="SysAdmin.OrgDetail.RemoveUser" xml:space="preserve"><value>Fjern fra organisation</value></data>
+  <data name="SysAdmin.OrgDetail.RemoveConfirm" xml:space="preserve"><value>Fjern {0} fra denne organisation? Personens record og historiske data bevares.</value></data>
+  <data name="SysAdmin.OrgDetail.Removed" xml:space="preserve"><value>{0} er fjernet fra organisationen.</value></data>
+  <data name="SysAdmin.OrgDetail.ChangeRole" xml:space="preserve"><value>Skift rolle</value></data>
+  <data name="SysAdmin.OrgDetail.RoleChanged" xml:space="preserve"><value>Rollen er opdateret for {0}.</value></data>
+  <data name="SysAdmin.OrgDetail.AlreadyMember" xml:space="preserve"><value>Denne bruger er allerede medlem af denne organisation.</value></data>
+  <data name="SysAdmin.Users.AssignToOrg" xml:space="preserve"><value>Tildel til organisation</value></data>
+  <data name="SysAdmin.Users.AssignSuccess" xml:space="preserve"><value>Bruger tildelt organisation.</value></data>
+  <data name="SysAdmin.Users.Title" xml:space="preserve"><value>Brugere</value></data>
+  <data name="SysAdmin.Users.NoOrganisations" xml:space="preserve"><value>Ikke medlem af nogen organisation.</value></data>
+  <data name="SysAdmin.Users.PromoteTitle" xml:space="preserve"><value>Tildel systemadministratorrolle</value></data>
+  <data name="SysAdmin.Users.DemoteTitle" xml:space="preserve"><value>Fjern systemadministratorrolle</value></data>
+  <data name="SysAdmin.Users.PromoteConfirm" xml:space="preserve"><value>Tildel systemadministratorrolle til {0}?</value></data>
+  <data name="SysAdmin.Users.DemoteConfirm" xml:space="preserve"><value>Fjern systemadministratorrolle fra {0}?</value></data>
+  <data name="SysAdmin.Users.PromoteSuccess" xml:space="preserve"><value>Bruger forfremmet til systemadministrator.</value></data>
+  <data name="SysAdmin.Users.DemoteSuccess" xml:space="preserve"><value>Systemadministratorrolle fjernet.</value></data>
+  <data name="SysAdmin.Users.GrantSysAdmin" xml:space="preserve"><value>Tildel systemadministratorrolle</value></data>
+  <data name="SysAdmin.Users.RemoveSysAdmin" xml:space="preserve"><value>Fjern systemadministratorrolle</value></data>
+  <data name="SysAdmin.Users.CannotChangeSelf" xml:space="preserve"><value>Du kan ikke ændre din egen systemadministratorstatus.</value></data>
+  <data name="SysAdmin.Users.CannotRemoveLastAdmin" xml:space="preserve"><value>Kan ikke fjerne den sidste systemadministrator.</value></data>
   <data name="Admin.AuditLog.Title" xml:space="preserve"><value>Revisionslog</value></data>
   <data name="Admin.AuditLog.Timestamp" xml:space="preserve"><value>Tidsstempel</value></data>
   <data name="Admin.AuditLog.Action" xml:space="preserve"><value>Handling</value></data>

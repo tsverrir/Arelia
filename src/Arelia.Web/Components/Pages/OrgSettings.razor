@@ -1,0 +1,106 @@
+@page "/organisation-settings"
+@inherits Arelia.Web.Components.TenantAwarePage
+@using Arelia.Application.Authorization
+@using Arelia.Application.Interfaces
+@using Arelia.Application.Organizations.Commands
+@using Arelia.Application.Organizations.Queries
+@using Arelia.Domain.Enums
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILocalizer L
+@inject IPermissionService PermissionService
+@inject ITenantContext TenantContext
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>@L["OrgSettings.Title"]</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">@L.H("OrgSettings.Title")</MudText>
+
+@if (TenantService.CurrentOrganizationId is null)
+{
+    <MudAlert Severity="Severity.Warning">@L["Common.SelectOrgFirst"]</MudAlert>
+    return;
+}
+
+@if (!_hasPermission)
+{
+    <MudAlert Severity="Severity.Error">@L["Common.AccessDenied"]</MudAlert>
+    return;
+}
+
+<MudPaper Class="pa-4" MaxWidth="500px">
+    <MudTextField @bind-Value="_name" Label="@L["Common.Name"]" Required="true" Class="mb-4" />
+    <MudTextField @bind-Value="_contactEmail" Label="@L["Common.Email"]" InputType="InputType.Email" Class="mb-4" />
+    <MudTextField @bind-Value="_contactPhone" Label="@L["Common.Phone"]" Class="mb-4" />
+    <MudSelect T="string" @bind-Value="_language" Label="@L["Common.DefaultLanguage"]" Class="mb-4">
+        <MudSelectItem T="string" Value="@("en")">English</MudSelectItem>
+        <MudSelectItem T="string" Value="@("da")">Dansk</MudSelectItem>
+        <MudSelectItem T="string" Value="@("is")">Íslenska</MudSelectItem>
+    </MudSelect>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">
+        @L.H("Common.Save")
+    </MudButton>
+</MudPaper>
+
+@code {
+    private string _name = string.Empty;
+    private string? _contactEmail;
+    private string? _contactPhone;
+    private string _language = "en";
+    private bool _hasPermission;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RegisterTenantChangeHandler();
+        await LoadAsync();
+    }
+
+    protected override async Task OnTenantChangedAsync()
+    {
+        await LoadAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId || TenantContext.CurrentUserId is not string userId)
+        {
+            _hasPermission = false;
+            return;
+        }
+
+        var permissions = await PermissionService.GetEffectivePermissionsAsync(userId, orgId);
+        _hasPermission = permissions.Contains(Permission.OrgSettings);
+
+        if (!_hasPermission)
+            return;
+
+        var detail = await Mediator.Send(new GetOrganizationDetailQuery(orgId));
+        if (detail is null)
+            return;
+
+        _name = detail.Name;
+        _contactEmail = detail.ContactEmail;
+        _contactPhone = detail.ContactPhone;
+        _language = detail.DefaultLanguage ?? "en";
+    }
+
+    private async Task SaveAsync()
+    {
+        if (TenantService.CurrentOrganizationId is not Guid orgId)
+            return;
+
+        var detail = await Mediator.Send(new GetOrganizationDetailQuery(orgId));
+        if (detail is null)
+            return;
+
+        var result = await Mediator.Send(new UpdateOrganizationCommand(
+            orgId, _name, _contactEmail, _contactPhone, _language, detail.IsActive));
+
+        if (result.IsSuccess)
+            Snackbar.Add(L["OrgSettings.Saved"], Severity.Success);
+        else
+            Snackbar.Add(result.Error!, Severity.Error);
+    }
+}

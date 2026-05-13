@@ -6,8 +6,7 @@ namespace Arelia.Application.Organizations.Commands;
 public record CreateOrganizationCommand(
     string Name,
     string? ContactEmail,
-    string? ContactPhone,
-    string CreatingUserId) : IRequest<Guid>;
+    string? ContactPhone) : IRequest<Guid>;
 
 public class CreateOrganizationHandler(IAreliaDbContext context) : IRequestHandler<CreateOrganizationCommand, Guid>
 {
@@ -22,33 +21,17 @@ public class CreateOrganizationHandler(IAreliaDbContext context) : IRequestHandl
 
         context.Organizations.Add(org);
 
-        // Link creating user as member
-        var orgUser = new OrganizationUser
+        // Seed System Roles (Admin, Board, Member)
+        var systemRoles = new (string Name, RoleType Type, Permission[] Permissions)[]
         {
-            UserId = request.CreatingUserId,
-            OrganizationId = org.Id,
-            IsActive = true,
-        };
-        context.OrganizationUsers.Add(orgUser);
-
-        // Seed default roles
-        var defaultRoles = new (string Name, Permission[] Permissions)[]
-        {
-            ("Member",    []),
-            ("Board",     [Permission.ManagePeople, Permission.ManageActivities, Permission.ManageAttendance, Permission.RsvpOnBehalf, Permission.ViewAttendanceReports, Permission.ViewMembershipReports, Permission.ManageDocuments]),
-            ("Treasurer", [Permission.ManageCharges, Permission.ManageExpenses, Permission.ViewFinanceReports, Permission.ViewMembershipReports]),
-            ("Conductor", [Permission.ManageAttendance, Permission.ViewAttendanceReports]),
-            ("Admin",     Enum.GetValues<Permission>()),
+            ("Member", RoleType.Member, []),
+            ("Board",  RoleType.Board,  [Permission.ManagePeople, Permission.ManageActivities, Permission.ManageAttendance, Permission.RsvpOnBehalf, Permission.ViewAttendanceReports, Permission.ViewMembershipReports, Permission.ManageDocuments]),
+            ("Admin",  RoleType.Admin,  Enum.GetValues<Permission>()),
         };
 
-        Role? adminRole = null;
-        foreach (var (roleName, permissions) in defaultRoles)
+        foreach (var (roleName, roleType, permissions) in systemRoles)
         {
-            var role = new Role
-            {
-                Name = roleName,
-                OrganizationId = org.Id,
-            };
+            var role = new Role { Name = roleName, RoleType = roleType, OrganizationId = org.Id };
             context.Roles.Add(role);
 
             foreach (var permission in permissions)
@@ -60,31 +43,29 @@ public class CreateOrganizationHandler(IAreliaDbContext context) : IRequestHandl
                     OrganizationId = org.Id,
                 });
             }
-
-            if (roleName == "Admin")
-                adminRole = role;
         }
 
-        // Create a Person for the creating user and assign Admin role
-        var person = new Person
+        // Seed Custom roles as org defaults
+        var customRoles = new (string Name, Permission[] Permissions)[]
         {
-            FirstName = "Admin",
-            LastName = "User",
-            OrganizationId = org.Id,
+            ("Treasurer", [Permission.ManageCharges, Permission.ManageExpenses, Permission.ViewFinanceReports, Permission.ViewMembershipReports]),
+            ("Conductor", [Permission.ManageAttendance, Permission.ViewAttendanceReports]),
         };
-        context.Persons.Add(person);
 
-        orgUser.PersonId = person.Id;
-
-        if (adminRole is not null)
+        foreach (var (roleName, permissions) in customRoles)
         {
-            context.RoleAssignments.Add(new RoleAssignment
+            var role = new Role { Name = roleName, RoleType = RoleType.Custom, OrganizationId = org.Id };
+            context.Roles.Add(role);
+
+            foreach (var permission in permissions)
             {
-                PersonId = person.Id,
-                RoleId = adminRole.Id,
-                FromDate = DateTime.UtcNow,
-                OrganizationId = org.Id,
-            });
+                context.RolePermissions.Add(new RolePermission
+                {
+                    RoleId = role.Id,
+                    Permission = permission,
+                    OrganizationId = org.Id,
+                });
+            }
         }
 
         // Seed default expense categories

@@ -4,7 +4,7 @@
 @using Arelia.Web.Components.Shared
 @inject IMediator Mediator
 @inject ILocalizer L
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
 
 <PageTitle>@L["Admin.AuditLog.Title"]</PageTitle>
 

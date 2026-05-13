@@ -53,10 +53,6 @@
         @L.H("People.ImportFromCsv")
     </MudButton>
     <InputFile id="csvFileInput" OnChange="HandleCsvUpload" accept=".csv" style="display:none" />
-    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _showAddByEmail = true)"
-               StartIcon="@Icons.Material.Filled.PersonSearch">
-        @L.H("People.AddByEmail")
-    </MudButton>
     <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="@(() => _showImport = true)"
                StartIcon="@Icons.Material.Filled.TransferWithinAStation">
         @L.H("People.ImportFromOrg")
@@ -78,10 +74,26 @@
                     case "VoiceGroup":
                         @(context.Value?.ToString() ?? "—")
                         break;
+                    case "Roles":
+                        @(context.Item.Roles.Count > 0 ? string.Join(", ", context.Item.Roles) : "—")
+                        break;
                     case "Status":
-                        <MudChip T="string" Size="Size.Small" Color="@((bool)(context.Value ?? false) ? Color.Success : Color.Default)">
-                            @((bool)(context.Value ?? false) ? L["Common.Active"] : L["Common.Inactive"])
-                        </MudChip>
+                        @if (context.Item.IsPending)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">@L["Common.Pending"]</MudChip>
+                        }
+                        else if (context.Item.IsSuspended)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">@L["Common.Suspended"]</MudChip>
+                        }
+                        else if ((bool)(context.Value ?? false))
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success">@L["Common.Active"]</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">@L["Common.Inactive"]</MudChip>
+                        }
                         break;
                     default:
                         @(context.Value?.ToString() ?? "—")
@@ -92,9 +104,35 @@
     }
     else
     {
-        var activePeople = _people.Where(p => p.IsActive).ToList();
+        var pendingPeople = _people.Where(p => p.IsPending).ToList();
+        var activePeople = _people.Where(p => p.IsActive && !p.IsSuspended && !p.IsPending).ToList();
+        var suspendedPeople = _people.Where(p => p.IsSuspended).ToList();
         var inactivePeople = _people.Where(p => !p.IsActive).ToList();
         <MudExpansionPanels MultiExpansion="true">
+            @if (pendingPeople.Count > 0)
+            {
+                <MudExpansionPanel Text="@($"{L["Common.Pending"]} ({pendingPeople.Count})")"
+                                   IsInitiallyExpanded="true">
+                    <MudTable Items="pendingPeople" Dense="true" Hover="true" OnRowClick="OnRowClick" T="PersonListDto">
+                        <HeaderContent>
+                            <MudTh>@L["Common.FirstName"]</MudTh>
+                            <MudTh>@L["Common.LastName"]</MudTh>
+                            <MudTh>@L["Common.Email"]</MudTh>
+                            <MudTh>@L["Common.Phone"]</MudTh>
+                            <MudTh>@L["Common.VoiceGroup"]</MudTh>
+                            <MudTh>@L["Common.Roles"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.FirstName</MudTd>
+                            <MudTd>@context.LastName</MudTd>
+                            <MudTd>@(context.Email ?? "—")</MudTd>
+                            <MudTd>@(context.Phone ?? "—")</MudTd>
+                            <MudTd>@(context.VoiceGroupName ?? "—")</MudTd>
+                            <MudTd>@(context.Roles.Count > 0 ? string.Join(", ", context.Roles) : "—")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudExpansionPanel>
+            }
             <MudExpansionPanel Text="@ActiveGroupTitle(activePeople.Count)"
                                IsInitiallyExpanded="true">
                 @if (activePeople.Count == 0)
@@ -110,6 +148,7 @@
                             <MudTh>@L["Common.Email"]</MudTh>
                             <MudTh>@L["Common.Phone"]</MudTh>
                             <MudTh>@L["Common.VoiceGroup"]</MudTh>
+                            <MudTh>@L["Common.Roles"]</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd>@context.FirstName</MudTd>
@@ -117,10 +156,35 @@
                             <MudTd>@(context.Email ?? "—")</MudTd>
                             <MudTd>@(context.Phone ?? "—")</MudTd>
                             <MudTd>@(context.VoiceGroupName ?? "—")</MudTd>
+                            <MudTd>@(context.Roles.Count > 0 ? string.Join(", ", context.Roles) : "—")</MudTd>
                         </RowTemplate>
                     </MudTable>
                 }
             </MudExpansionPanel>
+            @if (suspendedPeople.Count > 0)
+            {
+                <MudExpansionPanel Text="@SuspendedGroupTitle(suspendedPeople.Count)"
+                                   IsInitiallyExpanded="false">
+                    <MudTable Items="suspendedPeople" Dense="true" Hover="true" OnRowClick="OnRowClick" T="PersonListDto">
+                        <HeaderContent>
+                            <MudTh>@L["Common.FirstName"]</MudTh>
+                            <MudTh>@L["Common.LastName"]</MudTh>
+                            <MudTh>@L["Common.Email"]</MudTh>
+                            <MudTh>@L["Common.Phone"]</MudTh>
+                            <MudTh>@L["Common.VoiceGroup"]</MudTh>
+                            <MudTh>@L["Common.Roles"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.FirstName</MudTd>
+                            <MudTd>@context.LastName</MudTd>
+                            <MudTd>@(context.Email ?? "—")</MudTd>
+                            <MudTd>@(context.Phone ?? "—")</MudTd>
+                            <MudTd>@(context.VoiceGroupName ?? "—")</MudTd>
+                            <MudTd>—</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudExpansionPanel>
+            }
             <MudExpansionPanel Text="@InactiveGroupTitle(inactivePeople.Count)"
                                IsInitiallyExpanded="false">
                 @if (inactivePeople.Count == 0)
@@ -136,6 +200,7 @@
                             <MudTh>@L["Common.Email"]</MudTh>
                             <MudTh>@L["Common.Phone"]</MudTh>
                             <MudTh>@L["Common.VoiceGroup"]</MudTh>
+                            <MudTh>@L["Common.Roles"]</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd>@context.FirstName</MudTd>
@@ -143,6 +208,7 @@
                             <MudTd>@(context.Email ?? "—")</MudTd>
                             <MudTd>@(context.Phone ?? "—")</MudTd>
                             <MudTd>@(context.VoiceGroupName ?? "—")</MudTd>
+                            <MudTd>@(context.Roles.Count > 0 ? string.Join(", ", context.Roles) : "—")</MudTd>
                         </RowTemplate>
                     </MudTable>
                 }
@@ -156,7 +222,7 @@
     <DialogContent>
         <MudTextField @bind-Value="_firstName" Label="@L["Common.FirstName"]" Required="true" />
         <MudTextField @bind-Value="_lastName" Label="@L["Common.LastName"]" Required="true" />
-        <MudTextField @bind-Value="_email" Label="@L["Common.Email"]" InputType="InputType.Email" />
+        <MudTextField @bind-Value="_email" Label="@L["Common.Email"]" InputType="InputType.Email" Immediate="true" />
         <MudTextField @bind-Value="_phone" Label="@L["Common.Phone"]" />
         <MudSelect T="Guid?" @bind-Value="_voiceGroupId" Label="@L["Common.VoiceGroup"]" Clearable="true">
             @if (_voiceGroups is not null)
@@ -171,20 +237,15 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@(() => _showCreate = false)">@L.H("Common.Cancel")</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreatePerson">@L.H("Common.Create")</MudButton>
-    </DialogActions>
-</MudDialog>
-
-<MudDialog @bind-Visible="_showAddByEmail">
-    <TitleContent><MudText Typo="Typo.h6">@L.H("People.AddByEmailTitle")</MudText></TitleContent>
-    <DialogContent>
-        <MudTextField @bind-Value="_inviteEmail" Label="@L["Common.Email"]" Required="true" InputType="InputType.Email" />
-        <MudTextField @bind-Value="_inviteFirstName" Label="@L["Common.FirstName"]" />
-        <MudTextField @bind-Value="_inviteLastName" Label="@L["Common.LastName"]" />
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="@(() => _showAddByEmail = false)">@L.H("Common.Cancel")</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddByEmail">@L.H("Common.Add")</MudButton>
+        @if (!string.IsNullOrWhiteSpace(_email))
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CreatePerson">@L.H("People.AddOnly")</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAndInvite">@L.H("People.AddAndInvite")</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreatePerson">@L.H("Common.Add")</MudButton>
+        }
     </DialogActions>
 </MudDialog>
 
@@ -308,11 +369,6 @@ Jane;Smith;;;Soprano;Section leader</pre>
 
     private List<ColumnDefinition<PersonListDto>>? _columns;
 
-    private bool _showAddByEmail;
-    private string _inviteEmail = string.Empty;
-    private string? _inviteFirstName;
-    private string? _inviteLastName;
-
     private bool _showImport;
     private string _importSearch = string.Empty;
     private List<PersonAcrossOrgDto>? _importResults;
@@ -328,6 +384,7 @@ Jane;Smith;;;Soprano;Section leader</pre>
             new("Email", L["Common.Email"], x => x.Email),
             new("Phone", L["Common.Phone"], x => x.Phone),
             new("VoiceGroup", L["Common.VoiceGroup"], x => x.VoiceGroupName),
+            new("Roles", L["Common.Roles"], x => x.Roles.Count > 0 ? string.Join(", ", x.Roles) : null),
             new("Status", L["Common.Status"], x => x.IsActive),
         ];
         RegisterTenantChangeHandler();
@@ -433,9 +490,14 @@ Jane;Smith;;;Soprano;Section leader</pre>
         await LoadPeople();
     }
 
-    private async Task AddByEmail()
+    private async Task AddAndInvite()
     {
-        if (string.IsNullOrWhiteSpace(_inviteEmail))
+        if (string.IsNullOrWhiteSpace(_firstName) || string.IsNullOrWhiteSpace(_lastName))
+        {
+            Snackbar.Add(L["People.NameRequired"], Severity.Warning);
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_email))
         {
             Snackbar.Add(L["People.EmailRequired"], Severity.Warning);
             return;
@@ -443,15 +505,19 @@ Jane;Smith;;;Soprano;Section leader</pre>
         if (TenantService.CurrentOrganizationId is not Guid orgId) return;
 
         var result = await Mediator.Send(new InviteUserCommand(
-            _inviteEmail, orgId, _inviteFirstName, _inviteLastName));
+            orgId, _email, _firstName, _lastName, _phone, _voiceGroupId, _notes,
+            null, null, "Admin", Navigation.BaseUri.TrimEnd('/')));
 
         if (result.IsSuccess)
         {
             Snackbar.Add(L["People.MemberAdded"], Severity.Success);
-            _showAddByEmail = false;
-            _inviteEmail = string.Empty;
-            _inviteFirstName = null;
-            _inviteLastName = null;
+            _showCreate = false;
+            _firstName = string.Empty;
+            _lastName = string.Empty;
+            _email = null;
+            _phone = null;
+            _voiceGroupId = null;
+            _notes = null;
             await LoadPeople();
         }
         else
@@ -542,5 +608,6 @@ Jane;Smith;;;Soprano;Section leader</pre>
     }
 
     private string ActiveGroupTitle(int count) => L["Common.Active"] + $" ({count})";
+    private string SuspendedGroupTitle(int count) => L["Common.Suspended"] + $" ({count})";
     private string InactiveGroupTitle(int count) => L["Common.Inactive"] + $" ({count})";
 }

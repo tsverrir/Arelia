@@ -13,7 +13,7 @@ public class GetUserOrganizationsHandler(IAreliaDbContext context)
         GetUserOrganizationsQuery request, CancellationToken cancellationToken)
     {
         return await context.OrganizationUsers
-            .Where(ou => ou.UserId == request.UserId && ou.IsActive)
+            .Where(ou => ou.UserId == request.UserId)
             .Select(ou => new OrganizationDto(
                 ou.Organization.Id,
                 ou.Organization.Name,

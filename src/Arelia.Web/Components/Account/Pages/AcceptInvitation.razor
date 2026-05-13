@@ -1,0 +1,224 @@
+@page "/Account/AcceptInvitation"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using Arelia.Infrastructure.Identity
+@using Arelia.Application.Interfaces
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IUserService UserService
+@inject IdentityRedirectManager RedirectManager
+@inject NavigationManager NavigationManager
+@inject ILogger<AcceptInvitation> Logger
+
+<PageTitle>Accept Invitation</PageTitle>
+
+<div class="row">
+    <div class="col-lg-5">
+        @if (isAlreadyActive)
+        {
+            <h1>Account Already Active</h1>
+            <p>Your account is already set up. Please <a href="/Account/Login">log in</a> with your existing credentials.</p>
+        }
+        else if (isInvalidLink)
+        {
+            <h1>Invalid or Expired Link</h1>
+            <p class="text-danger">@errorMessage</p>
+            <p>Your invitation link has expired or is no longer valid. Invitation links are valid for 7 days.</p>
+
+            @if (!string.IsNullOrEmpty(Input.UserId) && !_resendSent)
+            {
+                <p>Click below to receive a new invitation link.</p>
+                <EditForm Model="Input" FormName="resend-invitation" OnValidSubmit="ResendInvitationAsync" method="post">
+                    <input type="hidden" name="Input.UserId" value="@Input.UserId" />
+                    <input type="hidden" name="Input.Token" value="@Input.Token" />
+                    <input type="hidden" name="Input.OrgName" value="@Input.OrgName" />
+                    <button type="submit" class="btn btn-primary me-2">Resend Invitation</button>
+                    <a href="/Account/Login" class="btn btn-outline-secondary">Go to Login</a>
+                </EditForm>
+            }
+            else if (_resendSent)
+            {
+                <div class="alert alert-success">A new invitation email has been sent. Please check your inbox.</div>
+                <a href="/Account/Login" class="btn btn-outline-primary">Go to Login</a>
+            }
+            else
+            {
+                <p>Please contact your organisation administrator to receive a new invitation.</p>
+                <a href="/Account/Login" class="btn btn-outline-primary">Go to Login</a>
+            }
+        }
+        else
+        {
+            <h1>Welcome to Arelia</h1>
+            <p>You have been invited to join an organisation. Please set a password to complete your account registration.</p>
+            <hr />
+            <StatusMessage Message="@Message" />
+            <EditForm Model="Input" FormName="accept-invitation" OnValidSubmit="OnValidSubmitAsync" method="post">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" role="alert" />
+
+                <input type="hidden" name="Input.UserId" value="@Input.UserId" />
+                <input type="hidden" name="Input.Token" value="@Input.Token" />
+                <input type="hidden" name="Input.OrgName" value="@Input.OrgName" />
+
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
+                               class="form-control" autocomplete="new-password" aria-required="true"
+                               placeholder="Choose a password" />
+                    <label for="Input.Password" class="form-label">Password</label>
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                </div>
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword"
+                               class="form-control" autocomplete="new-password" aria-required="true"
+                               placeholder="Confirm your password" />
+                    <label for="Input.ConfirmPassword" class="form-label">Confirm Password</label>
+                    <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                </div>
+                <button type="submit" class="w-100 btn btn-lg btn-primary">Set Password &amp; Sign In</button>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    private IEnumerable<IdentityError>? identityErrors;
+    private bool isAlreadyActive;
+    private bool isInvalidLink;
+    private bool _resendSent;
+    private string? errorMessage;
+
+    [SupplyParameterFromQuery]
+    private string? UserId { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? Token { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? OrgName { get; set; }
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(e => e.Description))}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // On GET: populate hidden fields from query string
+        if (string.IsNullOrWhiteSpace(Input.UserId))
+            Input.UserId = UserId ?? "";
+        if (string.IsNullOrWhiteSpace(Input.Token))
+            Input.Token = Token ?? "";
+        if (string.IsNullOrWhiteSpace(Input.OrgName))
+            Input.OrgName = OrgName ?? "";
+
+        var resolvedUserId = string.IsNullOrWhiteSpace(UserId) ? Input.UserId : UserId;
+
+        if (string.IsNullOrWhiteSpace(resolvedUserId) || string.IsNullOrWhiteSpace(Input.Token) && string.IsNullOrWhiteSpace(Token))
+        {
+            isInvalidLink = true;
+            errorMessage = "This invitation link is missing required information.";
+            return;
+        }
+
+        var targetUser = await UserManager.FindByIdAsync(resolvedUserId);
+        if (targetUser is null)
+        {
+            isInvalidLink = true;
+            errorMessage = "This invitation link is invalid or has expired.";
+            return;
+        }
+
+        var isPending = await UserService.IsAccountPendingAsync(resolvedUserId);
+        if (!isPending)
+        {
+            isAlreadyActive = true;
+        }
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var user = await UserManager.FindByIdAsync(Input.UserId);
+        if (user is null)
+        {
+            isInvalidLink = true;
+            errorMessage = "User not found.";
+            return;
+        }
+
+        var isPending = await UserService.IsAccountPendingAsync(Input.UserId);
+        if (!isPending)
+        {
+            RedirectManager.RedirectToWithStatus("Account/Login", "Your account is already set up. Please log in.", HttpContext);
+        }
+
+        var result = await UserManager.ResetPasswordAsync(user, Input.Token, Input.Password);
+        if (!result.Succeeded)
+        {
+            identityErrors = result.Errors;
+            return;
+        }
+
+        // Confirm the email so the user can log in
+        user.EmailConfirmed = true;
+        await UserManager.UpdateAsync(user);
+
+        Logger.LogInformation("User {UserId} accepted invitation and set their password.", Input.UserId);
+
+        // Sign in automatically after accepting invitation
+        await SignInManager.SignInAsync(user, isPersistent: false);
+        RedirectManager.RedirectTo("/");
+    }
+
+    private async Task ResendInvitationAsync()
+    {
+        if (string.IsNullOrEmpty(Input.UserId)) return;
+
+        // ISSUE-012: guard against fake/invalid user IDs
+        var targetUser = await UserManager.FindByIdAsync(Input.UserId);
+        if (targetUser is null)
+        {
+            errorMessage = "This invitation is no longer valid.";
+            return;
+        }
+
+        var isPending = await UserService.IsAccountPendingAsync(Input.UserId);
+        if (!isPending)
+        {
+            isInvalidLink = false;
+            isAlreadyActive = true;
+            return;
+        }
+
+        var resolvedOrgName = !string.IsNullOrWhiteSpace(Input.OrgName)
+            ? Input.OrgName
+            : "your organisation";
+
+        await UserService.SendInvitationEmailAsync(
+            Input.UserId, resolvedOrgName, "System", NavigationManager.BaseUri.TrimEnd('/'));
+
+        _resendSent = true;
+    }
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private sealed class InputModel
+    {
+        public string UserId { get; set; } = "";
+        public string Token { get; set; } = "";
+        public string OrgName { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

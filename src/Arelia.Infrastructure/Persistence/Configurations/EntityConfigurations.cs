@@ -45,7 +45,7 @@ public class OrganizationUserConfiguration : IEntityTypeConfiguration<Organizati
         builder.HasOne(ou => ou.Person)
             .WithMany()
             .HasForeignKey(ou => ou.PersonId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(ou => new { ou.UserId, ou.OrganizationId }).IsUnique();
     }

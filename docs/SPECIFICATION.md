@@ -1,4 +1,4 @@
-# Arelia — Multi-tenant Choir/Small Organization Management
+﻿# Arelia — Multi-tenant Choir/Small Organization Management
 
 _(Specifications — Obsidian Markdown)_
 
@@ -6,8 +6,7 @@ _(Specifications — Obsidian Markdown)_
 
 **Arelia** is a **multi-tenant** web application for managing choirs (or similar small organizations). Each tenant (Organization) manages:
 
-- People (members and former members)
-- Roles and role history
+- People and their role history
 - Semesters, rehearsals, concerts, trips, and other activities
 - Participation expectations, RSVP (Yes/No/Maybe), and attendance tracking
 - Finance: membership fees, event fees, partial payments, overpayment credit, discounts, optional top-ups, income and expenses
@@ -37,48 +36,75 @@ The system is built with **Blazor Server**, **MudBlazor**, **EF Core**, and **SQ
 
 ### 3.1 Identity model
 
-- Authentication uses a standard user account (`User`).
-- A user may be linked to zero or more organizations via `OrganizationUser`.
-- A user may optionally be linked to a `Person` record per organization (`OrganizationUser.PersonId`).
+- **User**: An authentication account (ASP.NET Core Identity). Global — not scoped to any organization.
+- A User may be linked to zero or more Organizations via `OrganizationUser`.
+- An `OrganizationUser` may optionally reference a `Person` record in that org.
+- **System Administrator**: A User holding the `"SystemAdmin"` ASP.NET Core Identity role. Manages all Organizations, user memberships across all orgs, and other System Administrators. Operates via `/system/*`. Cannot access org-internal data (people, activities, finance) for orgs they are not a member of. The initial System Administrator is seeded from environment variables (`ARELIA_ADMIN_EMAIL`, `ARELIA_ADMIN_PASSWORD`) on first startup.
+- **Pending Account**: A User account created by an Invitation whose password has not yet been set (null password hash, `EmailConfirmed = false`). Cannot log in until Registration Completion.
 
-### 3.2 Login & tenant selection (Q3 = Yes)
+### 3.2 Login & tenant selection
 
-- If a user belongs to **one** organization: auto-select that tenant on login.
-- If a user belongs to **multiple** organizations: show a **tenant selector** after login.
-- Store “last selected tenant” per user for convenience.
+- **System Administrators** are routed to `/system/` on login (or choose their org context if also an org member).
+- If a regular user belongs to **one** organization: auto-select that tenant on login.
+- If a regular user belongs to **multiple** organizations: show a **tenant selector** after login.
+- Store "last selected tenant" per user for convenience.
 
-### 3.3 Application roles (per organization)
+### 3.3 Role model
 
-Roles are assigned per organization membership:
+All roles live in a single unified pool (the `Role` entity) distinguished by a `RoleType` field.
 
-- **Admin**
-    
-    - Full access to all features, including configuration
-    - Includes conductor (your requirement)
-- **Board**
-    
-    - Can register/maintain operational data: people, roles, activities, attendance, finance entries
-    - Cannot access tenant configuration and advanced settings
-- **Member**
-    
-    - Can view calendar (rehearsals, concerts, activities)
-    - Can view own participation and own financial status (charges/payments/credit)
-    - Can RSVP for activities where RSVP is enabled
-- **FormerMember (restricted)**
-    
-    - Can log in
-    - Can view only activities marked `PublicVisible`
-    - Can contact choir (simple contact capability)
+**System Roles** — seeded automatically per organization on creation:
 
-### 3.4 Authorization rules (high-level)
+| Role | RoleType | Permissions |
+|---|---|---|
+| **Admin** | `Admin` | Hard-coded full access. RolePermission entries are not used. Cannot be edited. |
+| **Board** | `Board` | Pre-seeded default permissions (see §3.4). Org admins may edit. |
+| **Member** | `Member` | Pre-seeded minimal permissions (see §3.4). Org admins may edit. |
 
-- **Tenant configuration:** Admin only
-- **Create/update persons, roles, activities:** Board + Admin
-- **Attendance registration:** Board + Admin
-- **Finance registration (charges/payments/expenses):** Board + Admin _(you can later restrict to Treasurer if you add that app role)_
-- **Member views:** Member + FormerMember where allowed
-- **FormerMember visibility:** limited to `PublicVisible` activities
+**Custom Roles** (`RoleType = Custom`) — org-defined. Admins create custom roles (e.g., Treasurer, Conductor) and assign permissions freely.
 
+Rules:
+- A Person may hold **multiple simultaneous** RoleAssignments from both system and custom roles.
+- A User requires **at least one active RoleAssignment** to access an org. Zero active roles = no org access.
+- There is no "former member" access state. When a person leaves, their RoleAssignments are ended with a `ToDate`. Their Person record and history are preserved.
+
+### 3.4 Permissions
+
+Permissions are granular capability flags. Effective permissions are the union of all permissions across all Active Roles (`Admin` role bypasses this and grants full access).
+
+| Permission | Description |
+|---|---|
+| `ManagePeople` | Create/edit/deactivate persons, invite users to org, assign roles |
+| `ManageActivities` | Create/edit/cancel activities, semesters, rehearsal templates |
+| `ManageAttendance` | Register attendance for any person |
+| `RsvpOnBehalf` | Set RSVP on behalf of another person |
+| `ManageCharges` | Create/edit charges and payments |
+| `ManageExpenses` | Create/edit expenses |
+| `ManageDocuments` | Create/edit/delete documents |
+| `ViewAttendanceReports` | Access attendance reports |
+| `ViewFinanceReports` | Access finance reports |
+| `ViewMembershipReports` | Access membership and role reports |
+| `OrgSettings` | Edit organization settings and configuration |
+| `Backups` | Trigger and manage database backups |
+
+> `UserManagement` has been removed. User invitation and removal are covered by `ManagePeople`.
+
+### 3.5 Authorization summary
+
+| Action | Requirement |
+|---|---|
+| Create organizations | System Administrator only |
+| Manage all organizations (system level) | System Administrator only |
+| Org configuration | `Admin` role or `OrgSettings` |
+| Create/update persons, invite users, assign roles | `Admin` role or `ManagePeople` |
+| Create/update activities | `Admin` role or `ManageActivities` |
+| Attendance registration | `Admin` role or `ManageAttendance` |
+| Finance (charges/payments) | `Admin` role or `ManageCharges` |
+| Finance (expenses) | `Admin` role or `ManageExpenses` |
+| Documents | `Admin` role or `ManageDocuments` |
+| Reports | `Admin` role or respective `ViewXxx` permission |
+| Backups | `Admin` role or `Backups` |
+| View calendar, RSVP, own finance | At least one active role (any) |
 ---
 
 ## 4. Domain Concepts
@@ -122,29 +148,41 @@ Each person’s relationship to an activity is tracked with:
 
 ## 5.1 Organization & Configuration
 
-- Create and manage organization profile:
-    - Name, description, contact email, phone
-- Admin-configurable options:
+Organization creation is restricted to **System Administrators** (via `/system/`). Org Admins manage their own organization settings.
+
+- Create and manage organization profile (System Admin creates; Org Admin edits):
+    - Name, contact email, phone, timezone, default language, default currency
+- Org-Admin-configurable options:
     - Default currency (e.g., DKK)
-    - Visibility rules defaults (e.g. default `PublicVisible=false`)
-    - Rehearsal template defaults (optional)
+    - Default timezone
+    - Visibility rules defaults (e.g. default `IsPublicFacing=false`)
+    - Rehearsal template defaults (day of week, start time, duration, location)
 
 ## 5.2 People Management
 
-- Create/update/deactivate persons
-- Track:
-    - Name, email, phone
-    - Active/inactive
+Requires `Admin` role or `ManagePeople` permission.
+
+- Create/update/deactivate Persons
+- A Person can be created **without an email** (no linked User account) — for tracking people who do not use the system
+- If an email is provided during Person creation, an **Invitation** is sent and a User account is created
+- Track: name, email, phone
 - Show lists:
-    - **Current members** (active Member role assignment)
-    - **Former members** (no active Member role assignment)
+    - **Active persons** — at least one active RoleAssignment
+    - **Inactive persons** — Person records with no active RoleAssignments (historical, preserved)
 
 ## 5.3 Roles & Role History
 
-- Define roles (domain roles): Member, Conductor, Board Member, etc.
-- Assign roles to persons via role periods:
-    - FromDate, ToDate (nullable)
-- Show current roles and role history timeline.
+Requires `Admin` role or `ManagePeople` permission.
+
+**System Roles** (`RoleType = Admin | Board | Member`) are seeded per org and cannot be deleted. The `Admin` role permissions are hard-coded; `Board` and `Member` default permissions are editable.
+
+**Custom Roles** (`RoleType = Custom`) are org-defined (e.g., Treasurer, Conductor, Vice President). Permissions are freely assigned.
+
+- View and edit permissions on Board, Member, and Custom roles
+- Create/rename/delete Custom roles
+- Assign roles to persons via dated role periods: `FromDate`, `ToDate` (nullable)
+- A person can hold multiple simultaneous role assignments
+- Show current roles and role history timeline per person
 
 ## 5.4 Activities & Calendar
 
@@ -153,7 +191,7 @@ Each person’s relationship to an activity is tracked with:
     - Location (string)
     - Status: Draft / Published / Cancelled
     - ParentActivityId (nesting under semester)
-    - `IsPublicVisible` (controls FormerMember visibility) ✅ (Q2=C)
+    - `IsPublicFacing` (bool) — marks the activity for inclusion on a future public-facing calendar
 
 Calendar views:
 
@@ -163,7 +201,7 @@ Calendar views:
     - activity type
     - “my activities”
 
-## 5.5 RSVP, Capacity, Signup Deadline, Waiting List ✅ (Q4)
+## 5.5 RSVP, Capacity, Signup Deadline, Waiting List
 
 Activities (typically concerts/trips/events) may enable RSVP:
 
@@ -183,7 +221,7 @@ Promotion:
 
 - When a confirmed spot frees up, **Board/Admin manually promotes** the earliest waiting list entry.
 
-## 5.6 Rehearsals — Recurrence Template + Manual Changes ✅ (Q1=C)
+## 5.6 Rehearsals — Recurrence Template + Manual Changes
 
 ### 5.6.1 Rehearsal generation
 
@@ -205,7 +243,7 @@ Promotion:
 ## 5.7 Attendance tracking
 
 - For rehearsals:
-    - expectation is set per member: Expected / Optional / NotExpected
+    - expectation is set per person: Expected / Optional / NotExpected
 - For events:
     - RSVP supports Yes/No/Maybe
 - Attendance registration:
@@ -214,7 +252,7 @@ Promotion:
     - expected vs attended counts
     - missing attendance registration detection
 
-## 5.8 Finance — Charges, Discounts, Optional Top-ups, Credit ✅ (your requirements)
+## 5.8 Finance — Charges, Discounts, Optional Top-ups, Credit
 
 ### Charges
 
@@ -300,12 +338,54 @@ Exports:
 
 ## 5.11 Backups
 
-- Admin can trigger a database backup
+- Users with Backups permission (or Admin role) can trigger a database backup
 - Backups stored in a docker volume
 - Backup list with timestamps
 - Restore instructions documented (manual restore is acceptable initially)
 
 ---
+
+## 5.12 User Registration & Invitation
+
+**Self-service registration is disabled.** The `/Account/Register` page shows an "invitation only" message to anyone who navigates to it directly.
+
+### Invite paths (Org Admin or user with `ManagePeople`)
+
+Two paths are available when inviting a person to an org:
+
+**Path A — Person-first:** Select an existing Person in the org (one without a linked User), then enter their email.
+- The system auto-detects whether a User account already exists for that email.
+- If **new email**: Pending Account created + invitation email sent → `/Account/AcceptInvitation`
+- If **existing User**: OrganizationUser linked + notification email sent (no confirmation required)
+
+**Path B — Email-first:** Enter an email directly without selecting an existing Person.
+- The system auto-detects whether a User account already exists.
+- If **new email**: Pending Account + new Person record created + invitation email sent
+- If **existing User**: new Person created, linked to that User + notification email sent
+
+In both paths a single initial role is selected (default: `Member`).
+A Person can also be created with no email at all — no User account, no email, Member role assigned.
+
+### System Administrator flow (`/system/`)
+
+System Admins can invite users to any org using the same two paths above.  
+Additionally, System Admins can **directly assign** an existing User to an org:
+- Silent (no email sent)
+- Always creates a minimal Person record (name sourced from the User account)
+- Default role: `Member`
+
+### Invitation email
+
+- **New User email**: org name, inviter name, brief blurb, "Set your password" link → `/Account/AcceptInvitation` (token valid for **7 days**)
+- **Existing User email**: org name, "you've been added" notification, no action required
+
+### Registration Completion (`/Account/AcceptInvitation`)
+
+- Accessible only via a valid invite link (contains a password-reset token)
+- User sets their password; email is confirmed; user is signed in automatically
+- Expired links show a clear error with a self-service **"Resend invitation"** button
+  - Self-service resend works only if the account is still Pending (null password hash)
+  - Admins (`ManagePeople`) can also resend from the Person's profile page
 
 ## 6. Data Model (Entities)
 
@@ -320,25 +400,39 @@ Exports:
 ## 6.1 Organization
 
 - `Name`
-- `Description`
-- `Email`
-- `PhoneNumber`
+- `ContactEmail`
+- `ContactPhone`
+- `DefaultCurrencyCode`
+- `DefaultPublicVisible` (bool)
+- `DefaultRehearsalDay` (DayOfWeek, nullable)
+- `DefaultRehearsalStartTime` (nullable)
+- `DefaultRehearsalDurationMinutes` (nullable)
+- `DefaultRehearsalLocation` (nullable)
+- `Timezone` (IANA timezone string, e.g. `"Europe/Copenhagen"`)
+- `DefaultLanguage` (e.g. `"en"`, `"da"`, `"is"`)
+- `IsActive` (bool) — orgs can be deactivated by System Administrators
 
 ---
 
 ## 6.2 User (Auth identity)
 
-_(Stored via chosen auth system; details depend on implementation)_
+Stored in ASP.NET Core Identity (`ApplicationUser`).
+
+- `Email` / `UserName`
+- `EmailConfirmed` (bool) — `false` for Pending Accounts
+- `PasswordHash` — `null` for Pending Accounts (awaiting Registration Completion)
+- `PreferredLanguage` (nullable string) — overrides org default language
+- Holds zero or more ASP.NET Core Identity roles (e.g. `"SystemAdmin"`)
 
 ---
 
-## 6.3 OrganizationUser (joins User ↔ Organization) ✅ (Q3=Yes)
+## 6.3 OrganizationUser (joins User ↔ Organization)
 
 Represents a user’s membership in an organization and their access role.
 
 - `UserId`
 - `OrganizationId`
-- `ApplicationRole` (Admin / Board / Member / FormerMember)
+
 - `PersonId` (nullable) — link to Person within this org
 - `IsActive`
 
@@ -369,8 +463,10 @@ Relationships:
 
 - `OrganizationId`
 - `Name`
-- `Description`
+- `RoleType` — `Admin | Board | Member | Custom`
 - `IsActive`
+
+System Roles (`Admin`, `Board`, `Member`) are seeded per org and cannot be deleted. `Admin` permissions are hard-coded; `Board` and `Member` ship with editable defaults via `RolePermission` entries. Custom roles start with no permissions.
 
 ---
 
@@ -395,7 +491,7 @@ Relationships:
 - `Location` (string)
 - `Status` (Draft, Published, Cancelled)
 - `ParentActivityId` (nullable)
-- `IsPublicVisible` (bool) ✅ (Q2=C)
+- `IsPublicFacing` (bool)
 
 RSVP/Signup fields (optional):
 
@@ -406,7 +502,7 @@ RSVP/Signup fields (optional):
 
 ---
 
-## 6.8 RehearsalRecurrenceTemplate ✅ (Q1=C)
+## 6.8 RehearsalRecurrenceTemplate
 
 Defines how to generate rehearsals for a semester.
 
@@ -477,7 +573,7 @@ Calculated:
 
 ---
 
-## 6.11 ChargeLine ✅ (supports discount + optional top-up)
+## 6.11 ChargeLine (supports discount + optional top-up)
 
 - `OrganizationId`
 - `ChargeId`
@@ -501,7 +597,7 @@ Calculated:
 
 ---
 
-## 6.13 CreditBalance ✅
+## 6.13 CreditBalance
 
 - `OrganizationId`
 - `PersonId`
@@ -510,7 +606,7 @@ Calculated:
 
 ---
 
-## 6.14 Expense ✅
+## 6.14 Expense
 
 - `OrganizationId`
 - `PayeePersonId` (nullable)
@@ -535,32 +631,35 @@ Calculated:
 
 ## 7. Key Workflows (Use Cases)
 
-## 7.1 Tenant selection
+## 7.1 Tenant selection / System Admin routing
 
 1. User logs in
-2. If >1 OrganizationUser membership:
-    - show tenant selector
-3. Load all data scoped to selected tenant
+2. If the user is a **System Administrator**:
+    - Route to `/system/` (or offer choice if also an org member)
+3. Else if the user has **one** org membership: auto-select that org
+4. Else if the user has **multiple** memberships: show the tenant selector
+5. Else if the user has **no** org memberships: show an "awaiting access" message
+6. Load all data scoped to the selected tenant
 
-## 7.2 Create semester + generate rehearsals ✅
+## 7.2 Create semester + generate rehearsals
 
-1. Board/Admin creates `Activity (Semester)`
-2. Board/Admin defines one or more `RehearsalRecurrenceTemplate`
-3. Board/Admin clicks “Generate rehearsals”
+1. User with ManageActivities (or Admin) creates `Activity (Semester)`
+2. User with ManageActivities (or Admin) defines one or more `RehearsalRecurrenceTemplate`
+3. User with ManageActivities (or Admin) clicks “Generate rehearsals”
 4. System generates concrete `Activity (Rehearsal)` instances
-5. Board/Admin manually edits/cancels individual rehearsals as needed
+5. User with ManageActivities (or Admin) manually edits/cancels individual rehearsals as needed
 
-## 7.3 RSVP with waiting list ✅
+## 7.3 RSVP with waiting list
 
 1. Member opens activity
 2. Sets RSVP (Yes/No/Maybe)
 3. If RSVP Yes and capacity full:
     - set `SignupStatus=Waitlisted`, assign WaitlistPosition
 4. If a spot frees:
-    - Board/Admin chooses “Promote from waiting list”
+    - User with ManageActivities or Admin role chooses “Promote from waiting list”
     - system marks selected waitlisted participant as Confirmed
 
-## 7.4 Membership fee generation with discounts/top-ups ✅
+## 7.4 Membership fee generation with discounts/top-ups
 
 1. Board/Admin selects semester
 2. System creates charges for current members:
@@ -569,13 +668,53 @@ Calculated:
     - Discount line (if applicable)
 3. Member may choose to enable top-up (if you want member-driven; otherwise board sets it)
 
-## 7.5 Payments and credit ✅
+## 7.5 Payments and credit
 
 - Payments can be recorded and linked to charges.
 - If payment exceeds outstanding amount:
     - excess adds to credit balance
 - Credit can be applied to new charges.
 
+## 7.6 Invite a user to an organization
+
+### Path A — Person-first (existing Person, no User yet)
+1. Admin (System Admin or user with `ManagePeople`) selects an existing Person in the org (one with no linked User)
+2. Enters the Person's email + selects initial role (default: `Member`)
+3. System checks if a User with that email exists:
+   - **New email**: create Pending Account → generate password-reset token (7-day expiry) → send invitation email
+   - **Existing User**: link to existing User → send notification email
+4. Create `OrganizationUser` with `PersonId` pointing to the selected Person; create `RoleAssignment`
+
+### Path B — Email-first (new Person + User)
+1. Admin opens the invite form, enters email + first/last name + initial role (default: `Member`)
+2. System checks if a User with that email exists:
+   - **New email**: create Pending Account → generate token → send invitation email
+   - **Existing User**: link to existing User → send notification email
+3. Create new `Person` record + `OrganizationUser` + `RoleAssignment`
+
+## 7.7 Complete Registration (accept invitation)
+
+1. Invited user clicks the link in the email → `/Account/AcceptInvitation`
+2. If token is valid: user enters and confirms their password → password saved, `EmailConfirmed = true` → user signed in
+3. If token is **expired**: error page shown with "Resend invitation" button
+   - Resend only works for Pending Accounts (null password hash)
+   - Self-service resend: available to the invited user from the expired-link page
+   - Admin resend: available to any user with `ManagePeople` from the Person's profile
+
+## 7.8 Suspend a user from an organization
+
+1. Admin (System Admin or user with `ManagePeople`) chooses "Suspend" on a Person's profile
+2. All active `RoleAssignment` records for that Person are ended with `ToDate = today`
+3. The `OrganizationUser` link is preserved — the User still exists in the org but has no access
+4. **Reinstatement**: admin assigns new roles via the normal role assignment UI (no special "reinstate" action)
+
+## 7.9 Remove a user from an organization
+
+1. Admin (System Admin or user with `ManagePeople`) chooses "Remove from org" — presented with a destructive-action warning
+2. All active `RoleAssignment` records are ended
+3. The `OrganizationUser` record is deleted
+4. The `Person` record is preserved with full history intact (appears in People list as unlinked)
+5. The Person can be re-invited later via Path A (Person-first invite)
 ---
 
 ## 8. Open Items / Final Tiny Clarifications (only what’s still needed)
@@ -1220,7 +1359,7 @@ For each generated rehearsal occurrence:
 - `EndDateTime = StartDateTime + 150 minutes` → 21:30
 - `Location = Stavangergade 10` _(template default; editable later)_
 - `Status = Draft` _(recommended default; can be published later in batch)_
-- `IsPublicVisible = false` _(default; rehearsals usually not public)_
+- `IsPublicFacing = false` _(default; rehearsals usually not public)_
 
 ---
 

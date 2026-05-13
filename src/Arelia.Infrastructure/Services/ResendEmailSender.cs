@@ -5,6 +5,7 @@
 // Copyright (c) 2026 JBT Marel. All rights reserved.
 //
 //-------------------------------------------------------------------------------------------------
+using Arelia.Application.Interfaces;
 using Arelia.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -13,11 +14,12 @@ using Resend;
 namespace Arelia.Infrastructure.Services;
 
 /// <summary>
-/// Sends transactional emails (confirmation links, password resets) via the Resend API.
+/// Sends transactional emails via the Resend API.
 /// Configure the API token via <c>Resend:ApiToken</c> in app settings or the
 /// <c>Resend__ApiToken</c> environment variable.
 /// </summary>
-public sealed class ResendEmailSender(IResend resend, IConfiguration configuration) : IEmailSender<ApplicationUser>
+public sealed class ResendEmailSender(IResend resend, IConfiguration configuration)
+    : IEmailSender<ApplicationUser>, IAreliaEmailService
 {
 	//-----------------------------------------------------------------------------------------
 	/// <inheritdoc />
@@ -81,6 +83,48 @@ public sealed class ResendEmailSender(IResend resend, IConfiguration configurati
 		);
 
 		return SendAsync(email, subject, body);
+	}
+
+	//-----------------------------------------------------------------------------------------
+	/// <inheritdoc />
+	public Task SendInvitationAsync(string toEmail, string orgName, string inviterName, string acceptLink)
+	{
+		var subject = $"You've been invited to {orgName} on Arelia";
+
+		var body = BuildEmailLayout(
+			heading: $"You're invited to join {orgName} 🎵",
+			preheader: $"{inviterName} has invited you to {orgName} on Arelia.",
+			paragraphs:
+			[
+				$"{inviterName} has added you to <strong>{orgName}</strong> on Arelia — a platform for managing choir activities, attendance, and more.",
+				"Click the button below to set your password and activate your account. The link is valid for 7 days."
+			],
+			buttonText: "Set my password",
+			buttonUrl: acceptLink,
+			footerNote: "If you weren't expecting this invitation, you can safely ignore this email. No account will be activated without your action."
+		);
+
+		return SendAsync(toEmail, subject, body);
+	}
+
+	//-----------------------------------------------------------------------------------------
+	/// <inheritdoc />
+	public Task SendOrgAddedNotificationAsync(string toEmail, string orgName)
+	{
+		var subject = $"You've been added to {orgName} on Arelia";
+
+		var body = BuildEmailLayout(
+			heading: $"Welcome to {orgName} 🎶",
+			preheader: $"You've been added to {orgName} on Arelia.",
+			paragraphs:
+			[
+				$"You've been added to <strong>{orgName}</strong> on Arelia. You can now log in and access the organisation.",
+				"If you don't have a login yet, contact your organisation administrator."
+			],
+			footerNote: "If you weren't expecting this, please contact your organisation administrator."
+		);
+
+		return SendAsync(toEmail, subject, body);
 	}
 
 	//-----------------------------------------------------------------------------------------
