@@ -92,6 +92,65 @@ The codebase follows **Clean Architecture** with four layers:
 
 All entities are scoped to an `OrganizationId` for tenant isolation, enforced by EF Core global query filters.
 
+## Docker
+
+### Local testing
+
+Build and run from source using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+The app starts at **http://localhost:8080**. On first boot the database is created and seeded with a default admin account (`admin@arelia.dev` / `Admin123!`).
+
+Data (SQLite database and uploaded files) is stored in `./data/` on your host machine.
+
+### Production deployment
+
+The [GitHub Actions workflow](.github/workflows/docker-publish.yml) builds and pushes an image to GitHub Container Registry on every push to `main`:
+
+```
+ghcr.io/sverrir-asmundsson/arelia:latest
+ghcr.io/sverrir-asmundsson/arelia:<git-sha>
+```
+
+To deploy on a server, copy `docker-compose.yml`, set your credentials, and start:
+
+```bash
+# Edit these before first run
+# Seed__AdminEmail=you@example.com
+# Seed__AdminPassword=YourStrongPassword1!
+
+docker compose pull
+docker compose --profile production up -d
+```
+
+#### Authenticating with GHCR
+
+If the package is private (the default for new packages), you need to authenticate Docker before pulling:
+
+1. Create a [GitHub Personal Access Token](https://github.com/settings/tokens) (classic) with the **`read:packages`** scope.
+2. Log in:
+
+```bash
+echo YOUR_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+Credentials are saved to `~/.docker/config.json` and reused automatically by `docker compose pull`.
+
+#### Automatic updates with Watchtower
+
+The production `docker-compose.yml` includes [Watchtower](https://containrrr.dev/watchtower/), which polls GHCR every 5 minutes and automatically pulls and restarts the `arelia` container whenever a new image is pushed.
+
+Watchtower reads GHCR credentials from `~/.docker/config.json` on the host, so **log in before starting the stack** (see above). Once running, every push to `main` will be live within ~5 minutes — no manual `docker compose pull` needed.
+
+Data is stored in a named Docker volume (`arelia_data`). The admin credentials are written to the database on first boot only — changing the env vars afterwards has no effect on the existing account.
+
+#### Cloudflare Tunnel
+
+The app runs plain HTTP on port 8080 inside the container. Expose it publicly via a [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) pointing at `http://localhost:8080` — Cloudflare handles TLS termination.
+
 ## Contributing
 
 1. Fork the repository

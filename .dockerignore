@@ -1,0 +1,14 @@
+**/.git
+**/.vs
+**/.vscode
+**/bin
+**/obj
+tests/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/uploads
+.github
+*.md
+LICENSE
+docs/

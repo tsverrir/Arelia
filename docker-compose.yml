@@ -1,0 +1,36 @@
+services:
+  arelia:
+    image: ghcr.io/sverrir-asmundsson/arelia:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - arelia_data:/data
+    environment:
+      # Database — stored inside the /data volume
+      - ConnectionStrings__DefaultConnection=DataSource=/data/arelia.db;Cache=Shared
+      # File uploads — stored inside the /data volume
+      - FileStorage__BasePath=/data/uploads
+      # Seed admin credentials — CHANGE THESE before first run
+      - Seed__AdminEmail=admin@arelia.dev
+      - Seed__AdminPassword=Admin123!
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # Watchtower — polls ghcr.io every 5 minutes and restarts arelia when a new image is pushed.
+  # Requires ~/.docker/config.json on the host to already contain ghcr.io credentials
+  # (run: echo YOUR_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin)
+  # Start with: docker compose --profile production up -d
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    profiles: ["production"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.docker/config.json:/config.json:ro
+    environment:
+      - DOCKER_CONFIG=/config.json
+    command: --label-enable --cleanup --interval 300
+
+volumes:
+  arelia_data:

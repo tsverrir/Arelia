@@ -6,6 +6,9 @@
 # Playwright MCP temp files
 .playwright-mcp/
 
+# Local Docker data directory
+/data/
+
 # User-specific files
 *.rsuser
 *.suo
