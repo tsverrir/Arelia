@@ -91,74 +91,82 @@ When a System Admin creates a new organisation via `/system/organizations`, they
 ## ISSUE-006 — Token URL encoding in invitation emails
 
 **Severity:** Medium  
-**Status:** Open  
+**Status:** ✅ Fixed  
 **Area:** Infrastructure / Email
 
 **Description:**  
 The ASP.NET Identity password-reset token contains characters (`+`, `=`, `/`) that can be corrupted by some email clients or HTTP libraries if not URL-encoded before embedding in the invite link. The current implementation uses `Uri.EscapeDataString(token)` which handles this correctly for most cases, but some clients double-decode `%2B` → `+` before the server receives it.
 
-**Impact:** Rare cases where invitation tokens arrive with `+` characters decoded as spaces, causing `UserManager.ResetPasswordAsync` to fail with "Invalid token".  
-**Workaround:** Users can use the "Resend Invitation" button to generate a fresh token.  
-**Fix:** Switch to Base64url encoding for token transport, or use shorter opaque tokens via a custom provider.
+**Fix applied:**
+- Created `InvitationTokenProvider` in `src/Arelia.Infrastructure/Services/InvitationTokenProvider.cs`
+- Extends `DataProtectorTokenProvider<ApplicationUser>`, overriding `GenerateAsync` (Base64→Base64url) and `ValidateAsync` (reverse conversion before delegating)
+- Registered as the default token provider via `.AddTokenProvider<InvitationTokenProvider>(TokenOptions.DefaultProvider)` in `DependencyInjection.cs`
+- Removed `Uri.EscapeDataString(token)` from `UserService.SendInvitationEmailAsync` — tokens are now URL-safe by construction
 
 ---
 
 ## ISSUE-007 — Duplicate person records on re-invite
 
 **Severity:** Medium  
-**Status:** Open  
+**Status:** ✅ Fixed  
 **Area:** Application / InviteUser command
 
 **Description:**  
 If an org admin invites the same email address twice (e.g. by navigating away and re-submitting the invite form), a second `Person` record can be created for the same email before the first user completes registration.
 
-**Impact:** Two `Person` records with the same email in the same org; the second invite email's token belongs to the first `ApplicationUser`.  
-**Workaround:** The second `OrganizationUser` creation will fail with a unique constraint (if `UserId` is unique per org), surfacing an error to the admin.  
-**Fix:** The `InviteUserCommand` should check for an existing `OrganizationUser` with the same email before proceeding. Consider adding a unique index on `(OrganizationId, UserId)` in `OrganizationUsers`.
+**Fix applied:**
+- In `InviteUserCommand` (Email-first path), both the "user already exists" and "new user" branches now query for an existing `Person` with the same email in the same org (`IgnoreQueryFilters()`, `!IsDeleted`) before creating a new one
+- If a matching Person is found, it is reused rather than creating a duplicate
 
 ---
 
 ## ISSUE-008 — Self-service resend uses generic org name
 
 **Severity:** Low  
-**Status:** Open  
+**Status:** ✅ Fixed  
 **Area:** Web / AcceptInvitation.razor
 
 **Description:**  
 When a user clicks "Resend Invitation" from the `AcceptInvitation` page (self-service path), the invitation email is sent with the org name set to `"your organisation"` because there is no org context available on the unauthenticated invitation page.
 
-**Impact:** Slightly impersonal email copy, but functionally correct.  
-**Fix:** Include the `OrganizationId` as an additional query parameter in the invite URL so the page can look up the org name.
+**Fix applied:**
+- `UserService.SendInvitationEmailAsync` now appends `&orgName={Uri.EscapeDataString(orgName)}` to the invite URL
+- `AcceptInvitation.razor` reads `OrgName` from the query string via `[SupplyParameterFromQuery]` and stores it in `InputModel.OrgName` with a hidden form field
+- `ResendInvitationAsync` uses `Input.OrgName ?? "your organisation"` as the org name when re-sending
 
 ---
 
 ## ISSUE-009 — System Admin with org memberships always sees org picker first
 
 **Severity:** Low  
-**Status:** Open  
+**Status:** ✅ Fixed  
 **Area:** Web / SelectOrganization.razor
 
 **Description:**  
 A System Admin who is also a member of one or more organisations sees the standard org picker on login. There is no prominent "Go to System Panel" shortcut in the org picker.
 
-**Impact:** System Admins with org memberships must navigate manually to `/system/organizations` after picking an org (or know the URL directly).  
-**Fix:** Add a "System Panel" button or link to the org picker page for users in the `SystemAdmin` role.
+**Fix applied:**
+- `SelectOrganization.razor` tracks `_isSystemAdmin` from `AuthenticationState`
+- When the user is a SystemAdmin and the org list is non-empty, an "Open System Panel" button (`/system/organizations`) is shown below the organisation list, separated by a divider
 
 ---
 
 ## ISSUE-010 — `RoleDetail.razor` — Admin role is not read-only
 
 **Severity:** Medium  
-**Status:** Open  
+**Status:** ✅ Fixed  
 **Area:** Web / RoleDetail.razor
 
 **Description:**  
 The `Admin` role detail page (`/roles/{id}` where the role has `RoleType == Admin`) shows editable fields, save, and delete buttons. The permission matrix on `/roles` correctly disables Admin checkboxes, but `RoleDetail.razor` does not enforce read-only behaviour for system roles (`Admin`, `Board`, `Member`).
 
-**Impact:** An org admin could accidentally rename or attempt to delete the Admin role, potentially disrupting access control.  
-**Fix:** In `RoleDetail.razor`, check `_role.RoleType`:
-- If `Admin`: hide save/delete, make all permissions read-only (greyed-out checkboxes)
-- If `Board` or `Member`: allow permission editing, but prevent renaming or deletion
+**Fix applied:**
+- Added `RoleType` to `RoleDetailDto` and projected it in `GetRoleDetailHandler`
+- `RoleDetail.razor` now checks `_role.RoleType`:
+  - `Admin`: permission checkboxes are greyed-out (disabled), name field is read-only, Save/Delete buttons are hidden, info alert explains constraints
+  - `Board` / `Member`: name field is read-only, Save/Delete hidden, permissions remain editable, info alert explains constraints
+  - `Custom`: full editing capabilities (unchanged)
+- A "System Role" chip is displayed in the page heading for non-Custom roles
 
 ---
 
@@ -178,28 +186,31 @@ If a user navigated to `/Account/AcceptInvitation?userId=00000000-...&token=...`
 ## ISSUE-012 — "Resend Invitation" button appears for fake/invalid user IDs
 
 **Severity:** Low  
-**Status:** Open  
+**Status:** ✅ Fixed  
 **Area:** Web / AcceptInvitation.razor
 
 **Description:**  
 On the `AcceptInvitation` page, the "Resend Invitation" button in the invalid-link state is shown whenever `Input.UserId` is non-empty — even for fake or non-existent user IDs. Clicking it calls `ResendInvitationAsync`, which calls `IsAccountPendingAsync` (returns `false` for non-existent user), and then incorrectly shows "Account Already Active".
 
-**Impact:** Minor edge case. Only affects crafted fake URLs, not real expired invitation links. Real expired links have a valid userId (the user exists) and correctly re-send the invitation.  
-**Fix:** In `ResendInvitationAsync`, add the same `FindByIdAsync` null check: if the user does not exist, show a "This invitation is no longer valid" message instead of triggering the resend path.
+**Fix applied:**
+- `ResendInvitationAsync` now calls `UserManager.FindByIdAsync(Input.UserId)` first
+- If the user is not found, it sets `errorMessage = "This invitation is no longer valid."` and returns without proceeding to the resend path
 
 ---
 
 ## ISSUE-013 — Permission enum values displayed as `PascalCase` code names in UI
 
 **Severity:** Low  
-**Status:** Open  
+**Status:** ✅ Fixed  
 **Area:** Web / RoleManagement.razor, RoleDetail.razor
 
 **Description:**  
 Permissions are displayed using their C# enum names (e.g. `ManagePeople`, `ViewFinanceReports`) rather than human-friendly labels. This looks technical and is not suitable for end users.
 
-**Impact:** Cosmetic. Functional permissions are correctly applied.  
-**Fix:** Add a `[Display(Name = "Manage People")]` attribute to each `Permission` enum value and use `EnumMemberDisplayHelper` (or similar) to render the display name in the UI.
+**Fix applied:**
+- Added `[Display(Name = "...")]` attributes to all `Permission` enum values in `src/Arelia.Domain/Enums/Permission.cs`
+- Created `src/Arelia.Web/Extensions/PermissionExtensions.cs` with `GetDisplayName()` extension method (reads `DisplayAttribute` via reflection, falls back to `ToString()`)
+- `RoleDetail.razor` and `RoleManagement.razor` updated to call `permission.GetDisplayName()` instead of `permission.ToString()` / default interpolation
 
 ---
 

@@ -35,19 +35,31 @@
                 </MudListItem>
             }
         </MudList>
+
+        @if (_isSystemAdmin)
+        {
+            <MudDivider Class="my-4" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.AdminPanelSettings"
+                       Href="/system/organizations" Class="w-100">
+                Open System Panel
+            </MudButton>
+        }
     }
 </MudContainer>
 
 @code {
     private List<OrganizationDto>? _organizations;
+    private bool _isSystemAdmin;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        _isSystemAdmin = authState.User.IsInRole("SystemAdmin");
 
         // System Admins with no org memberships go directly to the system panel
-        if (authState.User.IsInRole("SystemAdmin"))
+        if (_isSystemAdmin)
         {
             _organizations = userId is not null
                 ? await Mediator.Send(new GetUserOrganizationsQuery(userId))

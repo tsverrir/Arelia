@@ -74,21 +74,31 @@ public class InviteUserHandler(
                 if (alreadyMember)
                     return Result.Failure("User is already a member of this organisation.");
 
-                var person = new Person
+                // Reuse an existing Person record for this email to avoid duplicates on re-submission
+                var personForOrg = await context.Persons
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(p => p.Email == normalizedEmail
+                                              && p.OrganizationId == request.OrganizationId
+                                              && !p.IsDeleted, cancellationToken);
+
+                if (personForOrg is null)
                 {
-                    FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? "New" : request.FirstName.Trim(),
-                    LastName = string.IsNullOrWhiteSpace(request.LastName) ? "Member" : request.LastName.Trim(),
-                    Email = normalizedEmail,
-                    OrganizationId = request.OrganizationId,
-                };
-                context.Persons.Add(person);
-                resolvedPersonId = person.Id;
+                    personForOrg = new Person
+                    {
+                        FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? "New" : request.FirstName.Trim(),
+                        LastName = string.IsNullOrWhiteSpace(request.LastName) ? "Member" : request.LastName.Trim(),
+                        Email = normalizedEmail,
+                        OrganizationId = request.OrganizationId,
+                    };
+                    context.Persons.Add(personForOrg);
+                }
+                resolvedPersonId = personForOrg.Id;
 
                 var orgUserExisting = new OrganizationUser
                 {
                     UserId = userId,
                     OrganizationId = request.OrganizationId,
-                    PersonId = person.Id,
+                    PersonId = personForOrg.Id,
                 };
                 context.OrganizationUsers.Add(orgUserExisting);
 
@@ -110,14 +120,24 @@ public class InviteUserHandler(
 
             userId = createResult.Value!;
 
-            var newPerson = new Person
+            // Reuse an orphaned Person record from a previous invite attempt if one exists
+            var newPerson = await context.Persons
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Email == normalizedEmail
+                                          && p.OrganizationId == request.OrganizationId
+                                          && !p.IsDeleted, cancellationToken);
+
+            if (newPerson is null)
             {
-                FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? "New" : request.FirstName.Trim(),
-                LastName = string.IsNullOrWhiteSpace(request.LastName) ? "Member" : request.LastName.Trim(),
-                Email = normalizedEmail,
-                OrganizationId = request.OrganizationId,
-            };
-            context.Persons.Add(newPerson);
+                newPerson = new Person
+                {
+                    FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? "New" : request.FirstName.Trim(),
+                    LastName = string.IsNullOrWhiteSpace(request.LastName) ? "Member" : request.LastName.Trim(),
+                    Email = normalizedEmail,
+                    OrganizationId = request.OrganizationId,
+                };
+                context.Persons.Add(newPerson);
+            }
             resolvedPersonId = newPerson.Id;
 
             var orgUserNew = new OrganizationUser

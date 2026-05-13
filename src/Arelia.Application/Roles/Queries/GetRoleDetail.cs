@@ -8,6 +8,7 @@ public record RoleDetailDto(
     Guid Id,
     string Name,
     bool IsActive,
+    RoleType RoleType,
     List<Permission> Permissions,
     List<RoleDetailAssignmentDto> ActiveAssignments);
 
@@ -31,6 +32,7 @@ public class GetRoleDetailHandler(IAreliaDbContext context)
                 r.Id,
                 r.Name,
                 r.IsActive,
+                r.RoleType,
                 r.RolePermissions
                     .Where(rp => rp.IsActive)
                     .Select(rp => rp.Permission)

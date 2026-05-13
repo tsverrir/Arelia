@@ -35,7 +35,9 @@ public static class DependencyInjection
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<AreliaDbContext>()
             .AddSignInManager()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            // Replace the default DataProtector token provider with URL-safe Base64url variant
+            .AddTokenProvider<InvitationTokenProvider>(TokenOptions.DefaultProvider);
 
         // Invitation links are valid for 7 days
         services.Configure<DataProtectionTokenProviderOptions>(options =>

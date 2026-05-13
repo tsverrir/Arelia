@@ -3,6 +3,7 @@
 @using Arelia.Application.Roles.Commands
 @using Arelia.Application.Roles.Queries
 @using Arelia.Domain.Enums
+@using Arelia.Web.Extensions
 @using Arelia.Web.Components.Shared
 @inject IMediator Mediator
 @inject NavigationManager Navigation
@@ -56,7 +57,7 @@
             @foreach (var permission in Enum.GetValues<Permission>())
             {
                 <tr>
-                    <td>@permission</td>
+                    <td>@permission.GetDisplayName()</td>
                     @foreach (var role in _roles.Where(r => r.IsActive))
                     {
                         var hasPermission = role.RoleType == RoleType.Admin || role.Permissions.Contains(permission);

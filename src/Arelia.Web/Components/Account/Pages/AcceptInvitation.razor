@@ -33,6 +33,7 @@
                 <EditForm Model="Input" FormName="resend-invitation" OnValidSubmit="ResendInvitationAsync" method="post">
                     <input type="hidden" name="Input.UserId" value="@Input.UserId" />
                     <input type="hidden" name="Input.Token" value="@Input.Token" />
+                    <input type="hidden" name="Input.OrgName" value="@Input.OrgName" />
                     <button type="submit" class="btn btn-primary me-2">Resend Invitation</button>
                     <a href="/Account/Login" class="btn btn-outline-secondary">Go to Login</a>
                 </EditForm>
@@ -60,6 +61,7 @@
 
                 <input type="hidden" name="Input.UserId" value="@Input.UserId" />
                 <input type="hidden" name="Input.Token" value="@Input.Token" />
+                <input type="hidden" name="Input.OrgName" value="@Input.OrgName" />
 
                 <div class="form-floating mb-3">
                     <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
@@ -94,6 +96,9 @@
     [SupplyParameterFromQuery]
     private string? Token { get; set; }
 
+    [SupplyParameterFromQuery]
+    private string? OrgName { get; set; }
+
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -106,6 +111,8 @@
             Input.UserId = UserId ?? "";
         if (string.IsNullOrWhiteSpace(Input.Token))
             Input.Token = Token ?? "";
+        if (string.IsNullOrWhiteSpace(Input.OrgName))
+            Input.OrgName = OrgName ?? "";
 
         var resolvedUserId = string.IsNullOrWhiteSpace(UserId) ? Input.UserId : UserId;
 
@@ -169,6 +176,14 @@
     {
         if (string.IsNullOrEmpty(Input.UserId)) return;
 
+        // ISSUE-012: guard against fake/invalid user IDs
+        var targetUser = await UserManager.FindByIdAsync(Input.UserId);
+        if (targetUser is null)
+        {
+            errorMessage = "This invitation is no longer valid.";
+            return;
+        }
+
         var isPending = await UserService.IsAccountPendingAsync(Input.UserId);
         if (!isPending)
         {
@@ -177,8 +192,12 @@
             return;
         }
 
+        var resolvedOrgName = !string.IsNullOrWhiteSpace(Input.OrgName)
+            ? Input.OrgName
+            : "your organisation";
+
         await UserService.SendInvitationEmailAsync(
-            Input.UserId, "your organisation", "System", NavigationManager.BaseUri.TrimEnd('/'));
+            Input.UserId, resolvedOrgName, "System", NavigationManager.BaseUri.TrimEnd('/'));
 
         _resendSent = true;
     }
@@ -190,6 +209,7 @@
     {
         public string UserId { get; set; } = "";
         public string Token { get; set; } = "";
+        public string OrgName { get; set; } = "";
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
