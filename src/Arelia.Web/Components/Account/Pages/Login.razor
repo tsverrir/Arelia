@@ -87,8 +87,8 @@
 
         if (Environment.IsDevelopment() && string.IsNullOrEmpty(Input.Email))
         {
-            Input.Email = Arelia.Infrastructure.Services.DataSeeder.AdminEmail;
-            Input.Password = Arelia.Infrastructure.Services.DataSeeder.AdminPassword;
+            Input.Email = Arelia.Infrastructure.Services.DataSeeder.DefaultAdminEmail;
+            Input.Password = Arelia.Infrastructure.Services.DataSeeder.DefaultAdminPassword;
         }
     }
 

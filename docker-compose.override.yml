@@ -1,0 +1,21 @@
+# Local development override — merged automatically with docker-compose.yml.
+# Run with: docker compose up --build
+#
+# Differences from production:
+#   - Builds the image from source instead of pulling from ghcr.io
+#   - Mounts ./data as a bind mount so you can inspect the DB and uploads directly
+#   - Uses the default dev seed credentials (admin@arelia.dev / Admin123!)
+#   - Sets ASPNETCORE_ENVIRONMENT=Development
+
+services:
+  arelia:
+    build: .
+    image: arelia:local
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=DataSource=/data/arelia.db;Cache=Shared
+      - FileStorage__BasePath=/data/uploads
+      - Seed__AdminEmail=admin@arelia.dev
+      - Seed__AdminPassword=Admin123!
+    volumes:
+      - ./data:/data
