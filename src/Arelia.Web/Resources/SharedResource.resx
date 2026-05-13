@@ -80,6 +80,7 @@
   <data name="Common.EndTime" xml:space="preserve"><value>End Time</value></data>
   <data name="Common.PublicVisible" xml:space="preserve"><value>Public Visible</value></data>
   <data name="Common.SelectOrgFirst" xml:space="preserve"><value>Please select an organisation first.</value></data>
+  <data name="Common.AccessDenied" xml:space="preserve"><value>You do not have permission to access this page.</value></data>
   <data name="Common.SignIn" xml:space="preserve"><value>sign in</value></data>
   <data name="Common.SignedInAs" xml:space="preserve"><value>Signed in as {0}</value></data>
   <data name="Common.Language" xml:space="preserve"><value>Language</value></data>
@@ -110,6 +111,7 @@
   <data name="Nav.Admin" xml:space="preserve"><value>Admin</value></data>
   <data name="Nav.Users" xml:space="preserve"><value>Users</value></data>
   <data name="Nav.Organizations" xml:space="preserve"><value>Organisations</value></data>
+  <data name="Nav.Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Nav.AuditLog" xml:space="preserve"><value>Audit Log</value></data>
   <data name="Nav.Backups" xml:space="preserve"><value>Backups</value></data>
   <data name="Home.Title" xml:space="preserve"><value>Welcome to Arelia</value></data>
@@ -190,6 +192,8 @@
   <data name="ActivityDetail.StatusExplained" xml:space="preserve"><value>Explained</value></data>
   <data name="People.Title" xml:space="preserve"><value>People</value></data>
   <data name="People.AddPerson" xml:space="preserve"><value>Add Person</value></data>
+  <data name="People.AddOnly" xml:space="preserve"><value>Add only</value></data>
+  <data name="People.AddAndInvite" xml:space="preserve"><value>Add and invite</value></data>
   <data name="People.AddByEmail" xml:space="preserve"><value>Add by Email</value></data>
   <data name="People.ImportFromOrg" xml:space="preserve"><value>Import from Org</value></data>
   <data name="People.ShowInactive" xml:space="preserve"><value>Show inactive</value></data>
@@ -305,6 +309,41 @@
   <data name="Admin.Org.EditSettingsTitle" xml:space="preserve"><value>Organisation Settings</value></data>
   <data name="Admin.Org.SettingsSaved" xml:space="preserve"><value>Organisation settings saved.</value></data>
   <data name="Admin.Org.Created" xml:space="preserve"><value>Organisation '{0}' created.</value></data>
+  <data name="OrgSettings.Title" xml:space="preserve"><value>Organisation Settings</value></data>
+  <data name="OrgSettings.Saved" xml:space="preserve"><value>Organisation settings saved.</value></data>
+  <data name="SysAdmin.OrgDetail.Title" xml:space="preserve"><value>Organisation</value></data>
+  <data name="SysAdmin.OrgDetail.AssignUser" xml:space="preserve"><value>Assign User</value></data>
+  <data name="SysAdmin.OrgDetail.AssignSuccess" xml:space="preserve"><value>User assigned to organisation.</value></data>
+  <data name="SysAdmin.OrgDetail.InviteUser" xml:space="preserve"><value>Invite User</value></data>
+  <data name="SysAdmin.OrgDetail.InviteTitle" xml:space="preserve"><value>Invite New User</value></data>
+  <data name="SysAdmin.OrgDetail.InviteSent" xml:space="preserve"><value>Invitation sent to {0}.</value></data>
+  <data name="SysAdmin.Users.InviteUser" xml:space="preserve"><value>Invite User</value></data>
+  <data name="SysAdmin.Users.InviteTitle" xml:space="preserve"><value>Invite New User</value></data>
+  <data name="SysAdmin.Users.InviteSent" xml:space="preserve"><value>Invitation sent to {0}.</value></data>
+  <data name="SysAdmin.Users.DeleteUser" xml:space="preserve"><value>Delete User</value></data>
+  <data name="SysAdmin.Users.DeleteTitle" xml:space="preserve"><value>Delete User</value></data>
+  <data name="SysAdmin.Users.DeleteConfirm" xml:space="preserve"><value>Are you sure you want to permanently delete the account for {0}? Their Person record and organisation data will be preserved.</value></data>
+  <data name="SysAdmin.Users.Deleted" xml:space="preserve"><value>User {0} has been deleted.</value></data>
+  <data name="SysAdmin.OrgDetail.RemoveUser" xml:space="preserve"><value>Remove from Organisation</value></data>
+  <data name="SysAdmin.OrgDetail.RemoveConfirm" xml:space="preserve"><value>Remove {0} from this organisation? Their Person record and historical data will be preserved.</value></data>
+  <data name="SysAdmin.OrgDetail.Removed" xml:space="preserve"><value>{0} has been removed from the organisation.</value></data>
+  <data name="SysAdmin.OrgDetail.ChangeRole" xml:space="preserve"><value>Change Role</value></data>
+  <data name="SysAdmin.OrgDetail.RoleChanged" xml:space="preserve"><value>Role updated for {0}.</value></data>
+  <data name="SysAdmin.OrgDetail.AlreadyMember" xml:space="preserve"><value>This user is already a member of this organisation.</value></data>
+  <data name="SysAdmin.Users.AssignToOrg" xml:space="preserve"><value>Assign to Organisation</value></data>
+  <data name="SysAdmin.Users.AssignSuccess" xml:space="preserve"><value>User assigned to organisation.</value></data>
+  <data name="SysAdmin.Users.Title" xml:space="preserve"><value>Users</value></data>
+  <data name="SysAdmin.Users.NoOrganisations" xml:space="preserve"><value>Not a member of any organisation.</value></data>
+  <data name="SysAdmin.Users.PromoteTitle" xml:space="preserve"><value>Grant System Administrator Role</value></data>
+  <data name="SysAdmin.Users.DemoteTitle" xml:space="preserve"><value>Remove System Administrator Role</value></data>
+  <data name="SysAdmin.Users.PromoteConfirm" xml:space="preserve"><value>Grant System Administrator role to {0}?</value></data>
+  <data name="SysAdmin.Users.DemoteConfirm" xml:space="preserve"><value>Remove System Administrator role from {0}?</value></data>
+  <data name="SysAdmin.Users.PromoteSuccess" xml:space="preserve"><value>User promoted to System Administrator.</value></data>
+  <data name="SysAdmin.Users.DemoteSuccess" xml:space="preserve"><value>System Administrator role removed.</value></data>
+  <data name="SysAdmin.Users.GrantSysAdmin" xml:space="preserve"><value>Grant System Administrator role</value></data>
+  <data name="SysAdmin.Users.RemoveSysAdmin" xml:space="preserve"><value>Remove System Administrator role</value></data>
+  <data name="SysAdmin.Users.CannotChangeSelf" xml:space="preserve"><value>Cannot change your own System Administrator status.</value></data>
+  <data name="SysAdmin.Users.CannotRemoveLastAdmin" xml:space="preserve"><value>Cannot remove the last System Administrator.</value></data>
   <data name="Admin.AuditLog.Title" xml:space="preserve"><value>Audit Log</value></data>
   <data name="Admin.AuditLog.Timestamp" xml:space="preserve"><value>Timestamp</value></data>
   <data name="Admin.AuditLog.Action" xml:space="preserve"><value>Action</value></data>

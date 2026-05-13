@@ -19,11 +19,11 @@ A User with the `Admin` System Role in a specific Organization. Manages that org
 _Avoid_: Administrator (ambiguous between org and system level)
 
 **Direct Assignment**:
-A System Administrator action that silently adds an existing User to an Organization without sending an email. Always creates a minimal Person record (using the User's name from their account) and assigns the `Member` role by default. Distinct from an **Invitation**, which triggers email and is available to Org Admins.
+A System Administrator action that silently adds an existing User to an Organization without sending an email. Always creates a minimal Person record (using the User's name from their account). The initial role is selectable at assignment time, defaulting to `Member`. Distinct from an **Invitation**, which triggers email and is available to Org Admins.
 _Avoid_: Silent invite, force-add
 
 **Person**:
-An individual tracked within a specific organization. Org-scoped. Can exist without a linked User (e.g. a member who does not use the system).
+An individual tracked within a specific organization. Org-scoped. A Person with a linked User (via OrganizationUser) is self-managing — they log in and interact with the system directly. A Person without a linked User is manually managed — an Org Admin or System Administrator maintains their data on their behalf.
 _Avoid_: Member (overloaded — see Role), contact
 
 **OrganizationUser**:

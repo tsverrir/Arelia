@@ -18,16 +18,7 @@
                 <MudNavLink Href="/document-categories" Icon="@Icons.Material.Filled.LocalOffer">@L["Nav.DocumentCategories"]</MudNavLink>
                 <MudNavLink Href="/finances" Icon="@Icons.Material.Filled.Payments">@L["Nav.Finances"]</MudNavLink>
                 <MudNavLink Href="/reports" Icon="@Icons.Material.Filled.Assessment">@L["Nav.Reports"]</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="@L["Nav.Admin"]" Icon="@Icons.Material.Filled.AdminPanelSettings" Expanded="false">
-                <MudNavLink Href="/admin/users" Icon="@Icons.Material.Filled.ManageAccounts">@L["Nav.Users"]</MudNavLink>
-                <MudNavLink Href="/admin/organizations" Icon="@Icons.Material.Filled.Business">@L["Nav.Organizations"]</MudNavLink>
-                <MudNavLink Href="/admin/audit" Icon="@Icons.Material.Filled.History">@L["Nav.AuditLog"]</MudNavLink>
-                <MudNavLink Href="/admin/backups" Icon="@Icons.Material.Filled.Backup">@L["Nav.Backups"]</MudNavLink>
-                <MudNavLink Icon="@(HighlightService.ShowMissingTranslations ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
-                            OnClick="HighlightService.Toggle">
-                    @L["Layout.HighlightMissing"]
-                </MudNavLink>
+                <MudNavLink Href="/organisation-settings" Icon="@Icons.Material.Filled.Tune">@L["OrgSettings.Title"]</MudNavLink>
             </MudNavGroup>
         </Authorized>
     </AuthorizeView>
@@ -36,6 +27,12 @@
         <MudNavGroup Title="System Admin" Icon="@Icons.Material.Filled.Security" Expanded="false">
             <MudNavLink Href="/system/organizations" Icon="@Icons.Material.Filled.Business">All Organisations</MudNavLink>
             <MudNavLink Href="/system/users" Icon="@Icons.Material.Filled.People">All Users</MudNavLink>
+            <MudNavLink Href="/admin/audit" Icon="@Icons.Material.Filled.History">@L["Nav.AuditLog"]</MudNavLink>
+            <MudNavLink Href="/admin/backups" Icon="@Icons.Material.Filled.Backup">@L["Nav.Backups"]</MudNavLink>
+            <MudNavLink Icon="@(HighlightService.ShowMissingTranslations ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                        OnClick="HighlightService.Toggle">
+                @L["Layout.HighlightMissing"]
+            </MudNavLink>
         </MudNavGroup>
     </AuthorizeView>
 </MudNavMenu>

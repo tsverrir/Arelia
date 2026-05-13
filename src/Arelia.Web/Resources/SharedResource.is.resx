@@ -80,6 +80,7 @@
   <data name="Common.EndTime" xml:space="preserve"><value>Lokatimi</value></data>
   <data name="Common.PublicVisible" xml:space="preserve"><value>Opinber synileiki</value></data>
   <data name="Common.SelectOrgFirst" xml:space="preserve"><value>Vinsamlegast veldu fyrst samtok.</value></data>
+  <data name="Common.AccessDenied" xml:space="preserve"><value>Þú hefur ekki heimild til að fara á þessa síðu.</value></data>
   <data name="Common.SignIn" xml:space="preserve"><value>skra inn</value></data>
   <data name="Common.SignedInAs" xml:space="preserve"><value>Skráður inn sem {0}</value></data>
   <data name="Common.Language" xml:space="preserve"><value>Tungumad</value></data>
@@ -110,6 +111,7 @@
   <data name="Nav.Admin" xml:space="preserve"><value>Stjornun</value></data>
   <data name="Nav.Users" xml:space="preserve"><value>Notendur</value></data>
   <data name="Nav.Organizations" xml:space="preserve"><value>Samtok</value></data>
+  <data name="Nav.Settings" xml:space="preserve"><value>Stillingar</value></data>
   <data name="Nav.AuditLog" xml:space="preserve"><value>Eftirlit</value></data>
   <data name="Nav.Backups" xml:space="preserve"><value>Oryggisafrit</value></data>
   <data name="Home.Title" xml:space="preserve"><value>Velkomin i Arelia</value></data>
@@ -190,6 +192,8 @@
   <data name="ActivityDetail.StatusExplained" xml:space="preserve"><value>Skyrdur fjar</value></data>
   <data name="People.Title" xml:space="preserve"><value>Medhlimaur</value></data>
   <data name="People.AddPerson" xml:space="preserve"><value>Baeta vid einstaklingi</value></data>
+  <data name="People.AddOnly" xml:space="preserve"><value>Baeta vid eingongu</value></data>
+  <data name="People.AddAndInvite" xml:space="preserve"><value>Baeta vid og bjoda</value></data>
   <data name="People.AddByEmail" xml:space="preserve"><value>Baeta vid med netfangi</value></data>
   <data name="People.ImportFromOrg" xml:space="preserve"><value>Flyja inn fra samtokum</value></data>
   <data name="People.ShowInactive" xml:space="preserve"><value>Syyna ovirk</value></data>
@@ -312,6 +316,41 @@
   <data name="Admin.Org.EditSettingsTitle" xml:space="preserve"><value>Stillingar samtaka</value></data>
   <data name="Admin.Org.SettingsSaved" xml:space="preserve"><value>Stillingar samtaka vistadar.</value></data>
   <data name="Admin.Org.Created" xml:space="preserve"><value>Samtok '{0}' búið til.</value></data>
+  <data name="OrgSettings.Title" xml:space="preserve"><value>Stillingar samtaka</value></data>
+  <data name="OrgSettings.Saved" xml:space="preserve"><value>Stillingar samtaka vistadar.</value></data>
+  <data name="SysAdmin.OrgDetail.Title" xml:space="preserve"><value>Samtök</value></data>
+  <data name="SysAdmin.OrgDetail.AssignUser" xml:space="preserve"><value>Úthluta notanda</value></data>
+  <data name="SysAdmin.OrgDetail.AssignSuccess" xml:space="preserve"><value>Notandi úthlutaður samtökum.</value></data>
+  <data name="SysAdmin.OrgDetail.InviteUser" xml:space="preserve"><value>Bjóða notanda</value></data>
+  <data name="SysAdmin.OrgDetail.InviteTitle" xml:space="preserve"><value>Bjóða nýjum notanda</value></data>
+  <data name="SysAdmin.OrgDetail.InviteSent" xml:space="preserve"><value>Boð sent á {0}.</value></data>
+  <data name="SysAdmin.Users.InviteUser" xml:space="preserve"><value>Bjóða notanda</value></data>
+  <data name="SysAdmin.Users.InviteTitle" xml:space="preserve"><value>Bjóða nýjum notanda</value></data>
+  <data name="SysAdmin.Users.InviteSent" xml:space="preserve"><value>Boð sent á {0}.</value></data>
+  <data name="SysAdmin.Users.DeleteUser" xml:space="preserve"><value>Eyða notanda</value></data>
+  <data name="SysAdmin.Users.DeleteTitle" xml:space="preserve"><value>Eyða notanda</value></data>
+  <data name="SysAdmin.Users.DeleteConfirm" xml:space="preserve"><value>Ertu viss um að þú viljir eyða reikningnum fyrir {0}? Persónufærslur og gögn frá samtökum eru varðveitt.</value></data>
+  <data name="SysAdmin.Users.Deleted" xml:space="preserve"><value>Notanda {0} hefur verið eytt.</value></data>
+  <data name="SysAdmin.OrgDetail.RemoveUser" xml:space="preserve"><value>Fjarlægja úr samtökum</value></data>
+  <data name="SysAdmin.OrgDetail.RemoveConfirm" xml:space="preserve"><value>Fjarlægja {0} úr þessum samtökum? Persónufærslur og söguleg gögn eru varðveitt.</value></data>
+  <data name="SysAdmin.OrgDetail.Removed" xml:space="preserve"><value>{0} hefur verið fjarlægt úr samtökunum.</value></data>
+  <data name="SysAdmin.OrgDetail.ChangeRole" xml:space="preserve"><value>Breyta hlutverki</value></data>
+  <data name="SysAdmin.OrgDetail.RoleChanged" xml:space="preserve"><value>Hlutverk uppfært fyrir {0}.</value></data>
+  <data name="SysAdmin.OrgDetail.AlreadyMember" xml:space="preserve"><value>Þessi notandi er nú þegar meðlimur í þessum samtökum.</value></data>
+  <data name="SysAdmin.Users.AssignToOrg" xml:space="preserve"><value>Úthluta til samtaka</value></data>
+  <data name="SysAdmin.Users.AssignSuccess" xml:space="preserve"><value>Notandi úthlutaður samtökum.</value></data>
+  <data name="SysAdmin.Users.Title" xml:space="preserve"><value>Notendur</value></data>
+  <data name="SysAdmin.Users.NoOrganisations" xml:space="preserve"><value>Ekki meðlimur í neinum samtökum.</value></data>
+  <data name="SysAdmin.Users.PromoteTitle" xml:space="preserve"><value>Veita kerfisstjórnarhlutverki</value></data>
+  <data name="SysAdmin.Users.DemoteTitle" xml:space="preserve"><value>Fjarlægja kerfisstjórnarhlutverki</value></data>
+  <data name="SysAdmin.Users.PromoteConfirm" xml:space="preserve"><value>Veita kerfisstjórnarhlutverk til {0}?</value></data>
+  <data name="SysAdmin.Users.DemoteConfirm" xml:space="preserve"><value>Fjarlægja kerfisstjórnarhlutverk frá {0}?</value></data>
+  <data name="SysAdmin.Users.PromoteSuccess" xml:space="preserve"><value>Notandi gerður að kerfisstjóra.</value></data>
+  <data name="SysAdmin.Users.DemoteSuccess" xml:space="preserve"><value>Kerfisstjórnarhlutverk fjarlægt.</value></data>
+  <data name="SysAdmin.Users.GrantSysAdmin" xml:space="preserve"><value>Veita kerfisstjórnarhlutverk</value></data>
+  <data name="SysAdmin.Users.RemoveSysAdmin" xml:space="preserve"><value>Fjarlægja kerfisstjórnarhlutverk</value></data>
+  <data name="SysAdmin.Users.CannotChangeSelf" xml:space="preserve"><value>Þú getur ekki breytt eigin kerfisstjórnunarstöðu.</value></data>
+  <data name="SysAdmin.Users.CannotRemoveLastAdmin" xml:space="preserve"><value>Ekki hægt að fjarlægja síðasta kerfisstjóra.</value></data>
   <data name="Admin.AuditLog.Title" xml:space="preserve"><value>Eftirlit</value></data>
   <data name="Admin.AuditLog.Timestamp" xml:space="preserve"><value>Timastimpill</value></data>
   <data name="Admin.AuditLog.Action" xml:space="preserve"><value>Adgerd</value></data>

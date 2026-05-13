@@ -26,7 +26,7 @@ public class InviteUserTests
         var handler = new InviteUserHandler(context, userService);
 
         var result = await handler.Handle(
-            new InviteUserCommand(orgId, "new@test.dk", "Alice", "Test", null, null, "Admin", "https://test.arelia.dev"),
+            new InviteUserCommand(orgId, "new@test.dk", "Alice", "Test", null, null, null, null, null, "Admin", "https://test.arelia.dev"),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -57,7 +57,7 @@ public class InviteUserTests
         var handler = new InviteUserHandler(context, userService);
 
         var result = await handler.Handle(
-            new InviteUserCommand(orgId, "existing@test.dk", "Bob", "Existing", null, null, "Admin", "https://test.arelia.dev"),
+            new InviteUserCommand(orgId, "existing@test.dk", "Bob", "Existing", null, null, null, null, null, "Admin", "https://test.arelia.dev"),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -86,7 +86,7 @@ public class InviteUserTests
         var handler = new InviteUserHandler(context, userService);
 
         var result = await handler.Handle(
-            new InviteUserCommand(orgId, "existing@test.dk", null, null, null, null, "Admin", "https://test.arelia.dev"),
+            new InviteUserCommand(orgId, "existing@test.dk", null, null, null, null, null, null, null, "Admin", "https://test.arelia.dev"),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();

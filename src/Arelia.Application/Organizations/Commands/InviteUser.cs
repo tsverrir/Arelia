@@ -15,6 +15,9 @@ public record InviteUserCommand(
     string? Email,
     string? FirstName,
     string? LastName,
+    string? Phone,
+    Guid? VoiceGroupId,
+    string? Notes,
     Guid? PersonId,
     Guid? RoleId,
     string InviterName,
@@ -88,6 +91,9 @@ public class InviteUserHandler(
                         FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? "New" : request.FirstName.Trim(),
                         LastName = string.IsNullOrWhiteSpace(request.LastName) ? "Member" : request.LastName.Trim(),
                         Email = normalizedEmail,
+                        Phone = request.Phone?.Trim(),
+                        VoiceGroupId = request.VoiceGroupId,
+                        Notes = request.Notes?.Trim(),
                         OrganizationId = request.OrganizationId,
                     };
                     context.Persons.Add(personForOrg);
@@ -134,6 +140,9 @@ public class InviteUserHandler(
                     FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? "New" : request.FirstName.Trim(),
                     LastName = string.IsNullOrWhiteSpace(request.LastName) ? "Member" : request.LastName.Trim(),
                     Email = normalizedEmail,
+                    Phone = request.Phone?.Trim(),
+                    VoiceGroupId = request.VoiceGroupId,
+                    Notes = request.Notes?.Trim(),
                     OrganizationId = request.OrganizationId,
                 };
                 context.Persons.Add(newPerson);

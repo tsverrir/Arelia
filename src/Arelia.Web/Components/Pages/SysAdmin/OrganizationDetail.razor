@@ -1,0 +1,498 @@
+@page "/system/organizations/{Id:guid}"
+@using Arelia.Application.Organizations.Commands
+@using Arelia.Application.Organizations.Queries
+@using Arelia.Application.Roles.Queries
+@using Arelia.Infrastructure.Identity
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@inject IMediator Mediator
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject ILocalizer L
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize(Roles = "SystemAdmin")]
+
+<PageTitle>@L["SysAdmin.OrgDetail.Title"]</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Navigation.NavigateTo("/system/organizations"))" />
+    <MudText Typo="Typo.h5">@(_detail?.Name ?? L["SysAdmin.OrgDetail.Title"])</MudText>
+</MudStack>
+
+@if (_detail is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+    return;
+}
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4 mb-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">@L["Common.Edit"]</MudText>
+
+            <MudTextField @bind-Value="_editName" Label="@L["Common.Name"]" Required="true" Class="mb-3" />
+            <MudTextField @bind-Value="_editEmail" Label="@L["Common.Email"]" InputType="InputType.Email" Class="mb-3" />
+            <MudTextField @bind-Value="_editPhone" Label="@L["Common.Phone"]" Class="mb-3" />
+            <MudSelect T="string" @bind-Value="_editLanguage" Label="@L["Common.DefaultLanguage"]" Class="mb-3">
+                <MudSelectItem T="string" Value="@("en")">English</MudSelectItem>
+                <MudSelectItem T="string" Value="@("da")">Dansk</MudSelectItem>
+                <MudSelectItem T="string" Value="@("is")">Íslenska</MudSelectItem>
+            </MudSelect>
+            <MudSwitch @bind-Value="_editIsActive" Label="@L["Common.Active"]" Color="Color.Success" Class="mb-3" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveOrgAsync">
+                @L.H("Common.Save")
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudText Typo="Typo.h6">@L["Nav.Users"]</MudText>
+            <MudSpacer />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                       OnClick="OpenInviteDialog"
+                       Class="mr-2">
+                @L.H("SysAdmin.OrgDetail.InviteUser")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                       OnClick="@(() => _showAssign = true)">
+                @L.H("SysAdmin.OrgDetail.AssignUser")
+            </MudButton>
+        </MudStack>
+
+        @if (_users is not null)
+        {
+            <MudTable Items="_users" Hover="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>@L["Common.Name"]</MudTh>
+                    <MudTh>@L["Common.Email"]</MudTh>
+                    <MudTh>@L["Common.Roles"]</MudTh>
+                    <MudTh>@L["Common.Status"]</MudTh>
+                    <MudTh Style="width:48px"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@(context.PersonName ?? "—")</MudTd>
+                    <MudTd>@(context.Email ?? "—")</MudTd>
+                    <MudTd>
+                        @if (context.ActiveRoles.Any())
+                        {
+                            @string.Join(", ", context.ActiveRoles)
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@L["Common.NoActiveRoles"]</MudText>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if (context.IsPending)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">@L["Common.Pending"]</MudChip>
+                        }
+                        else if (context.ActiveRoles.Any())
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success">@L["Common.Active"]</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">@L["Common.Suspended"]</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true">
+                            <MudMenuItem Icon="@Icons.Material.Filled.Edit"
+                                         OnClick="@(() => OpenChangeRoleDialog(context))">
+                                @L["SysAdmin.OrgDetail.ChangeRole"]
+                            </MudMenuItem>
+                            <MudDivider />
+                            <MudMenuItem Icon="@Icons.Material.Filled.PersonRemove"
+                                         IconColor="Color.Error"
+                                         OnClick="@(() => OpenRemoveDialog(context))">
+                                <MudText Color="Color.Error">@L["SysAdmin.OrgDetail.RemoveUser"]</MudText>
+                            </MudMenuItem>
+                        </MudMenu>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudItem>
+</MudGrid>
+
+@* Change Role dialog *@
+<MudDialog @bind-Visible="_showChangeRole">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("SysAdmin.OrgDetail.ChangeRole")</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_changeRoleTarget is not null)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-3">@(_changeRoleTarget.PersonName ?? _changeRoleTarget.Email ?? "—")</MudAlert>
+        }
+        <MudSelect T="Guid?" @bind-Value="_changeRoleId" Label="@L["Common.Roles"]"
+                   ToStringFunc="@(id => _roles.FirstOrDefault(r => (Guid?)r.Id == id)?.Name ?? string.Empty)">
+            @foreach (var role in _roles)
+            {
+                <MudSelectItem T="Guid?" Value="@((Guid?)role.Id)">@role.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showChangeRole = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="ConfirmChangeRoleAsync"
+                   Disabled="@(_changeRoleId is null)">
+            @L.H("Common.Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Remove from Organisation dialog *@
+<MudDialog @bind-Visible="_showRemove">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("SysAdmin.OrgDetail.RemoveUser")</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_removeTarget is not null)
+        {
+            <MudText>@string.Format(L["SysAdmin.OrgDetail.RemoveConfirm"], _removeTarget.PersonName ?? _removeTarget.Email ?? "—")</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showRemove = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmRemoveAsync">
+            @L.H("Common.Delete")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showAssign">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("SysAdmin.OrgDetail.AssignUser")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_assignSearch" Label="@L["Common.Search"]"
+                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true" OnKeyUp="SearchUsersAsync" Class="mb-3" />
+
+        @if (_searchResults.Any())
+        {
+            <MudList T="ApplicationUser" Dense="true" Class="mb-3">
+                @foreach (var user in _searchResults)
+                {
+                    <MudListItem T="ApplicationUser"
+                                 OnClick="@(() => SelectUser(user))"
+                                 Class="@(_selectedUser?.Id == user.Id ? "mud-selected-item" : "")">
+                        @user.Email
+                    </MudListItem>
+                }
+            </MudList>
+        }
+
+        @if (_selectedUser is not null)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-3">@_selectedUser.Email</MudAlert>
+        }
+
+        <MudSelect T="Guid?" @bind-Value="_assignRoleId" Label="@L["Common.Roles"]"
+                   ToStringFunc="@(id => _roles.FirstOrDefault(r => (Guid?)r.Id == id)?.Name ?? string.Empty)">
+            @foreach (var role in _roles)
+            {
+                <MudSelectItem T="Guid?" Value="@((Guid?)role.Id)">@role.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAssignDialog">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="AssignUserAsync"
+                   Disabled="@(_selectedUser is null)">
+            @L.H("SysAdmin.OrgDetail.AssignUser")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Invite New User dialog *@
+<MudDialog @bind-Visible="_showInvite">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.H("SysAdmin.OrgDetail.InviteTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_inviteEmail" Label="@L["Common.Email"]" Required="true"
+                      InputType="InputType.Email" Class="mb-2" />
+        <MudTextField @bind-Value="_inviteFirstName" Label="@L["Common.FirstName"]" Class="mb-2" />
+        <MudTextField @bind-Value="_inviteLastName" Label="@L["Common.LastName"]" Class="mb-3" />
+        <MudSelect T="Guid?" @bind-Value="_inviteRoleId" Label="@L["Common.Roles"]"
+                   ToStringFunc="@(id => _roles.FirstOrDefault(r => (Guid?)r.Id == id)?.Name ?? string.Empty)">
+            @foreach (var role in _roles)
+            {
+                <MudSelectItem T="Guid?" Value="@((Guid?)role.Id)">@role.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showInvite = false)">@L.H("Common.Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="InviteUserAsync"
+                   Disabled="@string.IsNullOrWhiteSpace(_inviteEmail)">
+            @L.H("Common.Invite")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private OrganizationDetailDto? _detail;
+    private List<OrganizationUserDto>? _users;
+    private List<RoleDto> _roles = [];
+
+    private string _editName = string.Empty;
+    private string? _editEmail;
+    private string? _editPhone;
+    private string _editLanguage = "en";
+    private bool _editIsActive = true;
+
+    // Assign existing user
+    private bool _showAssign;
+    private string _assignSearch = string.Empty;
+    private List<ApplicationUser> _searchResults = [];
+    private ApplicationUser? _selectedUser;
+    private Guid? _assignRoleId;
+
+    // Invite new user
+    private bool _showInvite;
+    private string _inviteEmail = string.Empty;
+    private string? _inviteFirstName;
+    private string? _inviteLastName;
+    private Guid? _inviteRoleId;
+    private string? _currentUserEmail;
+
+    // Change role
+    private bool _showChangeRole;
+    private OrganizationUserDto? _changeRoleTarget;
+    private Guid? _changeRoleId;
+
+    // Remove from org
+    private bool _showRemove;
+    private OrganizationUserDto? _removeTarget;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _currentUserEmail = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+            ?? authState.User.Identity?.Name
+            ?? "System Admin";
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _detail = await Mediator.Send(new GetOrganizationDetailQuery(Id));
+
+        if (_detail is null)
+        {
+            Navigation.NavigateTo("/system/organizations");
+            return;
+        }
+
+        _editName = _detail.Name;
+        _editEmail = _detail.ContactEmail;
+        _editPhone = _detail.ContactPhone;
+        _editLanguage = _detail.DefaultLanguage ?? "en";
+        _editIsActive = _detail.IsActive;
+
+        _users = await Mediator.Send(new GetOrganizationUsersQuery(Id));
+        var allRoles = await Mediator.Send(new GetRolesQuery(Id));
+        _roles = allRoles.Where(r => r.IsActive).ToList();
+
+        var memberRole = _roles.FirstOrDefault(r => r.RoleType == Domain.Enums.RoleType.Member);
+        _assignRoleId = memberRole?.Id;
+    }
+
+    private async Task SaveOrgAsync()
+    {
+        var result = await Mediator.Send(new UpdateOrganizationCommand(
+            Id,
+            _editName,
+            _editEmail,
+            _editPhone,
+            _editLanguage,
+            _editIsActive));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["OrgSettings.Saved"], Severity.Success);
+            _detail = await Mediator.Send(new GetOrganizationDetailQuery(Id));
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private async Task SearchUsersAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_assignSearch) || _assignSearch.Length < 2)
+        {
+            _searchResults = [];
+            return;
+        }
+
+        _searchResults = UserManager.Users
+            .Where(u => u.Email != null && u.Email.Contains(_assignSearch))
+            .OrderBy(u => u.Email)
+            .Take(10)
+            .ToList();
+
+        await Task.CompletedTask;
+    }
+
+    private void SelectUser(ApplicationUser user)
+    {
+        _selectedUser = user;
+        _assignSearch = user.Email ?? string.Empty;
+        _searchResults = [];
+    }
+
+    private void OpenInviteDialog()
+    {
+        _inviteEmail = string.Empty;
+        _inviteFirstName = null;
+        _inviteLastName = null;
+        var memberRole = _roles.FirstOrDefault(r => r.RoleType == Domain.Enums.RoleType.Member);
+        _inviteRoleId = memberRole?.Id;
+        _showInvite = true;
+    }
+
+    private async Task InviteUserAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_inviteEmail))
+        {
+            Snackbar.Add(L["Common.EmailRequired"], Severity.Warning);
+            return;
+        }
+
+        var result = await Mediator.Send(new InviteUserCommand(
+            Id,
+            _inviteEmail.Trim(),
+            _inviteFirstName,
+            _inviteLastName,
+            null, null, null,
+            null,
+            _inviteRoleId,
+            _currentUserEmail ?? "System Admin",
+            Navigation.BaseUri.TrimEnd('/')));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(string.Format(L["SysAdmin.OrgDetail.InviteSent"], _inviteEmail), Severity.Success);
+            _showInvite = false;
+            _users = await Mediator.Send(new GetOrganizationUsersQuery(Id));
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private void OpenChangeRoleDialog(OrganizationUserDto user)
+    {
+        _changeRoleTarget = user;
+        var currentRoleName = user.ActiveRoles.FirstOrDefault();
+        var matchedRole = _roles.FirstOrDefault(r => r.Name == currentRoleName);
+        _changeRoleId = matchedRole?.Id ?? _roles.FirstOrDefault()?.Id;
+        _showChangeRole = true;
+    }
+
+    private async Task ConfirmChangeRoleAsync()
+    {
+        if (_changeRoleTarget is null || _changeRoleId is null)
+        {
+            return;
+        }
+
+        var result = await Mediator.Send(new ChangeOrganizationUserRoleCommand(
+            _changeRoleTarget.Id,
+            _changeRoleId.Value));
+
+        if (result.IsSuccess)
+        {
+            var name = _changeRoleTarget.PersonName ?? _changeRoleTarget.Email ?? "—";
+            Snackbar.Add(string.Format(L["SysAdmin.OrgDetail.RoleChanged"], name), Severity.Success);
+            _showChangeRole = false;
+            _users = await Mediator.Send(new GetOrganizationUsersQuery(Id));
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private void OpenRemoveDialog(OrganizationUserDto user)
+    {
+        _removeTarget = user;
+        _showRemove = true;
+    }
+
+    private async Task ConfirmRemoveAsync()
+    {
+        if (_removeTarget is null)
+        {
+            return;
+        }
+
+        var result = await Mediator.Send(new RemoveOrganizationUserCommand(_removeTarget.Id));
+
+        if (result.IsSuccess)
+        {
+            var name = _removeTarget.PersonName ?? _removeTarget.Email ?? "—";
+            Snackbar.Add(string.Format(L["SysAdmin.OrgDetail.Removed"], name), Severity.Success);
+            _showRemove = false;
+            _removeTarget = null;
+            _users = await Mediator.Send(new GetOrganizationUsersQuery(Id));
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+
+    private void CloseAssignDialog()
+    {
+        _showAssign = false;
+        _assignSearch = string.Empty;
+        _searchResults = [];
+        _selectedUser = null;
+        var memberRole = _roles.FirstOrDefault(r => r.RoleType == Domain.Enums.RoleType.Member);
+        _assignRoleId = memberRole?.Id;
+    }
+
+    private async Task AssignUserAsync()
+    {
+        if (_selectedUser is null)
+        {
+            return;
+        }
+
+        var result = await Mediator.Send(new DirectAssignUserCommand(
+            _selectedUser.Id,
+            Id,
+            _assignRoleId));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(L["SysAdmin.OrgDetail.AssignSuccess"], Severity.Success);
+            CloseAssignDialog();
+            _users = await Mediator.Send(new GetOrganizationUsersQuery(Id));
+        }
+        else
+        {
+            Snackbar.Add(result.Error!, Severity.Error);
+        }
+    }
+}

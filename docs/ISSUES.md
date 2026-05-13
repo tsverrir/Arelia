@@ -5,6 +5,23 @@ Use the template below when registering a new issue. Increment the issue number 
 
 ---
 
+## ISSUE-001 — System admin cannot assign users to organisations
+
+**Severity:** High  
+**Status:** Open  
+**Area:** Web / Admin
+
+**Description:**  
+As a system admin, there is no UI or API to assign existing users to organisations. Admins can only invite users via email; there is no way to directly assign an already-registered user to an organisation.
+
+**Impact:**  
+System admins cannot manage organisation membership for users who are already registered in the system. Workaround: the user must be re-invited via email.
+
+**Fix:**  
+Implement an admin interface that allows system admins to search for registered users and assign them to one or more organisations, including setting their role within the organisation.
+
+---
+
 ## ISSUE-000 — Template (example — delete when adding a real issue)
 
 **Severity:** Low | Medium | High | Critical  

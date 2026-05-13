@@ -3,6 +3,7 @@
 @using Arelia.Application.Organizations.Queries
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 @inject ILocalizer L
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
 
@@ -33,6 +34,7 @@ else
             <MudTh>Members</MudTh>
             <MudTh>Status</MudTh>
             <MudTh>Created</MudTh>
+            <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Name</MudTd>
@@ -44,6 +46,11 @@ else
                 </MudChip>
             </MudTd>
             <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small"
+                               Color="Color.Primary"
+                               OnClick="@(() => Navigation.NavigateTo($"/system/organizations/{context.Id}"))" />
+            </MudTd>
         </RowTemplate>
     </MudTable>
 }

@@ -381,6 +381,7 @@
 
         var result = await Mediator.Send(new InviteUserCommand(
             orgId, _person.Email!, _person.FirstName, _person.LastName,
+            null, null, null,
             _person.Id, null, null, Navigation.BaseUri.TrimEnd('/')));
 
         if (result.IsSuccess)
