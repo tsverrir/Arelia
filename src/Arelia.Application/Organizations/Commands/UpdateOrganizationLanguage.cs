@@ -1,12 +1,12 @@
 
 namespace Arelia.Application.Organizations.Commands;
 
-public record UpdateOrganizationLanguageCommand(Guid OrganizationId, string? Language) : IRequest;
+public record UpdateOrganizationLanguageCommand(Guid OrganizationId, string? Language) : IRequest<Unit>;
 
 public class UpdateOrganizationLanguageHandler(IAreliaDbContext context)
-    : IRequestHandler<UpdateOrganizationLanguageCommand>
+    : IRequestHandler<UpdateOrganizationLanguageCommand, Unit>
 {
-    public async Task Handle(UpdateOrganizationLanguageCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(UpdateOrganizationLanguageCommand request, CancellationToken cancellationToken)
     {
         var org = await context.Organizations
             .IgnoreQueryFilters()
@@ -15,5 +15,7 @@ public class UpdateOrganizationLanguageHandler(IAreliaDbContext context)
 
         org.DefaultLanguage = request.Language;
         await context.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
     }
 }

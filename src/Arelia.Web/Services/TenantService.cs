@@ -1,6 +1,6 @@
 using Arelia.Application.Interfaces;
+using Arelia.Application.Mediator;
 using Arelia.Application.Organizations.Queries;
-using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using System.Security.Claims;

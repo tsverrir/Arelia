@@ -14,7 +14,7 @@ using Arelia.Infrastructure;
 using Arelia.Infrastructure.Identity;
 using Arelia.Infrastructure.Persistence;
 using Arelia.Infrastructure.Services;
-using MediatR;
+using Arelia.Application.Mediator;
 using MudBlazor.Services;
 using Radzen;
 

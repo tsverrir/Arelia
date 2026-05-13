@@ -1,4 +1,4 @@
-﻿@page "/people/{PersonId:guid}"
+@page "/people/{PersonId:guid}"
 @using Arelia.Application.Interfaces
 @using Arelia.Application.People.Commands
 @using Arelia.Application.People.Queries
@@ -6,7 +6,6 @@
 @using Arelia.Application.Roles.Commands
 @using Arelia.Application.Roles.Queries
 @using Arelia.Application.VoiceGroups.Queries
-@using MediatR
 @inject IMediator Mediator
 @inject ITenantContext TenantContext
 @inject NavigationManager Navigation
