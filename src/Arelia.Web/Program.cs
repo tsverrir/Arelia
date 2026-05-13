@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Arelia.Web.Components;
@@ -72,6 +73,14 @@ public class Program
         // Seed data
         await DataSeeder.SeedAsync(app.Services);
 
+        // When running behind a reverse proxy (e.g. Cloudflare Tunnel → nginx → container),
+        // the real scheme/host/IP are in X-Forwarded-* headers. This must come first so that
+        // HTTPS detection, cookie Secure flags, and redirect URIs all see the correct values.
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
+
         app.UseMiddleware<MaintenanceMiddleware>();
 
         if (app.Environment.IsDevelopment())
@@ -82,9 +91,10 @@ public class Program
         {
             app.UseExceptionHandler("/Error");
             app.UseHsts();
+            // Only redirect to HTTPS in production; in Docker/dev the container speaks
+            // plain HTTP, and redirecting would break the Blazor SignalR WebSocket handshake.
+            app.UseHttpsRedirection();
         }
-
-        app.UseHttpsRedirection();
 
         var supportedCultures = CultureService.SupportedCultures;
         app.UseRequestLocalization(options =>
