@@ -5,7 +5,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - arelia_data:/data
+      - ${DATA_PATH:-/var/lib/areliacms}:/data
     environment:
       # Database — stored inside the /data volume
       - ConnectionStrings__DefaultConnection=DataSource=/data/arelia.db;Cache=Shared
@@ -55,5 +55,3 @@ services:
     depends_on:
       - arelia
 
-volumes:
-  arelia_data:

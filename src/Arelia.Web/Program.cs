@@ -73,13 +73,20 @@ public class Program
         // Seed data
         await DataSeeder.SeedAsync(app.Services);
 
-        // When running behind a reverse proxy (e.g. Cloudflare Tunnel → nginx → container),
+        // When running behind a reverse proxy (e.g. Cloudflare Tunnel → cloudflared container),
         // the real scheme/host/IP are in X-Forwarded-* headers. This must come first so that
         // HTTPS detection, cookie Secure flags, and redirect URIs all see the correct values.
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        //
+        // KnownNetworks/KnownProxies are cleared because ASP.NET Core only trusts loopback
+        // addresses by default. The cloudflared sidecar communicates over the Docker bridge
+        // network (172.x.x.x), not loopback, so headers would otherwise be silently ignored.
+        var forwardedHeadersOptions = new ForwardedHeadersOptions
         {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-        });
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+        };
+        forwardedHeadersOptions.KnownNetworks.Clear();
+        forwardedHeadersOptions.KnownProxies.Clear();
+        app.UseForwardedHeaders(forwardedHeadersOptions);
 
         app.UseMiddleware<MaintenanceMiddleware>();
 
