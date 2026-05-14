@@ -53,7 +53,7 @@ public class GetPersonDetailHandler(IAreliaDbContext context)
 						ra.Role.Name,
 						ra.FromDate,
 						ra.ToDate,
-						ra.FromDate <= DateTime.UtcNow && (ra.ToDate == null || ra.ToDate >= DateTime.UtcNow)))
+						ra.FromDate <= DateTime.Today && (ra.ToDate == null || ra.ToDate > DateTime.Today)))
 					.ToList(),
 				context.OrganizationUsers.IgnoreQueryFilters()
 					.Any(ou => ou.PersonId == p.Id),

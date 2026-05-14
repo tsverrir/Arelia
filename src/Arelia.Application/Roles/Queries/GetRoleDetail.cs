@@ -39,8 +39,8 @@ public class GetRoleDetailHandler(IAreliaDbContext context)
                     .ToList(),
                 r.RoleAssignments
                     .Where(ra => ra.IsActive &&
-                                 ra.FromDate <= DateTime.UtcNow &&
-                                 (ra.ToDate == null || ra.ToDate >= DateTime.UtcNow))
+                                 ra.FromDate <= DateTime.Today &&
+                                 (ra.ToDate == null || ra.ToDate > DateTime.Today))
                     .OrderBy(ra => ra.Person.LastName)
                     .ThenBy(ra => ra.Person.FirstName)
                     .Select(ra => new RoleDetailAssignmentDto(

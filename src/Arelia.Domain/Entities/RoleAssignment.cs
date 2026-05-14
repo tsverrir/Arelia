@@ -10,7 +10,7 @@ public class RoleAssignment : BaseEntity
     public DateTime? ToDate { get; set; }
 
     public bool IsCurrentlyActive =>
-        FromDate <= DateTime.UtcNow && (ToDate == null || ToDate >= DateTime.UtcNow);
+        FromDate <= DateTime.Today && (ToDate == null || ToDate > DateTime.Today);
 
     // Navigation
     public Person Person { get; set; } = null!;
