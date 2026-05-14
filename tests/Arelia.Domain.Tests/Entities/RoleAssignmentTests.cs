@@ -10,8 +10,8 @@ public class RoleAssignmentTests
     {
         var assignment = new RoleAssignment
         {
-            FromDate = DateTime.UtcNow.AddDays(-10),
-            ToDate = DateTime.UtcNow.AddDays(10)
+            FromDate = DateTime.Today.AddDays(-10),
+            ToDate = DateTime.Today.AddDays(10)
         };
 
         assignment.IsCurrentlyActive.Should().BeTrue();
@@ -22,8 +22,8 @@ public class RoleAssignmentTests
     {
         var assignment = new RoleAssignment
         {
-            FromDate = DateTime.UtcNow.AddDays(5),
-            ToDate = DateTime.UtcNow.AddDays(10)
+            FromDate = DateTime.Today.AddDays(5),
+            ToDate = DateTime.Today.AddDays(10)
         };
 
         assignment.IsCurrentlyActive.Should().BeFalse();
@@ -34,8 +34,8 @@ public class RoleAssignmentTests
     {
         var assignment = new RoleAssignment
         {
-            FromDate = DateTime.UtcNow.AddDays(-20),
-            ToDate = DateTime.UtcNow.AddDays(-5)
+            FromDate = DateTime.Today.AddDays(-20),
+            ToDate = DateTime.Today.AddDays(-5)
         };
 
         assignment.IsCurrentlyActive.Should().BeFalse();
@@ -46,8 +46,33 @@ public class RoleAssignmentTests
     {
         var assignment = new RoleAssignment
         {
-            FromDate = DateTime.UtcNow.AddDays(-10),
+            FromDate = DateTime.Today.AddDays(-10),
             ToDate = null
+        };
+
+        assignment.IsCurrentlyActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public void WhenToDateIsEndedTodayThenIsCurrentlyActiveShouldBeFalse()
+    {
+        // "End Now" sets ToDate = DateTime.Today — role should be immediately inactive
+        var assignment = new RoleAssignment
+        {
+            FromDate = DateTime.Today.AddDays(-10),
+            ToDate = DateTime.Today
+        };
+
+        assignment.IsCurrentlyActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public void WhenToDateIsStartingTodayThenIsCurrentlyActiveShouldBeTrue()
+    {
+        var assignment = new RoleAssignment
+        {
+            FromDate = DateTime.Today,
+            ToDate = DateTime.Today.AddDays(30)
         };
 
         assignment.IsCurrentlyActive.Should().BeTrue();

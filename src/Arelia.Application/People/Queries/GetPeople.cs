@@ -58,7 +58,7 @@ public class GetPeopleHandler(IAreliaDbContext context, IUserService userService
                         .Any(ra => ra.PersonId == p.Id &&
                                    ra.OrganizationId == request.OrganizationId &&
                                    ra.IsActive &&
-                                   (ra.ToDate == null || ra.ToDate > DateTime.UtcNow)),
+                                   (ra.ToDate == null || ra.ToDate > DateTime.Today)),
                 UserId = context.OrganizationUsers.IgnoreQueryFilters()
                     .Where(ou => ou.PersonId == p.Id && ou.OrganizationId == request.OrganizationId)
                     .Select(ou => ou.UserId)
@@ -67,8 +67,8 @@ public class GetPeopleHandler(IAreliaDbContext context, IUserService userService
                     .Where(ra => ra.PersonId == p.Id &&
                                  ra.OrganizationId == request.OrganizationId &&
                                  ra.IsActive &&
-                                 ra.FromDate <= DateTime.UtcNow &&
-                                 (ra.ToDate == null || ra.ToDate >= DateTime.UtcNow))
+                                 ra.FromDate <= DateTime.Today &&
+                                 (ra.ToDate == null || ra.ToDate > DateTime.Today))
                     .Select(ra => ra.Role.Name)
                     .ToList(),
             })

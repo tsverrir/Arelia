@@ -247,7 +247,7 @@ public class InviteUserHandler(
         {
             PersonId = personId,
             RoleId = role.Id,
-            FromDate = DateTime.UtcNow,
+            FromDate = DateTime.Today,
             OrganizationId = organizationId,
         });
     }
